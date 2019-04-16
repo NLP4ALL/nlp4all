@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from nlp4all.models import User
 
@@ -14,6 +14,7 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
+    organizations = SelectField('Select your organization', validators=[DataRequired()])
     submit = SubmitField('Sign Up')
 
     def validate_username(self, username):
@@ -63,7 +64,7 @@ class PostForm(FlaskForm):
 
 class AddOrgForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
-    submit = SubmitField('Post')
+    submit = SubmitField('Add Organization')
 
 
 class RequestResetForm(FlaskForm):

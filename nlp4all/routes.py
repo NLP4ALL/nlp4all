@@ -5,7 +5,7 @@ from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
                              PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm)
-from nlp4all.models import User, Post, Organization
+from nlp4all.models import User, Post, Organization, Project
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 
@@ -15,7 +15,9 @@ from flask_mail import Message
 def home():
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
-    return render_template('home.html', posts=posts)
+    user_orgs = current_user.organizations
+    my_projects = Project.query.filter(Project.id.in_(user_orgs))
+    return render_template('home.html', projects=my_projects)
 
 
 @app.route("/about")
@@ -28,9 +30,11 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = RegistrationForm()
+    form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        org = Organization.query.get(int(form.organizations.data)).id
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password, organization=org)
         db.session.add(user)
         db.session.commit()
         flash('Your account has been created! You are now able to log in', 'success')
@@ -98,13 +102,15 @@ def account():
 @login_required
 def add_org():
     form = AddOrgForm()
+    orgs = Organization.query.all()
     if form.validate_on_submit():
-        org = Organization(name=form.name.data,)
-        db.session.add(post)
+        print(form.name.data)
+        org = Organization(name=form.name.data)
+        db.session.add(org)
         db.session.commit()
         flash('Your organization has been created!', 'success')
-        return redirect(url_for('home'))
-    return url_for('add_org')
+        return redirect(url_for('add_org'))
+    return render_template('add_org.html', form=form, orgs=orgs)
 
 
 @app.route("/post/new", methods=['GET', 'POST'])
