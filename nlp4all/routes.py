@@ -4,8 +4,8 @@ from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
-                             PostForm, RequestResetForm, ResetPasswordForm)
-from nlp4all.models import User, Post
+                             PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm)
+from nlp4all.models import User, Post, Organization
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 
@@ -93,6 +93,18 @@ def account():
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template('account.html', title='Account',
                            image_file=image_file, form=form)
+
+@app.route("/add_org", methods=['GET', 'POST'])
+@login_required
+def add_org():
+    form = AddOrgForm()
+    if form.validate_on_submit():
+        org = Organization(name=form.name.data,)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your organization has been created!', 'success')
+        return redirect(url_for('home'))
+    return url_for('add_org')
 
 
 @app.route("/post/new", methods=['GET', 'POST'])

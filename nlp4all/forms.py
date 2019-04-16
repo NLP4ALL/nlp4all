@@ -61,6 +61,10 @@ class PostForm(FlaskForm):
     content = TextAreaField('Content', validators=[DataRequired()])
     submit = SubmitField('Post')
 
+class AddOrgForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    submit = SubmitField('Post')
+
 
 class RequestResetForm(FlaskForm):
     email = StringField('Email',
