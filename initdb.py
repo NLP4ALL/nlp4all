@@ -15,17 +15,19 @@ hp = bcrypt.generate_password_hash("Hermes_2014")
 user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", password=hp)
 user.roles = [admin_role,]
 db.session.add(user)
-user = User(username="arthurhjorth_teacher", email="arthur.hjorth@u.northwestern.edu", password=hp)
-user.roles = [teacher_role,]
-db.session.add(user)
-user = User(username="arthurhjorth_student", email="hermeshjorth2011@u.northwestern.edu", password=hp)
-user.roles = [student_role,]
-db.session.add(user)
-db.session.commit()
+
 org = Organization(name="UBI/CCTD")
 db.session.add(org)
 db.session.commit()
+
+user = User(username="arthurhjorth_teacher", email="arthur.hjorth@u.northwestern.edu", password=hp, organizations=[org,])
+user.roles = [teacher_role,]
+db.session.add(user)
+user = User(username="arthurhjorth_student", email="hermeshjorth2011@u.northwestern.edu", password=hp, organizations=[org,])
+user.roles = [student_role,]
+db.session.add(user)
+db.session.commit()
+
 project = Project(name="Test Project", organization=org.id)
 db.session.add(project)
 db.session.commit()
-

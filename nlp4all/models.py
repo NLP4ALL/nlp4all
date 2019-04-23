@@ -43,6 +43,13 @@ class Role(db.Model):
     name = db.Column(db.String(50), unique=True)
 
 
+# Define the ProjectCategories association table
+class UserOrgs(db.Model):
+    __tablename__ = 'project_categories'
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey('category.id', ondelete='CASCADE'))
+
 # Define the UserOrgs association table
 class UserOrgs(db.Model):
     __tablename__ = 'user_orgs'
@@ -59,15 +66,15 @@ class UserRoles(db.Model):
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
 
 
-class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    content = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+# class Post(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     title = db.Column(db.String(100), nullable=False)
+#     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+#     content = db.Column(db.Text, nullable=False)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f"Post('{self.title}', '{self.date_posted}')"
+#     def __repr__(self):
+#         return f"Post('{self.title}', '{self.date_posted}')"
 
 class Organization(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,10 +87,20 @@ class Project(db.Model):
     name = db.Column(db.String(50))
     organization = db.Column(db.Integer, db.ForeignKey('organization.id'))
 
+class TweetTagCategory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    tweets = db.relationship('Tweet')
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
     handle = db.Column(db.String(15))
     text = db.Column(db.String(280))
     words = db.Column(JSON)
     hashtags = db.Column(JSON)
+    
+class BayesianAnalysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    tweets = db.relationship('Tweet')
