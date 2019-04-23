@@ -28,6 +28,9 @@ user.roles = [student_role,]
 db.session.add(user)
 db.session.commit()
 
+
+
+
 project = Project(name="Test Project", organization=org.id)
 db.session.add(project)
 db.session.commit()

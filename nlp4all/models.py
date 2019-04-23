@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     # posts = db.relationship('Post', backref='author', lazy=True)
     organizations = db.relationship('Organization', secondary='user_orgs')
     roles = db.relationship('Role', secondary='user_roles')
+    analyses = db.relationship('BayesianAnalysis')
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
@@ -86,11 +87,15 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     organization = db.Column(db.Integer, db.ForeignKey('organization.id'))
+    analyses = db.relationship('BayesianAnalysis')
+    categories = db.relationship('TweetTagCategory', secondary='project_categories')
 
 class TweetTagCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     tweets = db.relationship('Tweet')
+    tags = db.relationship('TweetTag')
+    projects = db.relationship('Project', secondary='project_categories')
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -99,8 +104,19 @@ class Tweet(db.Model):
     text = db.Column(db.String(280))
     words = db.Column(JSON)
     hashtags = db.Column(JSON)
+    taags = db.relationship('TweetTag')
     
-# class BayesianAnalysis(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50))
-#     tweets = db.relationship('Tweet')
+class TweetTag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE"))
+    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+
+class BayesianAnalysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(50))
+    filters = db.Column(JSON)
+    features = db.Column(JSON)
+    tags = db.relationship('TweetTag')
+    project = db.Column(db.Integer, db.ForeignKey('project.id'))
