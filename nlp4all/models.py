@@ -16,7 +16,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
     password = db.Column(db.String(60), nullable=False)
-    posts = db.relationship('Post', backref='author', lazy=True)
+    # posts = db.relationship('Post', backref='author', lazy=True)
     organizations = db.relationship('Organization', secondary='user_orgs')
     roles = db.relationship('Role', secondary='user_roles')
 
@@ -44,11 +44,11 @@ class Role(db.Model):
 
 
 # Define the ProjectCategories association table
-class UserOrgs(db.Model):
+class ProjectCategories(db.Model):
     __tablename__ = 'project_categories'
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('category.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
 
 # Define the UserOrgs association table
 class UserOrgs(db.Model):
@@ -100,7 +100,7 @@ class Tweet(db.Model):
     words = db.Column(JSON)
     hashtags = db.Column(JSON)
     
-class BayesianAnalysis(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    tweets = db.relationship('Tweet')
+# class BayesianAnalysis(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(50))
+#     tweets = db.relationship('Tweet')

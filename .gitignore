@@ -1,6 +1,13 @@
 .gitignore
 data/
 .vscode/
+test/bin
+test/include
+test/lib
+nlp4all/local
+nlp4all/share
+test/share/
+test/local
 nlp4all/bin
 nlp4all/lib
 nlp4all/include
