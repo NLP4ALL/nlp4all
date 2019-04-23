@@ -1,3 +1,5 @@
+.gitignore
+data/
 .vscode/
 nlp4all/bin
 nlp4all/lib

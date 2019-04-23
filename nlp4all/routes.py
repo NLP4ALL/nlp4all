@@ -14,10 +14,16 @@ from flask_mail import Message
 @app.route("/home")
 def home():
     page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
-    user_orgs = current_user.organizations
+    user_orgs = [org.id for org in current_user.organizations]
     my_projects = Project.query.filter(Project.id.in_(user_orgs))
     return render_template('home.html', projects=my_projects)
+
+
+@app.route("/project")
+def project():
+    project_id = request.args.get('project', None, type=int)
+    project = Project.query.get(project_id)
+    return render_template('project.html', title='About', project=project)
 
 
 @app.route("/about")
