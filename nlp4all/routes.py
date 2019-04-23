@@ -5,7 +5,7 @@ from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
                              PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm)
-from nlp4all.models import User, Post, Organization, Project
+from nlp4all.models import User, Organization, Project
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 
