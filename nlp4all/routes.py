@@ -5,7 +5,7 @@ from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
                              PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm)
-from nlp4all.models import User, Organization, Project
+from nlp4all.models import User, Organization, Project, BayesianAnalysis
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 
@@ -23,7 +23,8 @@ def home():
 def project():
     project_id = request.args.get('project', None, type=int)
     project = Project.query.get(project_id)
-    return render_template('project.html', title='About', project=project)
+    analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project.id)
+    return render_template('project.html', title='About', project=project, analyses=analyses)
 
 
 @app.route("/about")
