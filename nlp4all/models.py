@@ -93,18 +93,22 @@ class Project(db.Model):
 class TweetTagCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     tweets = db.relationship('Tweet')
     tags = db.relationship('TweetTag')
     projects = db.relationship('Project', secondary='project_categories')
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    time_posted = db.Column(db.DateTime)
     category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
     handle = db.Column(db.String(15))
     text = db.Column(db.String(280))
     words = db.Column(JSON)
     hashtags = db.Column(JSON)
-    taags = db.relationship('TweetTag')
+    tags = db.relationship('TweetTag')
+    links = db.Column(JSON)
+    url = db.Column(db.String(200))
     
 class TweetTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)

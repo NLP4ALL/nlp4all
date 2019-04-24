@@ -44,7 +44,7 @@ def about():
     return render_template('about.html', title='About')
 
 @app.route("/analysis")
-def analyis():
+def analysis():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     return render_template('analysis.html', analysis=analysis)
