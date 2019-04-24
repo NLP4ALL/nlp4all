@@ -1,4 +1,5 @@
 .gitignore
+tweet_data/
 data/
 .vscode/
 test/bin
