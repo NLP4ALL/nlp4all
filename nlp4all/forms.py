@@ -36,6 +36,11 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 
+class AddBayesianAnalysisForm(FlaskForm):
+    name = StringField('Title of Analysis', validators=[DataRequired()])
+    submit = SubmitField('Create Analysis')
+
+
 class UpdateAccountForm(FlaskForm):
     username = StringField('Username',
                            validators=[DataRequired(), Length(min=2, max=20)])

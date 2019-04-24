@@ -4,10 +4,11 @@ from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
-                             PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm)
+                             PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm)
 from nlp4all.models import User, Organization, Project, BayesianAnalysis
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
+import json
 
 
 @app.route("/")
@@ -19,18 +20,34 @@ def home():
     return render_template('home.html', projects=my_projects)
 
 
-@app.route("/project")
+@app.route("/project", methods=['GET', "POST"])
 def project():
     project_id = request.args.get('project', None, type=int)
     project = Project.query.get(project_id)
-    analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project.id)
-    return render_template('project.html', title='About', project=project, analyses=analyses)
+    form = AddBayesianAnalysisForm()
+    analyses = BayesianAnalysis.query.all()#.filter_by(user = current_user.id).all()
+    if form.validate_on_submit():
+        userid = current_user.id
+        name = form.name.data
+        filters = []
+        features = []
+        filters = json.dumps([])
+        features = json.dumps([])
+        analysis = BayesianAnalysis(user = userid, name=name, filters=filters, features=features,project=project.id)
+        db.session.add(analysis)
+        db.session.commit()
+    return render_template('project.html', title='About', project=project, analyses=analyses, form=form)
 
 
 @app.route("/about")
 def about():
     return render_template('about.html', title='About')
 
+@app.route("/analysis")
+def analyis():
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    return render_template('analysis.html', analysis=analysis)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -47,6 +64,7 @@ def register():
         flash('Your account has been created! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
+
 
 
 @app.route("/login", methods=['GET', 'POST'])
