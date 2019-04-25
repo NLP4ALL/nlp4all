@@ -86,6 +86,7 @@ class Organization(db.Model):
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
+    description = db.Column(db.String)
     organization = db.Column(db.Integer, db.ForeignKey('organization.id'))
     analyses = db.relationship('BayesianAnalysis')
     categories = db.relationship('TweetTagCategory', secondary='project_categories')

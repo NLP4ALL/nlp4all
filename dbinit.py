@@ -80,7 +80,9 @@ db.session.commit()
 db.session.close()
 
 org = Organization.query.first()
-project = Project(name="DF og Ehl", organization=org.id)
+all_cats = TweetTagCategory.query.all()
+cats = [all_cats[0], all_cats[2]]
+project = Project(name="DF og Ehl", organization=org.id, categories=cats)
 db.session.add(project)
 db.session.commit()
 

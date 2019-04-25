@@ -4,8 +4,8 @@ from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
-                             PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm)
-from nlp4all.models import User, Organization, Project, BayesianAnalysis
+                             PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm)
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import json
@@ -13,12 +13,31 @@ import json
 
 @app.route("/")
 @app.route("/home")
+@login_required
 def home():
     page = request.args.get('page', 1, type=int)
     user_orgs = [org.id for org in current_user.organizations]
     my_projects = Project.query.filter(Project.id.in_(user_orgs))
     return render_template('home.html', projects=my_projects)
 
+
+@app.route("/add_project", methods=['GET', 'POST'])
+def add_project():
+    form = AddProjectForm()
+    # find forst alle mulige organizations
+    form.organization.choices = [( str(o.id), o.name ) for o in Organization.query.all()]
+    form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
+    if form.validate_on_submit():
+        # orgs = [int(n) for n in form.organization.data]
+        # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
+        org = Organization.query.get(int(form.organization.data))
+        cats = [int(n) for n in form.categories.data]
+        cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cats)).all()
+        new_project = Project(name=form.title.data, description=form.description.data, organization=org.id, categories=cats_objs)
+        db.session.add(new_project)
+        db.session.commit()
+        flash('New Project Created!', 'success')
+    return render_template('add_project.html', title='Add New Projec5', form=form)
 
 @app.route("/project", methods=['GET', "POST"])
 def project():
@@ -33,6 +52,7 @@ def project():
         features = []
         filters = json.dumps([])
         features = json.dumps([])
+        tags = project.categories
         analysis = BayesianAnalysis(user = userid, name=name, filters=filters, features=features,project=project.id)
         db.session.add(analysis)
         db.session.commit()
@@ -44,7 +64,7 @@ def about():
     return render_template('about.html', title='About')
 
 @app.route("/analysis")
-def analysis():
+def analyis():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     return render_template('analysis.html', analysis=analysis)
@@ -54,10 +74,10 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = RegistrationForm()
-    form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+    form.organization.choices = [(str(o.id), o.name) for o in Organization.query.all()]
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        org = Organization.query.get(int(form.organizations.data)).id
+        org = Organization.query.get(int(form.organization.data)).id
         user = User(username=form.username.data, email=form.email.data, password=hashed_password, organization=org)
         db.session.add(user)
         db.session.commit()
@@ -65,7 +85,9 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
-
+@app.route("/analysis")
+def analysis():
+    return redirect(url_for('home'))
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():

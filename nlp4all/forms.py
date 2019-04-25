@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectMultipleField, SelectField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from nlp4all.models import User
+from nlp4all.models import User, Project
 
 
 class RegistrationForm(FlaskForm):
@@ -35,6 +35,18 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
+
+class AddProjectForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    description = StringField('Description', validators=[DataRequired()])
+    categories = SelectMultipleField('Categories for your students to work with', validators=[DataRequired()])
+    organization = SelectField('Which student group should participate?', validators=[DataRequired()])
+    submit = SubmitField("Create Project")
+
+    def validate_title(self, title):
+        title = Project.query.filter_by(name=title.data).first()
+        if title:
+            raise ValidationError('That project name is taken. Please choose a different one.')
 
 class AddBayesianAnalysisForm(FlaskForm):
     name = StringField('Title of Analysis', validators=[DataRequired()])
