@@ -17,7 +17,7 @@ import json
 def home():
     page = request.args.get('page', 1, type=int)
     user_orgs = [org.id for org in current_user.organizations]
-    my_projects = Project.query.filter(Project.id.in_(user_orgs))
+    my_projects = Project.query.filter(Project.organization.in_(user_orgs)).all()
     return render_template('home.html', projects=my_projects)
 
 
