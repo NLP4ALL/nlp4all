@@ -79,7 +79,7 @@ for f in files:
 db.session.commit()
 db.session.close()
 
-
+org = Organization.query.first()
 project = Project(name="DF og Ehl", organization=org.id)
 db.session.add(project)
 db.session.commit()
