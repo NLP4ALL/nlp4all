@@ -1,14 +1,15 @@
 import os
 import secrets
+from random import sample
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
-                             PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm)
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import json
+from sqlalchemy.orm.attributes import flag_modified
 
 
 @app.route("/")
@@ -44,7 +45,7 @@ def project():
     project_id = request.args.get('project', None, type=int)
     project = Project.query.get(project_id)
     form = AddBayesianAnalysisForm()
-    analyses = BayesianAnalysis.query.all()#.filter_by(user = current_user.id).all()
+    analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project_id).all()
     if form.validate_on_submit():
         userid = current_user.id
         name = form.name.data
@@ -53,9 +54,10 @@ def project():
         filters = json.dumps([])
         features = json.dumps([])
         tags = project.categories
-        analysis = BayesianAnalysis(user = userid, name=name, filters=filters, features=features,project=project.id)
+        analysis = BayesianAnalysis(user = userid, name=name, filters=filters, features=features,project=project.id, data = {"counts" : 0, "words" : {}})
         db.session.add(analysis)
         db.session.commit()
+        return(redirect(url_for('project', project=project_id)))
     return render_template('project.html', title='About', project=project, analyses=analyses, form=form)
 
 
@@ -63,11 +65,35 @@ def project():
 def about():
     return render_template('about.html', title='About')
 
-@app.route("/analysis")
+@app.route("/analysis", methods=['GET', 'POST'])
 def analyis():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
-    return render_template('analysis.html', analysis=analysis)
+    project = Project.query.get(analysis.project)
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
+    tweets = [t for cat in categories for t in cat.tweets]
+    the_tweet = sample(tweets, 1)[0]
+    predictions = analysis.categorize(set(the_tweet.words))
+    form = TaggingForm()
+    form.choices.choices  = [( str(c.id), c.name ) for c in categories]
+    number_of_tagged = len(analysis.tags)
+    data = {}
+    data['number_of_tagged']  = number_of_tagged
+    if form.validate_on_submit():
+        category = TweetTagCategory.query.get(int(form.choices.data))
+        analysis.data = analysis.updated_data(the_tweet, category)
+        ## all this  stuff is necessary  because the database backend doesnt resgister
+        ## changes on JSON
+        flag_modified(analysis, "data")
+        db.session.add(analysis)
+        db.session.merge(analysis)
+        db.session.flush()
+        db.session.commit()
+        #####
+        tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id)
+        db.session.add(tag)
+        db.session.commit()
+    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, predictions = predictions, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -84,10 +110,6 @@ def register():
         flash('Your account has been created! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
-
-@app.route("/analysis")
-def analysis():
-    return redirect(url_for('home'))
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -247,6 +269,9 @@ def reset_request():
         return redirect(url_for('login'))
     return render_template('reset_request.html', title='Reset Password', form=form)
 
+@app.route("/analysis")
+def analysis():
+    return redirect(url_for('home'))
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):

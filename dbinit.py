@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 import json
 
-
+db.drop_all()
 
 
 db.create_all()
@@ -62,14 +62,20 @@ for f in files:
             date_rep = '%a %b %d %H:%M:%S %z %Y'
             unix_time = time.mktime(datetime.strptime(date_str, date_rep).timetuple())
             timestamp = datetime.fromtimestamp(unix_time)
+            t = indict['full_text']
+            t.replace(".", " ")
+            t.replace("-", " ")
+            t.replace(",", " ")
+            t.replace("\(", " ")
+            t.replace("\)", " ")
             a_tweet = Tweet(
                 time_posted = timestamp,
                 category = category.id,
                 handle = indict['twitter_handle'],
                 text= indict['full_text'],
-                words = [w for w in indict['full_text'].lower().split() if "#" not in w and "http" not in w],
-                links = [w for w in indict['full_text'].split() if "http" in w],
-                hashtags = [w for w in indict['full_text'].split() if "#" in w],
+                words = [w for w in t.lower().split() if "#" not in w and "http" not in w],
+                links = [w for w in t.split() if "http" in w],
+                hashtags = [w for w in t.split() if "#" in w],
                 url = "https://twitter.com/"+indict['twitter_handle']+"/"+str(indict['id'])
                 )
             

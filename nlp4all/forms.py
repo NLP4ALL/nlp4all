@@ -27,6 +27,10 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError('That email is taken. Please choose a different one.')
 
+class TaggingForm(FlaskForm):
+    choices = SelectField("Which category does this tweet belong to?")
+    submit = SubmitField("Submit")
+
 
 class LoginForm(FlaskForm):
     email = StringField('Email',
