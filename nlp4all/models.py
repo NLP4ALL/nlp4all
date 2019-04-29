@@ -123,5 +123,45 @@ class BayesianAnalysis(db.Model):
     name = db.Column(db.String(50))
     filters = db.Column(JSON)
     features = db.Column(JSON)
-    tags = db.relationship('TweetTag')
+    tags = db.relationship('TweetTag') # this also tells us which tweets
+    # have already been tagged
+    data = db.Column(JSON)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
+
+
+    def updated_data(self, t, category):
+        self.data['counts'] = self.data['counts'] + 1
+        if category.name not in self.data.keys():
+            self.data[category.name] = {'counts' : 0, 'words' : {}}
+        self.data[category.name]['counts'] = (self.data[category.name].get('counts', 0)) + 1
+        for w in set(t.words):
+            val = self.data[category.name]['words'].get(w, 0)
+            self.data[category.name]['words'][w] = val + 1
+        return self.data
+    
+    def categorize(self, words):
+        # take each word  and  calculate a probabilty for each category
+        categories = Project.query.get(self.project).categories
+        category_names = [c.name for c in categories if  c.name in self.data.keys()]
+        # A = probability of the category
+        # B = probablity of the  word
+        predictions = {}
+        if self.data['counts'] == 0:
+            return {word : {category : 0 for category in category_names} for word in words}
+        for w in words:
+            predictions[w] = {}
+            for cat in category_names:
+                prob_ba = self.data[cat]['words'].get(w, 0) / self.data[cat]['counts']
+                prob_a = self.data[cat]['counts'] / self.data['counts'] 
+                prob_b = sum([self.data[c]['words'].get(w, 0) for c in category_names]) / self.data['counts']
+                if  prob_b == 0:
+                    predictions[cat] = 0
+                else:
+                    print(prob_ba * prob_a / prob_b)
+                    predictions[cat] = prob_ba * prob_a / prob_b
+        print(predictions)
+        return predictions
+
+
+
+        

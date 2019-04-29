@@ -1,4 +1,27 @@
 {% extends "layout.html" %}
 {% block content %}
+<div class="content-section">
+{{ tweet.text }}
+</div>
+{{ number_of_tagged }}
+    <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <div class="form-group">
+                    {{ form.choices.label(class="form-control-label")}}<br>
+                    {{ form.choices(class="form-control form-control-lg")}}
+                    {% for error in form.choices.errors %}
+                        <span style="color :red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
 
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{{ predictions }}
+{{ analysis.data }}
 {% endblock content %}
