@@ -39,14 +39,6 @@ db.session.add(user)
 db.session.commit()
 
 
-def clean_word(aword):
-    if "@" in  aword:
-        return "@twitter_ID"
-    if "#" in aword:
-        return "#hashtag"
-    if "http" in aword:
-        return "http://link"
-    return aword
 
 data_dir = 'tweet_data/'
 files = [f for f in os.listdir(data_dir) if '_out.json' in f]
@@ -55,7 +47,7 @@ existing_tag_names = []
 for f in files:
     with open(data_dir+f) as inf:
         counter = 0
-        for line in inf.readlines()[:20]:
+        for line in inf.readlines()[:100]:
             indict = json.loads(line)
 #             add cateogyr if it does not already exist
             if indict['twitter_handle'] not in existing_tag_names:
@@ -71,28 +63,22 @@ for f in files:
             unix_time = time.mktime(datetime.strptime(date_str, date_rep).timetuple())
             timestamp = datetime.fromtimestamp(unix_time)
             t = indict['full_text']
-            full_text=indict['full_text']
-            t = t.replace(".", " ")
-            t = t.replace("!", " ")
-            t = t.replace("/", " ")
-            t = t.replace("-", " ")
-            t = t.replace("-", " ")
-            t = t.replace(",", " ")
-            t = t.replace("\(", " ")
-            t = t.replace("\)", " ")
-            t = t.lower()
-            print(t)
+            t.replace(".", " ")
+            t.replace("-", " ")
+            t.replace("-", " ")
+            t.replace(",", " ")
+            t.replace("\(", " ")
+            t.replace("\)", " ")
             a_tweet = Tweet(
                 time_posted = timestamp,
                 category = category.id,
                 handle = indict['twitter_handle'],
-                full_text= t,
-                words = [w for w in t.split() if "#" not in w and "http" not in w and "@" not in w],
-                links = [w for w in full_text.split() if "http" in w],
-                hashtags = [w for w in full_text.split() if "#" in w],
-                mentions = [w for w in full_text.split() if "@" in w],
-                url = "https://twitter.com/"+indict['twitter_handle']+"/"+str(indict['id']),
-                text = " ".join([clean_word(word) for word in t.split()])
+                text= indict['full_text'],
+                words = [w for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
+                links = [w for w in t.split() if "http" in w],
+                hashtags = [w for w in t.split() if "#" in w],
+                mentions = [w for w in t.split() if "@" in w],
+                url = "https://twitter.com/"+indict['twitter_handle']+"/"+str(indict['id'])
                 )
             
             db.session.add(a_tweet)
@@ -107,8 +93,8 @@ cats = [all_cats[0], all_cats[2]]
 project = Project(name="DF og Ehl", organization=org.id, categories=cats)
 db.session.add(project)
 db.session.commit()
-analysis = BayesianAnalysis(user = 1, name="Test Analysis", filters=json.dumps([]), features=json.dumps([]),project=1, data = {"counts" : 0, "words" : {}})
-db.session.add(analysis)
-db.session.commit()
+
 print(Tweet.query.all())
 
+for t in Tweet.query.all():
+    print(t)
