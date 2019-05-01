@@ -89,7 +89,6 @@ def analyis():
         db.session.merge(analysis)
         db.session.flush()
         db.session.commit()
-        #####
         tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id)
         db.session.add(tag)
         db.session.commit()
