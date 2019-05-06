@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
-{{ tweet.full_text }}
+{{ tweet.text }}
 </div>
 {{ number_of_tagged }}
     <div class="content-section">
@@ -15,13 +15,16 @@
                         <span style="color :red;">[{{ error }}]</span>
                     {% endfor %}
                 </div>
-
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
     </div>
-{{ predictions }}
-{{ analysis.data }}
+<div class="content-section">
+<h2>Words in this tweet:</h2>
+{% for word, prediction in predictions.items() %}
+<p> {{word}} : {{ prediction}} </p>
+{% endfor %}
+</div>
 {% endblock content %}
