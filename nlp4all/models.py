@@ -141,7 +141,7 @@ class BayesianAnalysis(db.Model):
             self.data[category.name]['words'][w] = val + 1
         return self.data
     
-    def categorize(self, words):
+    def get_predictions_and_words(self, words):
         # take each word  and  calculate a probabilty for each category
         categories = Project.query.get(self.project).categories
         category_names = [c.name for c in categories if  c.name in self.data.keys()]
@@ -150,19 +150,17 @@ class BayesianAnalysis(db.Model):
         predictions = {}
         if self.data['counts'] == 0:
             return {word : {category : 0 for category in category_names} for word in words}
-        for w in words:
-            predictions[w] = {}
+        for w in set(words): # only categorize each word once
             for cat in category_names:
+                predictions[cat] = predictions.get(cat, {})
                 prob_ba = self.data[cat]['words'].get(w, 0) / self.data[cat]['counts']
                 prob_a = self.data[cat]['counts'] / self.data['counts'] 
                 prob_b = sum([self.data[c]['words'].get(w, 0) for c in category_names]) / self.data['counts']
                 if  prob_b == 0:
-                    predictions[cat] = 0
+                    predictions[cat][w] = 0
                 else:
-                    print(prob_ba * prob_a / prob_b)
-                    predictions[cat] = prob_ba * prob_a / prob_b
-        print(predictions)
-        return predictions
+                    predictions[cat][w] = prob_ba * prob_a / prob_b
+        return (predictions, {k : sum(v.values()) / len(set(words)) for k, v in predictions.items()})
 
 
 
