@@ -6,6 +6,7 @@ import json, os
 from datetime import datetime
 import time
 import json
+from sqlalchemy.orm.attributes import flag_modified
 
 db.drop_all()
 
@@ -55,7 +56,7 @@ existing_tag_names = []
 for f in files:
     with open(data_dir+f) as inf:
         counter = 0
-        for line in inf.readlines()[:30]:
+        for line in inf.readlines()[:800]:
             indict = json.loads(line)
 #             add cateogyr if it does not already exist
             if indict['twitter_handle'] not in existing_tag_names:
@@ -122,7 +123,25 @@ db.session.add(project)
 db.session.commit()
 analysis = BayesianAnalysis(user = 2, name="Test Analysis", filters=json.dumps([]), features=json.dumps([]),project=1, data = {"counts" : 0, "words" : {}})
 
-
 db.session.add(analysis)
 db.session.commit()
 
+# get 800 DF tweets and 800 EHl tweets and add them
+df_tweets = Tweet.query.filter_by(category = 5).all()
+df_cat = all_cats[4]
+for t in df_tweets[:500]:
+    analysis.data = analysis.updated_data(t, df_cat)
+
+ehl_cat = all_cats[5]
+ehl_tweets = Tweet.query.filter_by(category = 6).all()
+for t in ehl_tweets[:500]:
+    analysis.data = analysis.updated_data(t, ehl_cat)
+
+flag_modified(analysis, "data")
+db.session.add(analysis)
+db.session.merge(analysis)
+db.session.flush()
+db.session.commit()
+
+for c in TweetTagCategory.query.all():
+    print(c.id, c.name) 

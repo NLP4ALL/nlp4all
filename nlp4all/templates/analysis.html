@@ -1,7 +1,18 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
-{{ tweet.text }}
+<h2>Best Predictions</h2>
+<table>
+{% for tag, prediction in predictions.items() %}
+<tr>
+<TD class="c1">{{ tag }}</TD>
+<TD class="c2">{{ prediction }}</TD>
+</tr>
+{% endfor %}
+</table>
+</div>
+<div class="content-section">
+{{ tweet.full_text }}
 </div>
 {{ number_of_tagged }}
     <div class="content-section">
@@ -21,10 +32,4 @@
             </div>
         </form>
     </div>
-<div class="content-section">
-<h2>Words in this tweet:</h2>
-{% for word, prediction in predictions.items() %}
-<p> {{word}} : {{ prediction}} </p>
-{% endfor %}
-</div>
 {% endblock content %}

@@ -73,13 +73,12 @@ def analyis():
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
     tweets = [t for cat in categories for t in cat.tweets]
     the_tweet = sample(tweets, 1)[0]
-    # predictions = analysis.categorize(set(the_tweet.words))
     form = TaggingForm()
     form.choices.choices  = [( str(c.id), c.name ) for c in categories]
     number_of_tagged = len(analysis.tags)
     data = {}
     data['number_of_tagged']  = number_of_tagged
-    data['predictions'], data['words'] = analysis.get_predictions_and_words(set(the_tweet.words))
+    data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
