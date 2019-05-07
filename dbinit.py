@@ -90,7 +90,7 @@ for f in files:
             t = t.replace(":", " ")
             t = t.replace("/", " ")
             t = t.replace("-", " ")
-            t = t.replace("-", " ")
+            t = t.replace("–", " ")
             t = t.replace(",", " ")
             t = t.replace("\(", " ")
             t = t.replace("\)", " ")
@@ -117,8 +117,10 @@ db.session.close()
 
 org = Organization.query.first()
 all_cats = TweetTagCategory.query.all()
-cats = [all_cats[4], all_cats[5]]
+cats = [all_cats[0], all_cats[2]]
+print([c.name for c in cats])
 project = Project(name="DF og Ehl", organization=org.id, categories=cats)
+
 db.session.add(project)
 db.session.commit()
 analysis = BayesianAnalysis(user = 2, name="Test Analysis", filters=json.dumps([]), features=json.dumps([]),project=1, data = {"counts" : 0, "words" : {}})
@@ -127,13 +129,13 @@ db.session.add(analysis)
 db.session.commit()
 
 # get 800 DF tweets and 800 EHl tweets and add them
-df_tweets = Tweet.query.filter_by(category = 5).all()
-df_cat = all_cats[4]
+df_tweets = Tweet.query.filter_by(category = 1).all()
+df_cat = all_cats[0]
 for t in df_tweets[:500]:
     analysis.data = analysis.updated_data(t, df_cat)
 
-ehl_cat = all_cats[5]
-ehl_tweets = Tweet.query.filter_by(category = 6).all()
+ehl_cat = all_cats[2]
+ehl_tweets = Tweet.query.filter_by(category = 3).all()
 for t in ehl_tweets[:500]:
     analysis.data = analysis.updated_data(t, ehl_cat)
 
