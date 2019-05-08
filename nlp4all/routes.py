@@ -3,6 +3,7 @@ import secrets
 import nlp4all.utils
 from random import sample
 from PIL import Image
+from nlp4all.utils import add_css_class
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm
@@ -80,7 +81,11 @@ def analyis():
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
+<<<<<<< HEAD
 
+=======
+    add_css_class(data['words'], the_tweet.full_text)
+>>>>>>> b07ee2241f7c02d6180008eac330234c55a18768
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
