@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import re
 import json
 from nlp4all.models import TweetTagCategory, Tweet, Project, Role
@@ -90,4 +91,16 @@ def add_role(role_name):
 
 def get_role(role_name):
         return(Role.query.filter_by(name=role_name).first())
+=======
+
+# this function takes a dictionary containing 
+def add_css_class(words, text):
+    categories = list(words.keys())
+    all_words = list(words[categories[0]].keys())
+    text_words = text.lower().split()
+    for w in text_words:
+        print(w)
+        # css_class = (category, )
+        # print(t, )
+>>>>>>> b07ee2241f7c02d6180008eac330234c55a18768
 
