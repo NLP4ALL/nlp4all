@@ -1,5 +1,6 @@
 import os
 import secrets
+import nlp4all.utils
 from random import sample
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
@@ -79,6 +80,7 @@ def analyis():
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
+
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
