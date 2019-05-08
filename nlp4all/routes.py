@@ -81,11 +81,7 @@ def analyis():
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
-<<<<<<< HEAD
-
-=======
-    add_css_class(data['words'], the_tweet.full_text)
->>>>>>> b07ee2241f7c02d6180008eac330234c55a18768
+    data['word_tuples'] = add_css_class(data['words'], the_tweet.full_text)
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)

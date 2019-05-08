@@ -12,7 +12,17 @@
 </table>
 </div>
 <div class="content-section">
-{{ tweet.full_text }}
+{% for tup in word_tuples %}
+<span class="{{tup.1}}-{{tup.2}}">{{ tup.0 }}</span>
+{% endfor %}
+
+<style type="text/css">
+{% for tup in word_tuples %}
+.{{tup.1}}-{{tup.2}} {
+    color : hsl(180, 100%, 50%);
+}   
+{% endfor %}
+</style>
 </div>
 {{ number_of_tagged }}
     <div class="content-section">
@@ -32,5 +42,4 @@
             </div>
         </form>
     </div>
-{{ words }}
 {% endblock content %}
