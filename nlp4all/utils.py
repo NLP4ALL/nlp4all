@@ -7,9 +7,9 @@ import operator
 from nlp4all import db
 
 
-def generate_n_hsl_colors(no_colors, alpha=1, offset=0):
+def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
     hsl_span = int(255 / no_colors)
-    return[(hsl_span * n + offset, 50, 100 * alpha) for n in range(no_colors)]
+    return[(hsl_span * n + offset, 50, 100 * transparency) for n in range(no_colors)]
 
  
 # takes a list of TweetTagCategory objects, returns
@@ -36,7 +36,7 @@ def create_css_info(classifications, text, list_of_categories):
     category_color_dict = assign_colors(list_of_categories)
     tups = []
     for word in text.split():
-        clean_word = clean_non_alphanum(word).lower()
+        clean_word = clean_non_transparencynum(word).lower()
         if clean_word in classifications:
             # @todo: special case 50/50 
             max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
@@ -48,7 +48,7 @@ def create_css_info(classifications, text, list_of_categories):
             
         
         # match = re.compile(word, re.IGNORECASE) # match.sub("")
-#     words = clean_non_alphanum(text).split()
+#     words = clean_non_transparencynum(text).split()
 #     print(classifications)
     
 #     categories = list(words.keys())
@@ -71,7 +71,7 @@ def remove_hash_links_mentions(t):
         return(t)
 
 
-def clean_non_alphanum(t):
+def clean_non_transparencynum(t):
         t = t.replace(".", " ")
         t = t.replace("!", " ")
         t = t.replace("”", " ")
@@ -112,7 +112,7 @@ def add_tweet_from_dict(indict, category):
         tweet_parts = [clean_word(w) for w in full_text.split()]
         full_text=" ".join([w for w in tweet_parts])
         t = indict['full_text']
-        t = clean_non_alphanum(remove_hash_links_mentions(t))
+        t = clean_non_transparencynum(remove_hash_links_mentions(t))
         words = t.split()
         a_tweet = Tweet(
                 time_posted = timestamp,
@@ -141,14 +141,14 @@ def get_role(role_name):
 # the data from this function feeds into bar_chart.html (through analysis), and needs:
 # 1. A list of party names (labels)
 # 2. A list of estimates
-# 3. A list of background colors (the actual color but with an alpha of .2)
+# 3. A list of background colors (the actual color but with an transparency of .2)
 # 4. a list of bar colors
 
 def create_bar_chart_data(predictions, title=""):
         data = {}
         data['title'] = title
         colors = generate_n_hsl_colors(len(predictions))
-        bg_colors = generate_n_hsl_colors(len(predictions), alpha = .8)
+        bg_colors = generate_n_hsl_colors(len(predictions), transparency = .5)
         data_points = []
         for tup in zip(list(predictions.keys()), list(predictions.values()), colors, bg_colors):
                 d = {}
