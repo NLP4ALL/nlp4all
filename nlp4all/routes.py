@@ -3,10 +3,9 @@ import secrets
 import nlp4all.utils
 from random import sample
 from PIL import Image
-from nlp4all.utils import add_css_class
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
@@ -40,7 +39,7 @@ def add_project():
         db.session.add(new_project)
         db.session.commit()
         flash('New Project Created!', 'success')
-    return render_template('add_project.html', title='Add New Projec5', form=form)
+    return render_template('add_project.html', title='Add New Project', form=form)
 
 @app.route("/project", methods=['GET', "POST"])
 def project():
@@ -62,6 +61,12 @@ def project():
         return(redirect(url_for('project', project=project_id)))
     return render_template('project.html', title='About', project=project, analyses=analyses, form=form)
 
+@app.route("/add_category")
+def add_category():
+    form = AddTweetCategoryForm() 
+    # if form.validate_on_submit():
+    return render_template('about.html', title='About')
+
 
 @app.route("/about")
 def about():
@@ -81,7 +86,9 @@ def analyis():
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
-    data['word_tuples'] = add_css_class(data['words'], the_tweet.full_text)
+    data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
+    data['true_category'] = TweetTagCategory.query.get(the_tweet.category).name
+    data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
@@ -128,6 +135,11 @@ def login():
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', title='Login', form=form)
 
+@app.route("/bar_chart")
+def bar_chart():
+    values = [0, 1, 2, 3, 4, 5]
+    labels = ['0', '1', '2', '3', '4', '5']
+    return render_template('bar_chart.html', title="test chart", values=values, labels=labels)
 
 @app.route("/logout")
 def logout():
@@ -175,7 +187,6 @@ def add_org():
     form = AddOrgForm()
     orgs = Organization.query.all()
     if form.validate_on_submit():
-        print(form.name.data)
         org = Organization(name=form.name.data)
         db.session.add(org)
         db.session.commit()
