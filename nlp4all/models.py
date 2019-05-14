@@ -163,4 +163,5 @@ class BayesianAnalysis(db.Model):
                     else:
                         preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
                         predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
+
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})

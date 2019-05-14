@@ -32,6 +32,11 @@ class TaggingForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
+class AddTweetCategoryForm(FlaskForm):
+    twitter_handle = StringField('Twitter handle', validators=[DataRequired()])
+    submit = SubmitField('Create')
+
+
 class LoginForm(FlaskForm):
     email = StringField('Email',
                         validators=[DataRequired(), Email()])

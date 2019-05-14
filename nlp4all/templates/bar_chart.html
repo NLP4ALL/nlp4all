@@ -1,0 +1,42 @@
+<canvas id="myChart" width="50px" height="50px"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for d in chart_data.labels %}
+            '{{d}} ',
+            {% endfor %}],
+        datasets: [
+            {% for d in chart_data.data_points %}
+        {
+            label: '{{ d.label }}',
+            data: [
+            {{d.estimate}},
+            ],
+
+            backgroundColor: [
+                '{{ d.color }}'
+            ],
+            borderColor: [
+                '{{ d.bg_color }}'
+            ],
+            borderWidth: 1
+        },
+        {% endfor %}
+        
+        ]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+});
+</script>
