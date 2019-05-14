@@ -5,25 +5,12 @@ var ctx = document.getElementById('myChart').getContext('2d');
 var myChart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: [
-            {% for d in chart_data.labels %}
-            '{{d}} ',
-            {% endfor %}],
         datasets: [
             {% for d in chart_data.data_points %}
         {
             label: '{{ d.label }}',
-            data: [
-            {{d.estimate}},
-            ],
-
-            backgroundColor: [
-                '{{ d.color }}'
-            ],
-            borderColor: [
-                '{{ d.bg_color }}'
-            ],
-            borderWidth: 1
+            data: [{{d.estimate}}],
+            backgroundColor: ['{{ d.bg_color }}'],
         },
         {% endfor %}
         
