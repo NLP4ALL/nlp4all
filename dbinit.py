@@ -52,7 +52,7 @@ existing_tag_names = []
 for f in files:
     with open(data_dir+f) as inf:
         counter = 0
-        for line in inf.readlines()[:80]:
+        for line in inf.readlines()[:1500]:
             indict = json.loads(line)
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
             if not category:
@@ -67,28 +67,21 @@ for f in files:
 org = Organization.query.first()
 all_cats = TweetTagCategory.query.all()
 cats = [all_cats[0], all_cats[2]]
-
-
-
 nlp4all.utils.add_project("DF og EL", org.id, cats)
 
-
-
 analysis = BayesianAnalysis(user = 2, name="Test Analysis", filters=json.dumps([]), features=json.dumps([]),project=1, data = {"counts" : 0, "words" : {}})
-
-
 db.session.add(analysis)
 db.session.commit()
 
 # get 800 DF tweets and 800 EHl tweets and add them
 df_tweets = Tweet.query.filter_by(category = 1).all()
 df_cat = all_cats[0]
-for t in df_tweets[:500]:
+for t in df_tweets[:1000]:
     analysis.data = analysis.updated_data(t, df_cat)
 
 ehl_cat = all_cats[2]
 ehl_tweets = Tweet.query.filter_by(category = 3).all()
-for t in ehl_tweets[:500]:
+for t in ehl_tweets[:1000]:
     analysis.data = analysis.updated_data(t, ehl_cat)
 
 flag_modified(analysis, "data")
