@@ -9,6 +9,21 @@ from sqlalchemy.types import JSON
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+class BayesianRobot(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
+    parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'))
+    filters = db.Column(JSON)
+    features = db.Column(JSON)
+    accuracy = db.Column(db.Float)
+
+    def clone(self):
+        new_robot = BayesianRobot()
+        new_robot.filters = self.filters
+        new_robot.features = self.features
+        new_robot.parent = self
+        return(new_robot)
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -123,8 +138,6 @@ class BayesianAnalysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(50))
-    filters = db.Column(JSON)
-    features = db.Column(JSON)
     tags = db.relationship('TweetTag') # this also tells us which tweets
     # have already been tagged
     data = db.Column(JSON)

@@ -1,19 +1,14 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="content-section">
-<h2>Best Predictions</h2>
-
+<div class="content-section" id="chart">
 {% include "bar_chart.html" %}
-<table>
-{% for tag, prediction in predictions.items() %}
-<tr>
-<TD class="c1">{{ tag }}</TD>
-<TD class="c2">{{ prediction }}</TD>
-</tr>
-{% endfor %}
-</table>
 </div>
+<style type="text/css">
+#chart {
+    margin-left:auto;margin-right:auto;width:50%;height:45%;
+}
+</style>
 <div class="content-section">
 {{ true_category }}
 </div>

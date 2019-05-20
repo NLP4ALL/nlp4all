@@ -1,0 +1,35 @@
+<canvas id="myChart" width="50px" height="50px"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for d in chart_data.labels %}
+            '{{d}} ',
+            {% endfor %}],
+        datasets: [
+        {
+            label: 'Hep1',
+            data: [ {.7 }],
+            backgroundColor: [
+                'rgba(155, 99, 132, 0.2)'
+            ],
+            borderColor: [
+                'rgba(155, 99, 132, 1)'
+            ],
+            borderWidth: 1
+        }
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+});
+</script>
