@@ -5,7 +5,7 @@ from random import sample
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
@@ -61,11 +61,6 @@ def project():
         return(redirect(url_for('project', project=project_id)))
     return render_template('project.html', title='About', project=project, analyses=analyses, form=form)
 
-@app.route("/add_category")
-def add_category():
-    form = AddTweetCategoryForm() 
-    # if form.validate_on_submit():
-    return render_template('about.html', title='About')
 
 
 @app.route("/about")
@@ -180,6 +175,17 @@ def account():
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template('account.html', title='Account',
                            image_file=image_file, form=form)
+
+@app.route("/manage_categories", methods=['GET', 'POST'])
+@login_required
+def manage_categories():
+    form = AddTweetCategoryForm()
+    categories = [cat.name for cat in TweetTagCategory.query.all()]
+    if form.validate_on_submit():
+        nlp4all.utils.add_tweets_from_account(form.twitter_handle)
+        flash('Added tweets from the twitter handle', 'success')
+        return redirect(url_for('manage_categories'))
+    return render_template('manage_categories.html', form=form, categories=categories)
 
 @app.route("/add_org", methods=['GET', 'POST'])
 @login_required

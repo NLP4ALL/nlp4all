@@ -119,7 +119,6 @@ def add_tweets_from_account(twitter_handle):
                         outf.write(json.dumps(outdict, ensure_ascii=False))
                         outf.write("\n")
                         add_tweet_from_dict(outdict)
-            
 
 def add_category(name, description):
         category = TweetTagCategory(name = name, description = description)
