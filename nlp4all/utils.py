@@ -103,7 +103,7 @@ def add_tweets_from_account(twitter_handle):
         with open(twitter_handle+'_unicode.json', 'w') as outf:
                 # we probably still want to save them in case we need to load them later, but 
                 # no need to write for each file. Just append each dict to a big list, then save that.
-                for status in tweepy.Cursor(api.user_timeline, screen_name=p, tweet_mode="extended").items():
+                for status in tweepy.Cursor(api.user_timeline, screen_name=twitter_handle, tweet_mode="extended").items():
                         # outf.write(json.dumps(status._json, ensure_ascii=False))
                         # outf.write("\n")
                         outdict = {}
