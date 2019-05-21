@@ -182,7 +182,7 @@ def manage_categories():
     form = AddTweetCategoryForm()
     categories = [cat.name for cat in TweetTagCategory.query.all()]
     if form.validate_on_submit():
-        nlp4all.utils.add_tweets_from_account(form.twitter_handle)
+        nlp4all.utils.add_tweets_from_account(form.twitter_handle.data)
         flash('Added tweets from the twitter handle', 'success')
         return redirect(url_for('manage_categories'))
     return render_template('manage_categories.html', form=form, categories=categories)
