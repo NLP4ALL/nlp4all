@@ -125,7 +125,7 @@ class Tweet(db.Model):
     tags = db.relationship('TweetTag')
     links = db.Column(JSON)
     mentions = db.Column(JSON)
-    url = db.Column(db.String(200))
+    url = db.Column(db.String(200), unique=True)
     text = db.Column(db.String(300)) 
     
 class TweetTag(db.Model):

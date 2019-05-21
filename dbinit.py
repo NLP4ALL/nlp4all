@@ -69,7 +69,7 @@ all_cats = TweetTagCategory.query.all()
 cats = [all_cats[0], all_cats[2]]
 nlp4all.utils.add_project("DF og EL", org.id, cats)
 
-analysis = BayesianAnalysis(user = 2, name="Test Analysis", filters=json.dumps([]), features=json.dumps([]),project=1, data = {"counts" : 0, "words" : {}})
+analysis = BayesianAnalysis(user = 2, name="Test Analysis", project=1, data = {"counts" : 0, "words" : {}})
 db.session.add(analysis)
 db.session.commit()
 
