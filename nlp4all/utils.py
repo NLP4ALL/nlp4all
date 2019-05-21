@@ -1,3 +1,4 @@
+import tweepy
 import re
 import json
 from nlp4all.models import TweetTagCategory, Tweet, Project, Role
@@ -88,6 +89,38 @@ def clean_non_transparencynum(t):
         t = t.replace("\)", " ")
         return(t.strip())# changed this, might not work!
 
+# We can get up to 3200 tweets per account at the time we do this. But we can get interrupted if twitter thinks we are being
+# too greedy. I think the best way to ensure the transaction is to make sure that we download all 3200 tweets and add them to our 
+# db, or we don't add any at all. Right? I think so...
+def add_tweets_from_account(twitter_handle):
+        consumer_key="vKBUwDBPaqEBZZ86BABBlNCFb"
+        consumer_secret="bqnjqtKAdhtsHd6nAZj0cXWUbTeWL1TYvAuiFhZESfVyoXECBJ"
+        access_token="771594014-N4u8cajP8DTdeusllAqsFzgXOJLDd59V6v7MhP4Q"
+        access_token_secret="dYXesNmIYkpIjb7JpveqEJ2JfvSkzXBnMz0E3JT9xzlk2"
+        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_token_secret)
+        api = tweepy.API(auth)
+        with open(twitter_handle+'_unicode.json', 'w') as outf:
+                # we probably still want to save them in case we need to load them later, but 
+                # no need to write for each file. Just append each dict to a big list, then save that.
+                for status in tweepy.Cursor(api.user_timeline, screen_name=p, tweet_mode="extended").items():
+                        # outf.write(json.dumps(status._json, ensure_ascii=False))
+                        # outf.write("\n")
+                        outdict = {}
+                        indict = status
+                        outdict['twitter_handle'] = handle
+                        outdict['time'] = indict['created_at']
+                        outdict['id'] = indict['id']
+                        outdict['id_str'] = indict['id_str']
+                        if 'retweeted_status' in  indict:
+                            outdict['full_text'] = indict['retweeted_status']['full_text']
+                        else:
+                            outdict['full_text'] = indict['full_text']
+                        outf.write(json.dumps(outdict, ensure_ascii=False))
+                        outf.write("\n")
+                        add_tweet_from_dict(outdict)
+            
+
 def add_category(name, description):
         category = TweetTagCategory(name = name, description = description)
         db.session.add(category)
@@ -118,7 +151,6 @@ def add_tweet_from_dict(indict, category):
                 time_posted = timestamp,
                 category = category.id,
                 handle = indict['twitter_handle'],
-
                 full_text= full_text,
                 words = words,
                 links = links,
