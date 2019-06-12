@@ -14,3 +14,4 @@ nlp4all/lib
 nlp4all/include
 nlp4all/__pycache__/
 nlp4all/pip-selfcheck.json
+nlp4all/site.db
