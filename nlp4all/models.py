@@ -11,9 +11,8 @@ def load_user(user_id):
 
 class BayesianRobot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
     parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'))
-    filters = db.Column(JSON)
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
     features = db.Column(JSON)
     accuracy = db.Column(db.Float)
 
@@ -31,7 +30,6 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
     password = db.Column(db.String(60), nullable=False)
-    # posts = db.relationship('Post', backref='author', lazy=True)
     organizations = db.relationship('Organization', secondary='user_orgs')
     roles = db.relationship('Role', secondary='user_roles')
     analyses = db.relationship('BayesianAnalysis')
@@ -142,6 +140,7 @@ class BayesianAnalysis(db.Model):
     # have already been tagged
     data = db.Column(JSON)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
+    robots = db.relationship('BayesianRobot')
 
 
     def updated_data(self, tweet, category):
