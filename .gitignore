@@ -15,3 +15,6 @@ nlp4all/include
 nlp4all/__pycache__/
 nlp4all/pip-selfcheck.json
 nlp4all/site.db
+flaskblog/.DS_Store
+nlp4all/.DS_Store
+nlp4all/.DS_Store
