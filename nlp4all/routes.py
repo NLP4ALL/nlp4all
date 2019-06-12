@@ -55,7 +55,7 @@ def project():
         filters = json.dumps([])
         features = json.dumps([])
         tags = project.categories
-        analysis = BayesianAnalysis(user = userid, name=name, filters=filters, features=features,project=project.id, data = {"counts" : 0, "words" : {}})
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}})
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -66,6 +66,11 @@ def project():
 @app.route("/about")
 def about():
     return render_template('about.html', title='About')
+
+@app.route("/word")
+def word():
+    
+    return render_template('word.html', title='Word examples')
 
 @app.route("/analysis", methods=['GET', 'POST'])
 def analyis():
@@ -84,6 +89,8 @@ def analyis():
     data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
     data['true_category'] = TweetTagCategory.query.get(the_tweet.category).name
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
+    data['robots'] = analysis.robots
+    data['any_robots?'] = len(data['robots']) > 0
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)

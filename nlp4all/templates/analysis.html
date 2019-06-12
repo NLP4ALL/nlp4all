@@ -42,4 +42,8 @@
             </div>
         </form>
     </div>
+{% if any_robots %}
+{% for r in robots %}
+{% endfor %}
+{% else %}no robots{% endif %}
 {% endblock content %}
