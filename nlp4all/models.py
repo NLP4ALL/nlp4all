@@ -161,7 +161,8 @@ class BayesianAnalysis(db.Model):
         preds = {}
         predictions = {}
         if self.data['counts'] == 0:
-            predictions = {word : {category : 0 for category in category_names} for word in words}
+            predictions = {c : {w : 0} for w in words for c in category_names}
+            # predictions = {word : {category : 0 for category in category_names} for word in words}
         else:
             for w in words: # only categorize each word once
                 preds[w] = {c : 0 for c in category_names}
@@ -177,4 +178,5 @@ class BayesianAnalysis(db.Model):
                         preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
                         predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
 
+        print (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
