@@ -91,8 +91,15 @@ def ajax():
 
 
 @app.route("/robot")
-def robot():
-    # first get user's robot associated with 
+def robot(methods=['GET', 'POST']):
+    # first get user's robot associated with
+    robot_id = request.args.get('robot', 0, type=int)
+    # find the analysis and check if it belongs to the user
+    robot = BayesianRobot.query.get(robot_id)
+    analysis = BayesianAnalysis.query.get(robot.analysis)
+    if analysis.user == current_user.id:
+        return render_template('robot.html', title='Robot ' + robot.name, r = robot)
+
     return render_template('robot.html', title='Robot')
 
 
@@ -122,7 +129,9 @@ def analyis():
     data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
     data['true_category'] = TweetTagCategory.query.get(the_tweet.category).name
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
-    data['robots'] = analysis.robots
+    # filter robots that are retired, and sort them alphabetically
+    robots = [r for r in analysis.robots if not r.retired]
+    data['robots'] = sorted(robots, key= lambda r: r.name)
     data['any_robots'] = len(data['robots']) > 0
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
