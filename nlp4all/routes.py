@@ -92,6 +92,7 @@ def ajax():
 
 @app.route("/robot")
 def robot():
+    # first get user's robot associated with 
     return render_template('robot.html', title='Robot')
 
 
@@ -123,8 +124,6 @@ def analyis():
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
     data['robots'] = analysis.robots
     data['any_robots'] = len(data['robots']) > 0
-    print(data['robots'])
-    print([r.name for r in data.get('robots')])
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
