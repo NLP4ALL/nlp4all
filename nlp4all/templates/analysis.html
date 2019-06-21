@@ -1,16 +1,10 @@
 {% extends "layout.html" %}
 
 {% block content %}
+{{ true_category }}
+<div class="content-section">
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
-</div>
-<style type="text/css">
-#chart {
-    margin-left:auto;margin-right:auto;width:50%;height:45%;
-}
-</style>
-<div class="content-section">
-{{ true_category }}
 </div>
 <div class="content-section">
 {% for tup in word_tuples %}
@@ -25,6 +19,14 @@
 {% endfor %}
 </style>
 </div>
+<style type="text/css">
+#chart {
+    margin-left:auto;margin-right:auto;width:50%;height:45%;
+}
+</style>
+<!-- <div class="content-section">
+{{ true_category }}
+</div> --> 
     <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
@@ -42,8 +44,36 @@
             </div>
         </form>
     </div>
+</div>
 {% if any_robots %}
 {% for r in robots %}
+<div class="content-section">
+{% include "robot.html" %}
+</div>
 {% endfor %}
 {% else %}no robots{% endif %}
+
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">{{ legend }}</legend>
+            <div class="form-group">
+                {{ robot_form.name.label(class="form-control-label") }}
+                {% if robot_form.name.errors %}
+                    {{ robot_form.name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in robot_form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ robot_form.name(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+        </fieldset>
+        <div class="form-group">
+            {{ form.submit(class="btn btn-outline-info") }}
+        </div>
+    </form>
+
 {% endblock content %}

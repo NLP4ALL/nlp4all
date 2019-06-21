@@ -11,6 +11,7 @@ def load_user(user_id):
 
 class BayesianRobot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(25))
     parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'))
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
     features = db.Column(JSON)

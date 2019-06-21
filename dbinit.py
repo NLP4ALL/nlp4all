@@ -10,7 +10,7 @@ import nlp4all.utils
 from sqlalchemy.orm.attributes import flag_modified
 
 db.drop_all()
-
+print("HEP")
 
 db.create_all()
 db.session.commit()
@@ -25,7 +25,7 @@ nlp4all.utils.add_role('Teacher')
 teacher_role = nlp4all.utils.get_role('Teacher')
 
 
-
+print("he")
 
 hp = bcrypt.generate_password_hash("***REMOVED***")
 user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", password=hp)
@@ -47,7 +47,7 @@ db.session.commit()
 
 data_dir = 'tweet_data/'
 files = [f for f in os.listdir(data_dir) if '_out.json' in f]
-
+print("reading in data")
 existing_tag_names = []
 for f in files:
     with open(data_dir+f) as inf:
@@ -61,7 +61,7 @@ for f in files:
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
             nlp4all.utils.add_tweet_from_dict(indict, category)
 
-
+print("creating orgs")
 
 
 org = Organization.query.first()
@@ -74,21 +74,37 @@ db.session.add(analysis)
 db.session.commit()
 
 # get 800 DF tweets and 800 EHl tweets and add them
+
+# list to store tags in
+tags = []
+print("DF")
 df_tweets = Tweet.query.filter_by(category = 1).all()
 df_cat = all_cats[0]
-for t in df_tweets[:1000]:
+for t in df_tweets[:800]:
+    # tag = TweetTag (category = 1, analysis = analysis.id, tweet=t.id)
+    # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
-
+print("EHL")
 ehl_cat = all_cats[2]
 ehl_tweets = Tweet.query.filter_by(category = 3).all()
-for t in ehl_tweets[:1000]:
+for t in ehl_tweets[:800]:
+    # tag = TweetTag (category = 2, analysis = analysis.id, tweet=t.id)
+    # tags.append(tag)
     analysis.data = analysis.updated_data(t, ehl_cat)
+
 
 flag_modified(analysis, "data")
 db.session.add(analysis)
 db.session.merge(analysis)
 db.session.flush()
 db.session.commit()
+
+
+
+
+# for t in tags:
+#     db.session.add(t)
+# db.session.commit()
 
 for c in TweetTagCategory.query.all():
     print(c.id, c.name) 

@@ -3,10 +3,10 @@ import secrets
 import nlp4all.utils
 from random import sample
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, abort
+from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import json
@@ -62,6 +62,32 @@ def project():
     return render_template('project.html', title='About', project=project, analyses=analyses, form=form)
 
 
+@app.route("/test", methods=['GET', 'POST'])
+def test():
+    names = ["test1", "danskdf1995", "test3"]
+    buttons = []
+    for name in names:
+        button = TagButton()
+        button.set_name(name)
+        buttons.append(button)
+    for b in buttons:
+        if b.validate_on_submit():
+            return render_template('test.html', title='Test', buttons=buttons)
+    return render_template('test.html', title='Test', buttons=buttons)
+
+
+@app.route('/_add_numbers')
+def add_numbers():
+    a = request.args.get('a', 0, type=int)
+    b = request.args.get('b', 0, type=int)
+    return jsonify(result=a + b)
+    
+@app.route("/ajax")
+def ajax():
+    a = request.args.get('a', 0, type=int)
+    b = request.args.get('b', 0, type=int)
+    number = a + b
+    return render_template('ajax.html', title='Test')
 
 @app.route("/about")
 def about():
@@ -83,6 +109,7 @@ def analyis():
     form = TaggingForm()
     form.choices.choices  = [( str(c.id), c.name ) for c in categories]
     number_of_tagged = len(analysis.tags)
+    new_robot_form = AddBayesianRobotForm()
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
@@ -90,7 +117,9 @@ def analyis():
     data['true_category'] = TweetTagCategory.query.get(the_tweet.category).name
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
     data['robots'] = analysis.robots
-    data['any_robots?'] = len(data['robots']) > 0
+    data['any_robots'] = len(data['robots']) > 0
+    print(data['robots'])
+    print([r.name for r in data.get('robots')])
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
@@ -104,7 +133,11 @@ def analyis():
         tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id)
         db.session.add(tag)
         db.session.commit()
-    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
+    if new_robot_form.validate_on_submit():
+            robot = BayesianRobot(name=new_robot_form.name.data, parent = None, analysis = analysis.id, features = [], accuracy = 0)
+            db.session.add(robot)
+            db.session.commit()
+    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, robot_form = new_robot_form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
