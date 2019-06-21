@@ -1,9 +1,10 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectMultipleField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectMultipleField, SelectField, RadioField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from nlp4all.models import User, Project
+from wtforms.fields.core import Label
 
 
 class RegistrationForm(FlaskForm):
@@ -28,9 +29,15 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('That email is taken. Please choose a different one.')
 
 class TaggingForm(FlaskForm):
+    # choices = RadioField()
     choices = SelectField("Which category does this tweet belong to?")
     submit = SubmitField("Submit")
 
+class TagButton(FlaskForm):
+    submit = SubmitField("This doesn't matter apparently")
+    
+    def set_name(self, new_name):
+        self.submit.label = Label("", new_name)
 
 class AddTweetCategoryForm(FlaskForm):
     twitter_handle = StringField('Twitter handle', validators=[DataRequired()])
@@ -61,6 +68,10 @@ class AddBayesianAnalysisForm(FlaskForm):
     name = StringField('Title of Analysis', validators=[DataRequired()])
     submit = SubmitField('Create Analysis')
 
+
+class AddBayesianRobotForm(FlaskForm):
+    name = StringField('Title of Robot', validators=[DataRequired()])
+    submit = SubmitField('Create New Robot')
 
 class UpdateAccountForm(FlaskForm):
     username = StringField('Username',

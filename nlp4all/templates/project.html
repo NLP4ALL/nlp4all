@@ -1,13 +1,24 @@
 {% extends "layout.html" %}
 {% block content %}
-  <h1>{{ project.name }} </h1>
+  <h1>Project Title: {{ project.name }} </h1>
+<br>
+<div class="content-section">
+<h2>My analyses on project {{ project.name }} </h2>
+{% for a in analyses %}
+
+<div class="content-section">
+<a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{a.id}}">{{a.name}}</a>
+</div>
+{% endfor %}
+</div>
 {% for p in projects %}
 <a class="nav-item nav-link" href="{{ url_for('project') }}?project={{ p.id }}">p.name</a>
 {% endfor %}
+<div class="content-section">
+<h2>Create New Analysis</h1>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
-            <legend class="border-bottom mb-4">{{ legend }}</legend>
             <div class="form-group">
                 {{ form.name.label(class="form-control-label") }}
                 {% if form.name.errors %}
@@ -26,9 +37,5 @@
             {{ form.submit(class="btn btn-outline-info") }}
         </div>
     </form>
-<h2>My analyses</h2>
-{% for a in analyses %}
-<a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{a.id}}">{{a.name}}</a>
-{% endfor %}
-
+</div>
 {% endblock content %}
