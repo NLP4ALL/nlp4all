@@ -9,6 +9,7 @@ from nlp4all import db
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
+    no_colors = 1 if no_colors == 0 else no_colors
     hsl_span = int(255 / no_colors)
     return[(hsl_span * n + offset, 50, 100 * transparency) for n in range(no_colors)]
 

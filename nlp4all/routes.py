@@ -84,10 +84,16 @@ def add_numbers():
     
 @app.route("/ajax")
 def ajax():
-    a = request.args.get('a', 0, type=int)
+    o = request.args.get('a', 0, type=int)
     b = request.args.get('b', 0, type=int)
     number = a + b
     return render_template('ajax.html', title='Test')
+
+
+@app.route("/robot")
+def robot():
+    return render_template('robot.html', title='Robot')
+
 
 @app.route("/about")
 def about():
@@ -95,7 +101,6 @@ def about():
 
 @app.route("/word")
 def word():
-    
     return render_template('word.html', title='Word examples')
 
 @app.route("/analysis", methods=['GET', 'POST'])
