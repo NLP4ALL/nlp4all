@@ -48,7 +48,7 @@
 {% if any_robots %}
 {% for r in robots %}
 <div class="content-section">
-{% include "robot.html" %}
+<h3><a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ r.id }}">{{ r.name }} </a></h3>
 </div>
 {% endfor %}
 {% else %}no robots{% endif %}

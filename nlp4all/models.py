@@ -16,6 +16,7 @@ class BayesianRobot(db.Model):
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
     features = db.Column(JSON)
     accuracy = db.Column(db.Float)
+    retired = db.Column(db.Boolean, default=False)
 
     def clone(self):
         new_robot = BayesianRobot()
@@ -162,7 +163,7 @@ class BayesianAnalysis(db.Model):
         predictions = {}
         if self.data['counts'] == 0:
             predictions = {c : {w : 0} for w in words for c in category_names}
-            # predictions = {word : {category : 0 for category in category_names} for word in words}
+            predictions = {word : {category : 0 for category in category_names} for word in words}
         else:
             for w in words: # only categorize each word once
                 preds[w] = {c : 0 for c in category_names}
