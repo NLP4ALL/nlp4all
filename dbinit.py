@@ -8,6 +8,8 @@ import time
 import json
 import nlp4all.utils
 from sqlalchemy.orm.attributes import flag_modified
+from random import shuffle
+
 
 db.drop_all()
 print("HEP")
@@ -52,7 +54,7 @@ existing_tag_names = []
 for f in files:
     with open(data_dir+f) as inf:
         counter = 0
-        for line in inf.readlines()[:1500]:
+        for line in inf.readlines():
             indict = json.loads(line)
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
             if not category:
@@ -80,17 +82,21 @@ tags = []
 print("DF")
 df_tweets = Tweet.query.filter_by(category = 1).all()
 df_cat = all_cats[0]
-for t in df_tweets[:800]:
+
+shuffle(df_tweets)
+for t in df_tweets[:1000]:
     # tag = TweetTag (category = 1, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
 print("EHL")
 ehl_cat = all_cats[2]
 ehl_tweets = Tweet.query.filter_by(category = 3).all()
-for t in ehl_tweets[:800]:
+shuffle(ehl_tweets)
+for t in ehl_tweets[:1000]:
     # tag = TweetTag (category = 2, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, ehl_cat)
+
 
 
 flag_modified(analysis, "data")

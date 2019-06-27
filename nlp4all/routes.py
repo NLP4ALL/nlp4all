@@ -96,10 +96,10 @@ def robot(methods=['GET', 'POST']):
     robot_id = request.args.get('robot', 0, type=int)
     # find the analysis and check if it belongs to the user
     robot = BayesianRobot.query.get(robot_id)
+
     analysis = BayesianAnalysis.query.get(robot.analysis)
     if analysis.user == current_user.id:
         return render_template('robot.html', title='Robot ' + robot.name, r = robot)
-
     return render_template('robot.html', title='Robot')
 
 
@@ -133,6 +133,7 @@ def analyis():
     robots = [r for r in analysis.robots if not r.retired]
     data['robots'] = sorted(robots, key= lambda r: r.name)
     data['any_robots'] = len(data['robots']) > 0
+    data['analysis_data'] = analysis.data
     if form.validate_on_submit():
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
