@@ -3,7 +3,7 @@ from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectMultipleField, SelectField, RadioField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from nlp4all.models import User, Project
+from nlp4all.models import User, Project 
 from wtforms.fields.core import Label
 
 
@@ -72,6 +72,12 @@ class AddBayesianAnalysisForm(FlaskForm):
 class AddBayesianRobotForm(FlaskForm):
     name = StringField('Title of Robot', validators=[DataRequired()])
     submit = SubmitField('Create New Robot')
+
+class AddBayesianRobotFeaturesForm(FlaskForm):
+    feature = StringField('Write a word that your robot will look for', validators=[DataRequired()])
+    reasoning = StringField("Why do you think that this ")
+    submit = SubmitField("Add Word")
+
 
 class UpdateAccountForm(FlaskForm):
     username = StringField('Username',

@@ -82,12 +82,14 @@ def clean_non_transparencynum(t):
         t = t.replace("“", " ")
         t = t.replace("?", " ")
         t = t.replace(":", " ")
+        t = t.replace("'", " ")
+        t = t.replace("-", " ")
         t = t.replace("/", " ")
-        # t = t.replace("-", " ")
-        # t = t.replace("–", " ")
+        t = t.replace("-", " ")
+        t = t.replace("–", " ")
         t = t.replace(",", " ")
-        t = t.replace("\(", " ")
-        t = t.replace("\)", " ")
+        t = t.replace("(", " ")
+        t = t.replace(")", " ")
         return(t.strip())# changed this, might not work!
 
 # We can get up to 3200 tweets per account at the time we do this. But we can get interrupted if twitter thinks we are being
@@ -190,7 +192,6 @@ def create_bar_chart_data(predictions, title=""):
                 d['bg_color'] = hsl_color_to_string(tup[3])
                 data_points.append(d)
         data['data_points'] = data_points
-        print(data_points)
         return(data)
 
 def hsl_color_to_string(hsltup):
