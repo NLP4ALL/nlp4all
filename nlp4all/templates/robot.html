@@ -1,5 +1,50 @@
 {% extends 'layout.html' %}
 {% block content %}
 <h5>{{ r.name }}</h5>
+<h6>Robotten kigger lige nu på disse ord:</h6>
+<table>
+<tr><th>Ord</th><th>Begrundelse</th>
+{% for f in r.features.items() %}
+<tr><td>{{ f[0] }}</td><td>{{ f[1] }}</td></tr>
+{% endfor %}
+</table>
+<h6>Tilfoej ny feature</h6>
 
+    <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Tilføj et nyt ord til din robot</legend>
+                <div class="form-group">
+                    {{ form.feature.label(class="form-control-label") }}
+                    {% if form.feature.errors %}
+                        {{ form.feature(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.feature.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.feature(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.reasoning.label(class="form-control-label") }}
+                    {% if form.reasoning.errors %}
+                        {{ form.reasoning(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.reasoning.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.reasoning(class="form-control ") }}
+                    {% endif %}
+                </div>
+
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
 {% endblock content %}

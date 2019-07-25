@@ -73,7 +73,7 @@ class AddBayesianRobotForm(FlaskForm):
     name = StringField('Title of Robot', validators=[DataRequired()])
     submit = SubmitField('Create New Robot')
 
-class AddBayesianRobotFeaturesForm(FlaskForm):
+class AddBayesianRobotFeatureForm(FlaskForm):
     feature = StringField('Write a word that your robot will look for', validators=[DataRequired()])
     reasoning = StringField("Why do you think that this ")
     submit = SubmitField("Add Word")

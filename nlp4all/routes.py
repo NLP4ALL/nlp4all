@@ -5,7 +5,7 @@ from random import sample
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
@@ -90,17 +90,25 @@ def ajax():
     return render_template('ajax.html', title='Test')
 
 
-@app.route("/robot")
-def robot(methods=['GET', 'POST']):
+@app.route("/robot", methods=['GET', 'POST'])
+def robot():
     # first get user's robot associated with
     robot_id = request.args.get('robot', 0, type=int)
     # find the analysis and check if it belongs to the user
     robot = BayesianRobot.query.get(robot_id)
-
+    form = AddBayesianRobotFeatureForm()
     analysis = BayesianAnalysis.query.get(robot.analysis)
-    if analysis.user == current_user.id:
-        return render_template('robot.html', title='Robot ' + robot.name, r = robot)
-    return render_template('robot.html', title='Robot')
+    if form.validate_on_submit():
+        new_feature = {form.feature.data : form.reasoning.data}
+        robot.features.update(new_feature)
+        flag_modified(robot, "features")
+        db.session.add(robot)
+        db.session.merge(robot)
+        db.session.flush()
+        db.session.commit()
+    # if analysis.user == current_user.id:
+    #     return render_template('robot.html', title='Robot ' + robot.name, r = robot)
+    return render_template('robot.html', title='Robot', r = robot, form = form)
 
 
 @app.route("/about")
@@ -134,7 +142,9 @@ def analyis():
     data['robots'] = sorted(robots, key= lambda r: r.name)
     data['any_robots'] = len(data['robots']) > 0
     data['analysis_data'] = analysis.data
-    if form.validate_on_submit():
+    print(request.form)
+    if form.validate_on_submit() and form.data:
+        print(form.data)
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
         ## all this  stuff is necessary  because the database backend doesnt resgister
@@ -147,8 +157,8 @@ def analyis():
         tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id)
         db.session.add(tag)
         db.session.commit()
-    if new_robot_form.validate_on_submit():
-            robot = BayesianRobot(name=new_robot_form.name.data, parent = None, analysis = analysis.id, features = [], accuracy = 0)
+    elif new_robot_form.validate_on_submit():
+            robot = BayesianRobot(name=new_robot_form.name.data, parent = None, analysis = analysis.id, features = {}, accuracy = 0)
             db.session.add(robot)
             db.session.commit()
     return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, robot_form = new_robot_form, **data)
