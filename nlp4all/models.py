@@ -24,6 +24,14 @@ class BayesianRobot(db.Model):
         new_robot.features = self.features
         new_robot.parent = self
         return(new_robot)
+    
+    # def run_analysis(self):
+    def get_analysis():
+        return BayesianAnalysis.query.get(self.analysis)
+
+    def calculate_accuracy():
+        return BayesianAnalysis.query.get(self.analysis).full_data
+        # get the whole set
 
 
 class User(db.Model, UserMixin):
@@ -106,6 +114,10 @@ class Project(db.Model):
     analyses = db.relationship('BayesianAnalysis')
     categories = db.relationship('TweetTagCategory', secondary='project_categories')
 
+    def get_tweets(self):
+        return [t for cat in categories for t in cat.tweets]
+
+
 class TweetTagCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
@@ -141,8 +153,12 @@ class BayesianAnalysis(db.Model):
     tags = db.relationship('TweetTag') # this also tells us which tweets
     # have already been tagged
     data = db.Column(JSON)
+    # full_data = db.Column(JSON)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')
+
+    def get_project(self):
+        return Project.query.get(self.project)
 
     def updated_data(self, tweet, category):
         self.data['counts'] = self.data['counts'] + 1

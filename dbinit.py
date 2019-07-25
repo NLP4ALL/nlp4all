@@ -53,7 +53,6 @@ print("reading in data")
 existing_tag_names = []
 for f in files:
     with open(data_dir+f) as inf:
-        counter = 0
         for line in inf.readlines():
             indict = json.loads(line)
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
@@ -84,7 +83,7 @@ df_tweets = Tweet.query.filter_by(category = 1).all()
 df_cat = all_cats[0]
 
 shuffle(df_tweets)
-for t in df_tweets[:1000]:
+for t in df_tweets[:300]:
     # tag = TweetTag (category = 1, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
@@ -92,7 +91,7 @@ print("EHL")
 ehl_cat = all_cats[2]
 ehl_tweets = Tweet.query.filter_by(category = 3).all()
 shuffle(ehl_tweets)
-for t in ehl_tweets[:1000]:
+for t in ehl_tweets[:300]:
     # tag = TweetTag (category = 2, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, ehl_cat)
