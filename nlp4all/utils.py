@@ -129,11 +129,23 @@ def add_category(name, description):
         db.session.commit()
 
 def add_project(name, description, org, cat_ids):
-        cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cats)).all()
+        cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
         tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-        project = Project(name = name, organization = org, categories = cats, tweets = tweet_objs)
+        tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
+        project = Project(name = name, organization = org, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf)
         db.session.add(project)
         db.session.commit()
+
+def tf_idf_from_tweets_and_cats_objs(tweets, cats):
+        tf_idf = {}
+        tf_idf['total_tweets'] = len(tweets)
+        cat_ids = [c.id for c in cats]
+        for cat_id in cat_ids:
+                tf_idf[cat_id] = {}
+                cat_tweets = [t.id for t in tweets if t.cat == cat_id]
+                tf_idf[cat_id]['tweet_ids'] = cat_tweets
+                tf_idf[cat_id]['cat_count'] = len(cat_tweets)
+        return tf_idf
 
 def twitter_date_to_unix(date_str):
         date_rep = '%a %b %d %H:%M:%S %z %Y'
