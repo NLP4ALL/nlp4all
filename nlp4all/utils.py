@@ -139,12 +139,16 @@ def add_project(name, description, org, cat_ids):
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
         tf_idf = {}
         tf_idf['total_tweets'] = len(tweets)
-        cat_ids = [c.id for c in cats]
-        for cat_id in cat_ids:
-                tf_idf[cat_id] = {}
-                cat_tweets = [t.id for t in tweets if t.cat == cat_id]
-                tf_idf[cat_id]['tweet_ids'] = cat_tweets
-                tf_idf[cat_id]['cat_count'] = len(cat_tweets)
+        all_words = sorted(list(set([word for t in tweets for word in t.words])))
+        cat_tups = [(c.id, c.name) for c in cats]
+        for cat_tup in cat_tups:
+                tf_idf[cat_tup[0]] = {}
+                tf_idf[cat_tup[0]]['name'] = cat_tup[1]
+                cat_tweets = [t.id for t in tweets if t.category == cat_tup[0]]
+                tf_idf[cat_tup[0]]['tweet_ids'] = cat_tweets
+                tf_idf[cat_tup[0]]['cat_count'] = len(cat_tweets)
+                for word in all_words:
+                        tf_idf[cat_tup[0]][word] = [t.id for t in tweets if word in t.words]
         return tf_idf
 
 def twitter_date_to_unix(date_str):
