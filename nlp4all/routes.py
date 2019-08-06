@@ -124,7 +124,8 @@ def analyis():
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
-    tweets = [t for cat in categories for t in cat.tweets]
+    # tweets = [t for cat in categories for t in cat.tweets]
+    tweets = project.tweets
     the_tweet = sample(tweets, 1)[0]
     form = TaggingForm()
     form.choices.choices  = [( str(c.id), c.name ) for c in categories]
