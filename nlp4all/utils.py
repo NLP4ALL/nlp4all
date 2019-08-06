@@ -128,8 +128,10 @@ def add_category(name, description):
         db.session.add(category)
         db.session.commit()
 
-def add_project(name, org, cats):
-        project = Project(name = name, organization = org, categories = cats)
+def add_project(name, description, org, cat_ids):
+        cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cats)).all()
+        tweet_objs = [t for cat in cats_objs for t in cat.tweets]
+        project = Project(name = name, organization = org, categories = cats, tweets = tweet_objs)
         db.session.add(project)
         db.session.commit()
 

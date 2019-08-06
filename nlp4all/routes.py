@@ -34,8 +34,7 @@ def add_project():
         # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
         org = Organization.query.get(int(form.organization.data))
         cats = [int(n) for n in form.categories.data]
-        cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cats)).all()
-        new_project = Project(name=form.title.data, description=form.description.data, organization=org.id, categories=cats_objs)
+        utils.add_project(name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats)
         db.session.add(new_project)
         db.session.commit()
         flash('New Project Created!', 'success')
