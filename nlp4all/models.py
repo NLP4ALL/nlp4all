@@ -183,7 +183,7 @@ class BayesianAnalysis(db.Model):
     def get_predictions_and_words(self, words):
         # take each word  and  calculate a probabilty for each category
         categories = Project.query.get(self.project).categories
-        category_names = [c.name for c in categories if  c.name in self.data.keys()]
+        category_names = [c.name for c in categories if c.name in self.data.keys()]
         preds = {}
         predictions = {}
         if self.data['counts'] == 0:
