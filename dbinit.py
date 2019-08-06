@@ -54,9 +54,9 @@ existing_tag_names = []
 for f in files:
     print(f)
     with open(data_dir+f) as inf:
-        # lines = [line for line in inf.readlines()]
-        # for line in lines[:200]:
-        for line in inf.readlines():
+        lines = [line for line in inf.readlines()]
+        for line in lines[:200]:
+        # for line in inf.readlines():
             indict = json.loads(line)
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
             if not category:
@@ -70,7 +70,7 @@ print("creating orgs")
 
 org = Organization.query.first()
 all_cats = TweetTagCategory.query.all()
-cat_ids = [0, 2]
+cat_ids = [5, 6]
 nlp4all.utils.add_project(name="DF og EL", description="Kan du kende forskel på DF og Enhedslisten?", org = org.id, cat_ids = cat_ids)
 
 analysis = BayesianAnalysis(user = 2, name="Test Analysis", project=1, data = {"counts" : 0, "words" : {}})
