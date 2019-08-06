@@ -78,21 +78,19 @@ db.session.add(analysis)
 db.session.commit()
 
 # get 800 DF tweets and 800 EHl tweets and add them
-
+cat_names = [c.name for c in all_cats]
 # list to store tags in
 tags = []
-print("DF")
-df_tweets = Tweet.query.filter_by(category = 1).all()
-df_cat = all_cats[0]
+df_cat = all_cats[cat_names.index('danskdf1995')]
+df_tweets = Tweet.query.filter_by(category = df_cat.id).all()
 
 shuffle(df_tweets)
 for t in df_tweets[:300]:
     # tag = TweetTag (category = 1, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
-print("EHL")
-ehl_cat = all_cats[2]
-ehl_tweets = Tweet.query.filter_by(category = 3).all()
+ehl_cat = all_cats[cat_names.index('enhedslisten')]
+ehl_tweets = Tweet.query.filter_by(category = ehl_cat.id).all()
 shuffle(ehl_tweets)
 for t in ehl_tweets[:300]:
     # tag = TweetTag (category = 2, analysis = analysis.id, tweet=t.id)
