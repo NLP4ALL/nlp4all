@@ -82,6 +82,13 @@ class UserOrgs(db.Model):
     role_id = db.Column(db.Integer(), db.ForeignKey('organization.id', ondelete='CASCADE'))
 
 
+# Define the Tweet-Project association table
+class TweetProject(db.Model):
+    __tablename__ = 'tweet_project'
+    id = db.Column(db.Integer(), primary_key=True)
+    tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
+    project = db.Column(db.Integer(), db.ForeignKey('project.id', ondelete='CASCADE'))
+
 # Define the UserRoles association table
 class UserRoles(db.Model):
     __tablename__ = 'user_roles'
@@ -113,6 +120,8 @@ class Project(db.Model):
     organization = db.Column(db.Integer, db.ForeignKey('organization.id'))
     analyses = db.relationship('BayesianAnalysis')
     categories = db.relationship('TweetTagCategory', secondary='project_categories')
+    tf_idf = db.Column(JSON)
+    tweets = db.relationship('Tweet', secondary='tweet_project')
 
     def get_tweets(self):
         return [t for cat in categories for t in cat.tweets]
@@ -130,6 +139,7 @@ class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     time_posted = db.Column(db.DateTime)
     category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    projects = db.Column(db.Integer, db.ForeignKey('project.id'))
     handle = db.Column(db.String(15))
     full_text = db.Column(db.String(280))
     words = db.Column(JSON)
