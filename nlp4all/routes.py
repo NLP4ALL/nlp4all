@@ -34,9 +34,7 @@ def add_project():
         # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
         org = Organization.query.get(int(form.organization.data))
         cats = [int(n) for n in form.categories.data]
-        utils.add_project(name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats)
-        db.session.add(new_project)
-        db.session.commit()
+        nlp4all.utils.add_project(name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats)
         flash('New Project Created!', 'success')
     return render_template('add_project.html', title='Add New Project', form=form)
 
