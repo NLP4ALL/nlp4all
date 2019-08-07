@@ -29,10 +29,28 @@ class BayesianRobot(db.Model):
     def get_analysis():
         return BayesianAnalysis.query.get(self.analysis)
 
-    def calculate_accuracy():
-        return BayesianAnalysis.query.get(self.analysis).full_data
-        # get the whole set
+    def is_word_in_features(word):
+        for f in self.features:
+            feature_string = f['feature_string'].lower()
+            if feature_string.begins_with('*') and feature_string.ends_with('*'):
+                return feature_string[1:-1] in word
+            if feature_string.begins_with('*'):
+                return word.ends_with(feature_string[1:])
+            if feature_string.ends_with('*'):
+                return word.begins_with(feature_string[:1])
+            else:
+                return word == feature_string 
 
+    def calculate_accuracy():
+        tf_idf = self.analysis.project.tf_idf
+        tnt_sets = self.analysis.project.training_and_test_sets
+        # tweets = self.analysis.project.tweets
+        words_in_corpus = set([word for category in tf_idf for word in tf_idf[category]])
+        matched_words = [word for word in words_in_corpus if is_word_in_features(word.lower())]
+        
+        
+        # get the whole set
+    
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
