@@ -7,6 +7,7 @@ import time
 import operator
 from nlp4all import db
 from math import random
+import random
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -132,19 +133,23 @@ def add_category(name, description):
 def add_project(name, description, org, cat_ids):
         cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
         tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-        tweet_ids = [t.id for t in tweet_objs]
         tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-        training_and_test_sets = create_n_train_and_test_sets(30, tweet_ids)
+        tweet_id_and_cat = [(t.id, t.category) for t in tweet_objs]
+        training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
         project = Project(name = name, organization = org, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
         db.session.add(project)
         db.session.commit()
 
-def create_n_train_and_test_sets(n, alist):
+def create_n_train_and_test_sets(n, list_of_tweets):
+        # takes a list of tups each containing a tweet_id and tweet_category
         return_list = []
         half = len(alist) / 2
+        half = int(len(list_of_tweets) / 2)
         for n in range(n):
                 random.shuffle(alist)
                 return_list.append( (alist[0:half]), alist[half:])
+                random.shuffle(list_of_tweets)
+                return_list.append( (list_of_tweets[0:half], list_of_tweets[half:]))
         return return_list
 
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
