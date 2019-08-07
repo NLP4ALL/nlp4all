@@ -149,7 +149,6 @@ def create_n_train_and_test_sets(n, alist):
 
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
         tf_idf = {}
-        tf_idf['total_tweets'] = len(tweets)
         all_words = sorted(list(set([word for t in tweets for word in t.words])))
         cat_tups = [(c.id, c.name) for c in cats]
         for cat_tup in cat_tups:
