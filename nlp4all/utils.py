@@ -6,7 +6,6 @@ from datetime import datetime
 import time
 import operator
 from nlp4all import db
-from math import random
 import random
 
 
@@ -143,11 +142,8 @@ def add_project(name, description, org, cat_ids):
 def create_n_train_and_test_sets(n, list_of_tweets):
         # takes a list of tups each containing a tweet_id and tweet_category
         return_list = []
-        half = len(alist) / 2
         half = int(len(list_of_tweets) / 2)
         for n in range(n):
-                random.shuffle(alist)
-                return_list.append( (alist[0:half]), alist[half:])
                 random.shuffle(list_of_tweets)
                 return_list.append( (list_of_tweets[0:half], list_of_tweets[half:]))
         return return_list
