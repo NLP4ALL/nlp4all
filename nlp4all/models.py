@@ -122,6 +122,7 @@ class Project(db.Model):
     categories = db.relationship('TweetTagCategory', secondary='project_categories')
     tf_idf = db.Column(JSON)
     tweets = db.relationship('Tweet', secondary='tweet_project')
+    training_and_test_sets = db.Column(JSON)
 
     def get_tweets(self):
         return [t for cat in categories for t in cat.tweets]
