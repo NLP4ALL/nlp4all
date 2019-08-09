@@ -96,7 +96,7 @@ def robot():
     form = AddBayesianRobotFeatureForm()
     analysis = BayesianAnalysis.query.get(robot.analysis)
     if form.validate_on_submit():
-        new_feature = {"feature" : form.feature.data, "reasoning" : form.reasoning.data}
+        new_feature = {"feature_string" : form.feature.data, "reasoning" : form.reasoning.data}
         robot.features.update(new_feature)
         flag_modified(robot, "features")
         db.session.add(robot)

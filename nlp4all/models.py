@@ -47,7 +47,10 @@ class BayesianRobot(db.Model):
         # tweets = self.analysis.project.tweets
         words_in_corpus = set([word for category in tf_idf for word in tf_idf[category]])
         matched_words = [word for word in words_in_corpus if is_word_in_features(word.lower())]
-        
+        target_words = []
+        for [category.id for category in self.analysis.project.categories]:
+            for word in matched_words:
+                target_words.append(target_words[word])
         
         # get the whole set
     
