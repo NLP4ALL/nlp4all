@@ -70,7 +70,9 @@ print("creating orgs")
 
 org = Organization.query.first()
 all_cats = TweetTagCategory.query.all()
-cat_ids = [5, 6]
+df_cat = all_cats[cat_names.index('danskdf1995')]
+ehl_cat = all_cats[cat_names.index('enhedslisten')]
+cat_ids = [df_cat, ehl_cat]
 nlp4all.utils.add_project(name="DF og EL", description="Kan du kende forskel på DF og Enhedslisten?", org = org.id, cat_ids = cat_ids)
 
 analysis = BayesianAnalysis(user = 2, name="Test Analysis", project=1, data = {"counts" : 0, "words" : {}})
@@ -82,6 +84,7 @@ cat_names = [c.name for c in all_cats]
 # list to store tags in
 tags = []
 df_cat = all_cats[cat_names.index('danskdf1995')]
+print("df_cat.name:",df_cat.name)
 df_tweets = Tweet.query.filter_by(category = df_cat.id).all()
 
 shuffle(df_tweets)
@@ -90,10 +93,11 @@ for t in df_tweets[:300]:
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
 ehl_cat = all_cats[cat_names.index('enhedslisten')]
+print("ehl_cat.name",ehl_cat.name)
 ehl_tweets = Tweet.query.filter_by(category = ehl_cat.id).all()
 shuffle(ehl_tweets)
 for t in ehl_tweets[:300]:
-    # tag = TweetTag (category = 2, analysis = analysis.id, tweet=t.id)
+    # tag = TweetTag (category = 2, ansdffggalysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, ehl_cat)
 
