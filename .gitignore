@@ -1,6 +1,7 @@
 .gitignore
 tweet_data/
 data/
+venv/
 .vscode/
 test/bin
 test/include

@@ -6,7 +6,7 @@ from datetime import datetime
 import time
 import operator
 from nlp4all import db
-import random
+import random, itertools
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -130,36 +130,44 @@ def add_category(name, description):
         db.session.commit()
 
 def add_project(name, description, org, cat_ids):
+        print(description)
         cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
         tweet_objs = [t for cat in cats_objs for t in cat.tweets]
         tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-        tweet_id_and_cat = [(t.id, t.category) for t in tweet_objs]
+        tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
         training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
-        project = Project(name = name, organization = org, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
+        project = Project(name = name, description = description, organization = org, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
         db.session.add(project)
         db.session.commit()
+        return(project)
 
-def create_n_train_and_test_sets(n, list_of_tweets):
+def create_n_train_and_test_sets(n, dict_of_tweets_and_cats):
         # takes a list of tups each containing a tweet_id and tweet_category
         return_list = []
-        half = int(len(list_of_tweets) / 2)
+        half = int(len(dict_of_tweets_and_cats) / 2)
         for n in range(n):
-                random.shuffle(list_of_tweets)
-                return_list.append( (list_of_tweets[0:half], list_of_tweets[half:]))
+                d1, d2 = split_dict(dict_of_tweets_and_cats)
+                return_list.append( (d1, d2) )
         return return_list
+
+
+def split_dict(adict):
+        keys = list(adict.keys())
+        n = len(keys) // 2
+        random.shuffle(keys)
+        return ( { k : adict[k] for k in keys[:n] } , { k : adict[k] for k in keys[n:] } )
 
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
         tf_idf = {}
+        tf_idf['cat_counts'] = { cat.id : 0 for cat in cats}
+        tf_idf['words'] = {}
         all_words = sorted(list(set([word for t in tweets for word in t.words])))
-        cat_tups = [(c.id, c.name) for c in cats]
-        for cat_tup in cat_tups:
-                tf_idf[cat_tup[0]] = {}
-                tf_idf[cat_tup[0]]['name'] = cat_tup[1]
-                cat_tweets = [t.id for t in tweets if t.category == cat_tup[0]]
-                tf_idf[cat_tup[0]]['tweet_ids'] = cat_tweets
-                tf_idf[cat_tup[0]]['cat_count'] = len(cat_tweets)
-                for word in all_words:
-                        tf_idf[cat_tup[0]][word] = [t.id for t in tweets if word in t.words]
+        for tweet in tweets:
+                tf_idf['cat_counts'][tweet.category] = tf_idf['cat_counts'][tweet.category] + 1
+                for word  in tweet.words:
+                        the_list = tf_idf['words'].get(word, [])
+                        the_list.append((tweet.id, tweet.category))
+                        tf_idf['words'][word] = the_list
         return tf_idf
 
 def twitter_date_to_unix(date_str):

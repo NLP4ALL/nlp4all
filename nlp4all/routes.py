@@ -11,6 +11,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import json
 from sqlalchemy.orm.attributes import flag_modified
+import nlp4all.utils
 
 
 @app.route("/")
@@ -34,8 +35,9 @@ def add_project():
         # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
         org = Organization.query.get(int(form.organization.data))
         cats = [int(n) for n in form.categories.data]
-        nlp4all.utils.add_project(name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats)
-        flash('New Project Created!', 'success')
+        project = nlp4all.utils.add_project(name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats)
+        project_id = project.id
+        return(redirect(url_for('home', project=project_id)))
     return render_template('add_project.html', title='Add New Project', form=form)
 
 @app.route("/project", methods=['GET', "POST"])
@@ -44,6 +46,7 @@ def project():
     project = Project.query.get(project_id)
     form = AddBayesianAnalysisForm()
     analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project_id).all()
+
     if form.validate_on_submit():
         userid = current_user.id
         name = form.name.data
@@ -93,10 +96,11 @@ def robot():
     robot_id = request.args.get('robot', 0, type=int)
     # find the analysis and check if it belongs to the user
     robot = BayesianRobot.query.get(robot_id)
+    BayesianRobot.calculate_accuracy(robot)
     form = AddBayesianRobotFeatureForm()
     analysis = BayesianAnalysis.query.get(robot.analysis)
     if form.validate_on_submit():
-        new_feature = {"feature_string" : form.feature.data, "reasoning" : form.reasoning.data}
+        new_feature = {form.feature.data : form.reasoning.data}
         robot.features.update(new_feature)
         flag_modified(robot, "features")
         db.session.add(robot)
@@ -118,9 +122,24 @@ def word():
 
 @app.route("/analysis", methods=['GET', 'POST'])
 def analyis():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
+    ## check if user has access to this.
+    ## either it is a shared project. In that case the user needs to be a member of 
+    # projects.organization
+    # or it is not a shared project, in which case the user must be the owner.
+    owned = False
+    if analysis.shared :
+        if project.organization in current_user.organizations:
+            owned = True
+    else:
+        if analysis.user == current_user.id or current_user.admin:#or current_user.
+            owned = True
+    if owned == False:
+        return redirect(url_for('home'))
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
     tweets = project.tweets
     the_tweet = sample(tweets, 1)[0]
@@ -134,11 +153,15 @@ def analyis():
     data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
     data['true_category'] = TweetTagCategory.query.get(the_tweet.category).name
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
+    print(data['chart_data'])
     # filter robots that are retired, and sort them alphabetically
     robots = [r for r in analysis.robots if not r.retired]
     data['robots'] = sorted(robots, key= lambda r: r.name)
     data['any_robots'] = len(data['robots']) > 0
     data['analysis_data'] = analysis.data
+    data['user'] = current_user
+    data['user_role'] = current_user.roles
+
     if form.validate_on_submit() and form.data:
         category = TweetTagCategory.query.get(int(form.choices.data))
         analysis.data = analysis.updated_data(the_tweet, category)
@@ -149,7 +172,7 @@ def analyis():
         db.session.merge(analysis)
         db.session.flush()
         db.session.commit()
-        tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id)
+        tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id, user = current_user.id)
         db.session.add(tag)
         db.session.commit()
     elif new_robot_form.validate_on_submit():
