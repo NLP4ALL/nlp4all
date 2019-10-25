@@ -30,7 +30,7 @@ teacher_role = nlp4all.utils.get_role('Teacher')
 print("he")
 
 hp = bcrypt.generate_password_hash("***REMOVED***")
-user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", password=hp)
+user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", password=hp, admin = True)
 user.roles = [admin_role,]
 db.session.add(user)
 
@@ -55,7 +55,7 @@ for f in files:
     print(f)
     with open(data_dir+f) as inf:
         lines = [line for line in inf.readlines()]
-        for line in lines[:200]:
+        for line in lines[:800]:
         # for line in inf.readlines():
             indict = json.loads(line)
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
@@ -88,7 +88,7 @@ print("df_cat.name:",df_cat.name)
 df_tweets = Tweet.query.filter_by(category = df_cat.id).all()
 
 shuffle(df_tweets)
-for t in df_tweets[:300]:
+for t in df_tweets[:1500]:
     # tag = TweetTag (category = 1, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
@@ -96,7 +96,7 @@ ehl_cat = all_cats[cat_names.index('enhedslisten')]
 print("ehl_cat.name",ehl_cat.name)
 ehl_tweets = Tweet.query.filter_by(category = ehl_cat.id).all()
 shuffle(ehl_tweets)
-for t in ehl_tweets[:300]:
+for t in ehl_tweets[:1500]:
     # tag = TweetTag (category = 2, ansdffggalysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, ehl_cat)
