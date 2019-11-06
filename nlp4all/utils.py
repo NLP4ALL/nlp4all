@@ -7,6 +7,7 @@ import time
 import operator
 from nlp4all import db
 import random, itertools
+from nlp4all.models import BayesianAnalysis
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -128,6 +129,31 @@ def add_category(name, description):
         category = TweetTagCategory(name = name, description = description)
         db.session.add(category)
         db.session.commit()
+
+
+def  get_user_project_analyses(a_user, a_project):
+        if a_user.admin:
+                return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
+        else:
+                analyses = []
+                all_project_analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
+                return [a for a in all_project_analyses if a.shared or a.user == a_user.id]
+
+
+def  get_user_projects(a_user):
+        # people have access to projects iif they are part of the organizatioin of those 
+        # projects, or  because the user is an admiin
+        my_projects = []
+        if a_user.admin:
+                my_projects = Project.query.all()
+        else:
+                print("not admin")
+                user_orgs = [org.id for org in a_user.organizations]
+                print(user_orgs)
+                my_projects = Project.query.filter(Project.organization.in_(user_orgs)).all()
+                print([p.organization for p in Project.query.all()])
+        
+        return(my_projects)
 
 def add_project(name, description, org, cat_ids):
         print(description)

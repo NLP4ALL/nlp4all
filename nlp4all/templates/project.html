@@ -32,6 +32,25 @@
                     {{ form.name(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
+
+                <div class="form-check">
+                    {{ form.shared(class="form-check-input") }}
+                    {{ form.shared.label(class="form-check-label") }}
+                </div>
+            <div class="form-group">
+                {{ form.number.label(class="form-control-label") }}
+                {% if form.number.errors %}
+                    {{ form.number(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.number.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.number(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+
         </fieldset>
         <div class="form-group">
             {{ form.submit(class="btn btn-outline-info") }}

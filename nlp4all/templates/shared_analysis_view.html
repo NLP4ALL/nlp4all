@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section" id="chart">
+{% include "bar_chart.html" %}
+</div>
+{% for word in word_info %}
+<p>{{ word[0] }}: Antal tweets, {{ word[1]['counts']}}
+
+</p>
+{% endfor %}
+{% for tweet in tweets %}
+<div class="content-section">
+<p>Kategori: {{ tweet[1].category}}. Korrekt: {{ tweet[1]["%"]}}% </p>
+{{ tweet[1].full_text}}
+</div>
+{% endfor %}
+{% endblock content %}

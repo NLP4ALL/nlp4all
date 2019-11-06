@@ -36,6 +36,10 @@ user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", passwor
 user.roles = [admin_role,]
 db.session.add(user)
 
+org = Organization(name="Aarhus Statsgymnasium")
+db.session.add(org)
+db.session.commit()
+
 org = Organization(name="UBI/CCTD")
 db.session.add(org)
 db.session.commit()
