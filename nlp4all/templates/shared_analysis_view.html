@@ -3,6 +3,7 @@
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
 </div>
+
 {% for word in word_info %}
 <p>{{ word[0] }}: Antal tweets, {{ word[1]['counts']}}
 
@@ -15,3 +16,9 @@
 </div>
 {% endfor %}
 {% endblock content %}
+
+<script>
+$(document).ready( function () {
+    $('#table_id').DataTable();
+} );
+</script>
