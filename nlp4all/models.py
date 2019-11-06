@@ -244,7 +244,7 @@ class BayesianAnalysis(db.Model):
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
-    tweets = db.Column(JSON)
+    tweets = db.Column(JSON, default=[])
 
     def get_project(self):
         return Project.query.get(self.project)

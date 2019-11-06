@@ -1,28 +1,25 @@
 import os
 import secrets
 import nlp4all.utils
-from random import sample
+from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import json
 from sqlalchemy.orm.attributes import flag_modified
-import nlp4all.utils
+from nlp4all.utils import get_user_projects, get_user_project_analyses
 
 
 @app.route("/")
 @app.route("/home")
 @login_required
 def home():
-    page = request.args.get('page', 1, type=int)
-    user_orgs = [org.id for org in current_user.organizations]
-    my_projects = Project.query.filter(Project.organization.in_(user_orgs)).all()
+    my_projects = get_user_projects(current_user) 
     return render_template('home.html', projects=my_projects)
-
 
 @app.route("/add_project", methods=['GET', 'POST'])
 def add_project():
@@ -46,16 +43,20 @@ def project():
     project = Project.query.get(project_id)
     form = AddBayesianAnalysisForm()
     analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project_id).all()
-
+    analyses = nlp4all.utils.get_user_project_analyses(current_user, project)
     if form.validate_on_submit():
         userid = current_user.id
         name = form.name.data
-        filters = []
-        features = []
-        filters = json.dumps([])
-        features = json.dumps([])
-        tags = project.categories
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}})
+        number_per_category = form.number.data
+        analysis_tweets = [] 
+        if form.shared.data:
+            tweets_by_cat = {cat : [t.id for t in project.tweets if t.category == cat.id] for cat in project.categories}
+            for cat, tweets in tweets_by_cat.items():
+                analysis_tweets.extend(sample(tweets, number_per_category))
+        # make sure all students see tweets in the same order. So shuffle them now, and then 
+        # put them in the database
+        shuffle(analysis_tweets)
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets )
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -111,6 +112,45 @@ def robot():
     #     return render_template('robot.html', title='Robot ' + robot.name, r = robot)
     return render_template('robot.html', title='Robot', r = robot, form = form)
 
+@app.route("/shared_analysis_view", methods=['GET', 'POST'])
+def shared_analysis_view():
+    analysis_id = request.args.get('analysis', 0, type=int)
+    tweet_info = {}
+    if analysis_id != 0:
+        analysis = BayesianAnalysis.query.get(analysis_id)
+        if not analysis.shared:
+            return(redirect(url_for('home')))
+        tweet_info = {t : {"correct": 0, "incorrect" : 0} for t in analysis.tweets}
+        for tag in analysis.tags:
+            tweet = Tweet.query.get(tag.tweet)
+            tweet_info[tweet.id]["full_text"] = tweet.full_text
+            tweet_info[tweet.id]["words"] = tweet.words
+            tweet_info[tweet.id]["category"] = TweetTagCategory.query.get(tweet.category).name
+            if tweet.category == tag.category:
+                tweet_info[tweet.id]["correct"]  = tweet_info[tweet.id]["correct"]   + 1
+            else:
+                tweet_info[tweet.id]["incorrect"]  = tweet_info[tweet.id]["incorrect"]   + 1
+        for tweet_id in tweet_info.keys():
+            tweet_info[tweet_id].update({"%": (tweet_info[tweet_id]["correct"] / (tweet_info[tweet_id]["incorrect"] + tweet_info[tweet_id]["correct"])) * 100})
+    # print(tweet_info)
+    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["%"], reverse=True)
+    data={}
+    percent_values = [d[1]["%"] for d in tweet_info]
+    percent_counts = [{'label' : str(percent), 'estimate' : percent_values.count(percent)} for percent in set(percent_values)]
+    for d in percent_counts:
+        color = float(d['label']) / 100 * 120
+        color = int(color)
+        d.update({'color' : f"hsl({color}, 50%, 70%)", 'bg_color' : f"hsl({color}, 50%, 70%)"})
+    chart_data = {'title' : 'Antal korrekte', 'data_points' : percent_counts}
+    data['chart_data'] = chart_data
+    words = [word for x in tweet_info for word in x[1]["words"]]
+    pred_by_word, data['predictions'] = analysis.get_predictions_and_words(set(words))
+    word_info = {word : {'predictions' : pred_by_word[word], 'counts' : words.count(word)} for word in set(words)}
+    print([w for w in word_info.items()])
+    sorted_word_info = sorted([w for w in word_info.items()], key=lambda x: x[1]['counts'], reverse=True)
+    return render_template('shared_analysis_view.html', title='Oversigt over analyse', tweets = tweet_info, word_info = sorted_word_info, **data)
+
+
 
 @app.route("/about")
 def about():
@@ -133,7 +173,7 @@ def analyis():
     # or it is not a shared project, in which case the user must be the owner.
     owned = False
     if analysis.shared :
-        if project.organization in current_user.organizations:
+        if project.organization in [org.id for org in current_user.organizations]:
             owned = True
     else:
         if analysis.user == current_user.id or current_user.admin:#or current_user.
@@ -142,7 +182,18 @@ def analyis():
         return redirect(url_for('home'))
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
     tweets = project.tweets
-    the_tweet = sample(tweets, 1)[0]
+    the_tweet = None
+    if analysis.shared:
+        completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
+        uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        if(len(uncompleted_tweets) > 0):
+            the_tweet_id = uncompleted_tweets[0]
+            the_tweet = Tweet.query.get(the_tweet_id)
+        else:
+            flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
+            the_tweet = Tweet(full_text = "", words = [])
+    else:
+        the_tweet = sample(tweets, 1)[0]
     form = TaggingForm()
     form.choices.choices  = [( str(c.id), c.name ) for c in categories]
     number_of_tagged = len(analysis.tags)
@@ -151,8 +202,7 @@ def analyis():
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
     data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
-    data['true_category'] = TweetTagCategory.query.get(the_tweet.category).name
-    data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Sammenligning")
+    data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
     print(data['chart_data'])
     # filter robots that are retired, and sort them alphabetically
     robots = [r for r in analysis.robots if not r.retired]
@@ -175,6 +225,8 @@ def analyis():
         tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id, user = current_user.id)
         db.session.add(tag)
         db.session.commit()
+        # redirect(url_for('home'))
+        return redirect(url_for('analysis', analysis=analysis_id))
     elif new_robot_form.validate_on_submit():
             robot = BayesianRobot(name=new_robot_form.name.data, parent = None, analysis = analysis.id, features = {}, accuracy = 0)
             db.session.add(robot)
@@ -335,14 +387,14 @@ def delete_post(post_id):
     return redirect(url_for('home'))
 
 
-@app.route("/user/<string:username>")
-def user_posts(username):
-    page = request.args.get('page', 1, type=int)
-    user = User.query.filter_by(username=username).first_or_404()
-    posts = Post.query.filter_by(author=user)\
-        .order_by(Post.date_posted.desc())\
-        .paginate(page=page, per_page=5)
-    return render_template('user_posts.html', posts=posts, user=user)
+# @app.route("/user/<string:username>")
+# def user_posts(username):
+#     page = request.args.get('page', 1, type=int)
+#     user = User.query.filter_by(username=username).first_or_404()
+#     posts = Post.query.filter_by(author=user)\
+#         .order_by(Post.date_posted.desc())\
+#         .paginate(page=page, per_page=5)
+#     return render_template('user_posts.html', posts=posts, user=user)
 
 
 def send_reset_email(user):

@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 
 {% block content %}
-{{ user_role }}
 <div class="content-section">
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
@@ -42,14 +41,14 @@
         </form>
     </div>
 </div>
-{% if any_robots %}
+{% if any_robots and not analysis.shared %}
 {% for r in robots %}
 <div class="content-section">
 <h3><a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ r.id }}">{{ r.name }} </a></h3>
 </div>
 {% endfor %}
-{% else %}no robots{% endif %}
-
+{% endif %}
+{% if not analysis.shared %}
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
@@ -72,5 +71,8 @@
             {{ form.submit(class="btn btn-outline-info") }}
         </div>
     </form>
+{% else %}
+<p><a href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id}}">Se klassens fælles analyse her.</a></p>
+{% endif %}
 
 {% endblock content %}
