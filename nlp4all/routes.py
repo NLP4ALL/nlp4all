@@ -21,6 +21,13 @@ def home():
     my_projects = get_user_projects(current_user) 
     return render_template('home.html', projects=my_projects)
 
+@app.route("/data_table")
+def data_table():
+    my_projects = get_user_projects(current_user) 
+    test_data = [{'a' : 25, 'b': 200, 'c': 400}]
+    test_data.append({'a' : 25, 'b': 200, 'c': 80})
+    return render_template('data_table.html', table_data=test_data)
+
 @app.route("/add_project", methods=['GET', 'POST'])
 def add_project():
     form = AddProjectForm()
