@@ -139,7 +139,6 @@ def shared_analysis_view():
                 tweet_info[tweet.id]["incorrect"]  = tweet_info[tweet.id]["incorrect"]   + 1
         for tweet_id in tweet_info.keys():
             tweet_info[tweet_id].update({"%": (tweet_info[tweet_id]["correct"] / (tweet_info[tweet_id]["incorrect"] + tweet_info[tweet_id]["correct"])) * 100})
-    # print(tweet_info)
     tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["%"], reverse=True)
     data={}
     percent_values = [d[1]["%"] for d in tweet_info]
@@ -152,9 +151,15 @@ def shared_analysis_view():
     data['chart_data'] = chart_data
     words = [word for x in tweet_info for word in x[1]["words"]]
     pred_by_word, data['predictions'] = analysis.get_predictions_and_words(set(words))
-    word_info = {word : {'predictions' : pred_by_word[word], 'counts' : words.count(word)} for word in set(words)}
-    print([w for w in word_info.items()])
-    sorted_word_info = sorted([w for w in word_info.items()], key=lambda x: x[1]['counts'], reverse=True)
+    # word_info = {word : {'predictions' : pred_by_word[word], 'counts' : words.count(word)} for word in set(words)}
+    word_info = []
+    for word in set(words):
+        word_dict = {'word' : word, 'counts' : words.count(word)}
+        for k,v in pred_by_word[word].items():
+            word_dict[k] = v
+        word_info.append(word_dict)
+    print(word_info)
+    sorted_word_info = sorted([w for w in word_info], key=lambda x: x['counts'], reverse=True)
     return render_template('shared_analysis_view.html', title='Oversigt over analyse', tweets = tweet_info, word_info = sorted_word_info, **data)
 
 
