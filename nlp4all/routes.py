@@ -123,15 +123,17 @@ def robot():
 def shared_analysis_view():
     analysis_id = request.args.get('analysis', 0, type=int)
     tweet_info = {}
+    all_words = []
     if analysis_id != 0:
         analysis = BayesianAnalysis.query.get(analysis_id)
         if not analysis.shared:
             return(redirect(url_for('home')))
-        tweet_info = {t : {"correct": 0, "incorrect" : 0} for t in analysis.tweets}
+        tweet_info = {t : {"correct": 0, "incorrect" : 0, "%" : 0} for t in analysis.tweets}
         for tag in analysis.tags:
             tweet = Tweet.query.get(tag.tweet)
+            all_words.extend(tweet.words)
             tweet_info[tweet.id]["full_text"] = tweet.full_text
-            tweet_info[tweet.id]["words"] = tweet.words
+            # tweet_info[tweet.id]["words"] = tweet.words
             tweet_info[tweet.id]["category"] = TweetTagCategory.query.get(tweet.category).name
             if tweet.category == tag.category:
                 tweet_info[tweet.id]["correct"]  = tweet_info[tweet.id]["correct"]   + 1
@@ -149,18 +151,20 @@ def shared_analysis_view():
         d.update({'color' : f"hsl({color}, 50%, 70%)", 'bg_color' : f"hsl({color}, 50%, 70%)"})
     chart_data = {'title' : 'Antal korrekte', 'data_points' : percent_counts}
     data['chart_data'] = chart_data
-    words = [word for x in tweet_info for word in x[1]["words"]]
-    pred_by_word, data['predictions'] = analysis.get_predictions_and_words(set(words))
+    # words = [word for x in tweet_info for word in x[1]["words"]]
+    pred_by_word, data['predictions'] = analysis.get_predictions_and_words(all_words)
     # word_info = {word : {'predictions' : pred_by_word[word], 'counts' : words.count(word)} for word in set(words)}
     word_info = []
-    for word in set(words):
-        word_dict = {'word' : word, 'counts' : words.count(word)}
+    for word in all_words:
+        word_dict = {'word' : word, 'counts' : all_words.count(word)}
         for k,v in pred_by_word[word].items():
             word_dict[k] = v
         word_info.append(word_dict)
-    print(word_info)
-    sorted_word_info = sorted([w for w in word_info], key=lambda x: x['counts'], reverse=True)
-    return render_template('shared_analysis_view.html', title='Oversigt over analyse', tweets = tweet_info, word_info = sorted_word_info, **data)
+    tweet_info = [t[1] for t in tweet_info]
+    # we don't need to sort this since we put it in a datatable anyway
+    # print(word_info)
+    # sorted_word_info = sorted([w for w in word_info], key=lambda x: x['counts'], reverse=True)
+    return render_template('shared_analysis_view.html', title='Oversigt over analyse', tweets = tweet_info, word_info = word_info, **data)
 
 
 

@@ -30,7 +30,7 @@ class RegistrationForm(FlaskForm):
 
 class TaggingForm(FlaskForm):
     # choices = RadioField()
-    choices = SelectField("Which category does this tweet belong to?")
+    choices = SelectField("Hvem har skrevet dette tweet?")
     submit = SubmitField("Submit")
 
 class TagButton(FlaskForm):
