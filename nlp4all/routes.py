@@ -133,14 +133,19 @@ def shared_analysis_view():
             tweet = Tweet.query.get(tag.tweet)
             all_words.extend(tweet.words)
             tweet_info[tweet.id]["full_text"] = tweet.full_text
-            # tweet_info[tweet.id]["words"] = tweet.words
             tweet_info[tweet.id]["category"] = TweetTagCategory.query.get(tweet.category).name
+            print(tweet.category, tag.category)
             if tweet.category == tag.category:
+                print("Correct")
                 tweet_info[tweet.id]["correct"]  = tweet_info[tweet.id]["correct"]   + 1
             else:
                 tweet_info[tweet.id]["incorrect"]  = tweet_info[tweet.id]["incorrect"]   + 1
-        for tweet_id in tweet_info.keys():
-            tweet_info[tweet_id].update({"%": (tweet_info[tweet_id]["correct"] / (tweet_info[tweet_id]["incorrect"] + tweet_info[tweet_id]["correct"])) * 100})
+        for tweet_id in list(tweet_info.keys()):
+            # if they haven't been categorized by anyone, remove them
+            if tweet_info[tweet_id]["correct"] == 0 and tweet_info[tweet_id]["incorrect"] == 0:
+                del tweet_info[ tweet_id ]
+            else:
+                tweet_info[tweet_id].update({"%": (tweet_info[tweet_id]["correct"] / (tweet_info[tweet_id]["incorrect"] + tweet_info[tweet_id]["correct"])) * 100})
     tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["%"], reverse=True)
     data={}
     percent_values = [d[1]["%"] for d in tweet_info]
