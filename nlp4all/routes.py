@@ -134,9 +134,7 @@ def shared_analysis_view():
             all_words.extend(tweet.words)
             tweet_info[tweet.id]["full_text"] = tweet.full_text
             tweet_info[tweet.id]["category"] = TweetTagCategory.query.get(tweet.category).name
-            print(tweet.category, tag.category)
             if tweet.category == tag.category:
-                print("Correct")
                 tweet_info[tweet.id]["correct"]  = tweet_info[tweet.id]["correct"]   + 1
             else:
                 tweet_info[tweet.id]["incorrect"]  = tweet_info[tweet.id]["incorrect"]   + 1
@@ -160,7 +158,7 @@ def shared_analysis_view():
     pred_by_word, data['predictions'] = analysis.get_predictions_and_words(all_words)
     # word_info = {word : {'predictions' : pred_by_word[word], 'counts' : words.count(word)} for word in set(words)}
     word_info = []
-    for word in all_words:
+    for word in set(all_words):
         word_dict = {'word' : word, 'counts' : all_words.count(word)}
         for k,v in pred_by_word[word].items():
             word_dict[k] = v
@@ -193,12 +191,13 @@ def analyis():
     # projects.organization
     # or it is not a shared project, in which case the user must be the owner.
     owned = False
+    print(analysis.shared, analysis.user, current_user.id, current_user.admin)
     if analysis.shared :
         if project.organization in [org.id for org in current_user.organizations]:
             owned = True
-    else:
-        if analysis.user == current_user.id or current_user.admin:#or current_user.
-            owned = True
+    if analysis.user == current_user.id or current_user.admin:#or current_user.
+        owned = True
+    print(owned)
     if owned == False:
         return redirect(url_for('home'))
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
