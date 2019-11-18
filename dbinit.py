@@ -61,16 +61,20 @@ for f in files:
     print(f)
     with open(data_dir+f) as inf:
         lines = [line for line in inf.readlines()]
-        for line in lines[:800]:
+        for line in lines:
         # for line in inf.readlines():
             indict = json.loads(line)
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
             if not category:
                 nlp4all.utils.add_category(indict['twitter_handle'], "Tweet from " + indict['twitter_handle'])
+                db.session.commit()
+                all_cats = TweetTagCategory.query.all()
             existing_tag_names.append(indict['twitter_handle'])
             category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
             nlp4all.utils.add_tweet_from_dict(indict, category)
+        
 
+db.session.commit()
 print("creating orgs")
 
 
@@ -78,11 +82,12 @@ org = Organization.query.first()
 all_cats = TweetTagCategory.query.all()
 # get 800 DF tweets and 800 EHl tweets and add them
 cat_names = [c.name for c in all_cats]
+print(cat_names)
 df_cat = all_cats[cat_names.index('danskdf1995')]
 ehl_cat = all_cats[cat_names.index('enhedslisten')]
 cat_ids = list([df_cat.id, ehl_cat.id])
 nlp4all.utils.add_project(name="DF og EL", description="Kan du kende forskel på DF og Enhedslisten?", org = org.id, cat_ids = cat_ids)
-analysis = BayesianAnalysis(user = 2, name="Test Analysis", project=1, data = {"counts" : 0, "words" : {}})
+analysis = BayesianAnalysis(user = 2, name="Færdig Analyse", project=1, data = {"counts" : 0, "words" : {}})
 db.session.add(analysis)
 db.session.commit()
 
@@ -93,7 +98,7 @@ print("df_cat.name:",df_cat.name)
 df_tweets = Tweet.query.filter_by(category = df_cat.id).all()
 
 shuffle(df_tweets)
-for t in df_tweets[:1500]:
+for t in df_tweets[:800]:
     # tag = TweetTag (category = 1, analysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, df_cat)
@@ -101,12 +106,10 @@ ehl_cat = all_cats[cat_names.index('enhedslisten')]
 print("ehl_cat.name",ehl_cat.name)
 ehl_tweets = Tweet.query.filter_by(category = ehl_cat.id).all()
 shuffle(ehl_tweets)
-for t in ehl_tweets[:1500]:
+for t in ehl_tweets[:800]:
     # tag = TweetTag (category = 2, ansdffggalysis = analysis.id, tweet=t.id)
     # tags.append(tag)
     analysis.data = analysis.updated_data(t, ehl_cat)
-
-
 
 flag_modified(analysis, "data")
 db.session.add(analysis)
