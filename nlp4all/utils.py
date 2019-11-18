@@ -225,6 +225,7 @@ def add_tweet_from_dict(indict, category):
                 text = " ".join([clean_word(word) for word in t.split()])
         )
         db.session.add(a_tweet)
+        db.session.commit()
 
 def add_role(role_name):
         role = Role(name=role_name)
