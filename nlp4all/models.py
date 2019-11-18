@@ -71,24 +71,49 @@ class BayesianRobot(db.Model):
                 else:
                     accuracy_dict['uncategorized'] = []
             
+
+
     def calculate_accuracy(self):
-        ana_obj = BayesianAnalysis.query.get(self.analysis)
-        proj_obj = Project.query.get(ana_obj.project)
+        analysis_obj = BayesianAnalysis.query.get(self.analysis)
+        proj_obj = Project.query.get(analysis_obj.project)
         tf_idf = proj_obj.tf_idf
+        ## skriv det her om så accuraacy bregnes per feature, og ikke per ord.
         relevant_words = [word for  word in tf_idf.get('words') if BayesianRobot.word_in_features(self, word)]
-        features_and_words = [{feature : BayesianRobot.feature_words(self, feature, tf_idf) for feature in self.features}]
-        tweets_with_word = {word : [l[0] for l in tf_idf['words'].get(word)] for word in relevant_words}
-        words_by_tweet =  {}
-        for word, tweets in tweets_with_word.items():
-            for t in tweets:
-                the_list = words_by_tweet.get(t, [])
-                the_list.append(word)
-                words_by_tweet[t] = the_list
-        x = BayesianRobot.accuracy_for_tnt_set(relevant_words, tweets_with_word, words_by_tweet, proj_obj.training_and_test_sets)
+        feature_words = {}
+        for feature in self.features:
+            feature_words[feature] =[word for word in tf_idf.get('words') if BayesianRobot.matches(word, feature)]
+        print(feature_words)
+        # features_and_words = [{feature : BayesianRobot.feature_words(self, feature, tf_idf) for feature in self.features}]
+        # tweets_with_word = {word : [l[0] for l in tf_idf['words'].get(word)] for word in relevant_words}
+        # words_by_tweet =  {}
+        # for word, tweets in tweets_with_word.items():
+        #     for t in tweets:
+        #         the_list = words_by_tweet.get(t, [])
+        #         the_list.append(word)
+        #         words_by_tweet[t] = the_list
+        # x = BayesianRobot.accuracy_for_tnt_set(relevant_words, tweets_with_word, words_by_tweet, proj_obj.training_and_test_sets)
 
         # # okay, now we know which tweets contain any feature
         # # now we need to run through each of the training sets and compare to the test set
         # # this needs to be done for each category in the project.
+
+    def matches(word, afeature):
+        feature_string = afeature.lower()
+        if feature_string.startswith('*') and feature_string.endswith('*'):
+            if feature_string[1:-1] in word:
+                return True
+        elif feature_string.startswith('*'):
+            if word.endswith(feature_string[1:]):
+                return True
+        elif feature_string.endswith('*'):
+            if word.startswith(feature_string[:1]):
+                return True
+        else:
+            if word == feature_string :
+                return True
+        return False
+
+
 
     def feature_words(self, a_feature, tf_idf):
         return_list = []
