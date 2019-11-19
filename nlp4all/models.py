@@ -4,6 +4,8 @@ from nlp4all import db, login_manager, app
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 import collections
+import collections, functools, operator 
+import statistics
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -70,50 +72,114 @@ class BayesianRobot(db.Model):
                     real_cat = Tweet.query.get(int(t)).category
                 else:
                     accuracy_dict['uncategorized'] = []
+        return accuracy_dict
             
-
 
     def calculate_accuracy(self):
         analysis_obj = BayesianAnalysis.query.get(self.analysis)
         proj_obj = Project.query.get(analysis_obj.project)
         tf_idf = proj_obj.tf_idf
         ## skriv det her om så accuraacy bregnes per feature, og ikke per ord.
-        relevant_words = [word for  word in tf_idf.get('words') if BayesianRobot.word_in_features(self, word)]
+        # relevant_words = [word for  word in tf_idf.get('words') if BayesianRobot.word_in_features(self, word)]
         feature_words = {}
         for feature in self.features:
-            feature_words[feature] =[word for word in tf_idf.get('words') if BayesianRobot.matches(word, feature)]
-        print(feature_words)
-        # features_and_words = [{feature : BayesianRobot.feature_words(self, feature, tf_idf) for feature in self.features}]
-        # tweets_with_word = {word : [l[0] for l in tf_idf['words'].get(word)] for word in relevant_words}
-        # words_by_tweet =  {}
-        # for word, tweets in tweets_with_word.items():
-        #     for t in tweets:
-        #         the_list = words_by_tweet.get(t, [])
-        #         the_list.append(word)
-        #         words_by_tweet[t] = the_list
-        # x = BayesianRobot.accuracy_for_tnt_set(relevant_words, tweets_with_word, words_by_tweet, proj_obj.training_and_test_sets)
+            feature_words[feature] = [word for word in tf_idf.get('words') if BayesianRobot.matches(word, feature)]
+        # relevant_words = [w for words in feature_words.values() for w in words]
+        # first calculate the predictions, based on the training sets.
+        predictions_by_feature = {}
+        # initialize test_set_tweets so we dont need to calculate it twice
+        test_set_tweets = set()
+        cats = [c.id for c in proj_obj.categories]
+        for feature in feature_words:
+            predictions_by_feature[feature] = {}
+            for word in feature_words[feature]:
+                for dataset in proj_obj.training_and_test_sets[:1]:
+                    train_set = dataset[0]
+                    tweets = tf_idf.get('words').get(word)
+                    train_set_tweets = []
+                    for t in tweets:
+                        if str(t[0]) in train_set.keys():
+                            train_set_tweets.append(t)
+                        else:
+                            test_set_tweets.add(t[0])
+                    categories_in_dataset = [dataset[0].get(str(tweet[0])) for tweet in train_set_tweets]
+                    cat_counts = {c : categories_in_dataset.count(c) for c in cats}
+                    total_cats = sum(cat_counts.values())
+                    predictions = 0
+                    # if there are no words in the training set to learn from, we simply ignore the word and do not append anything here
+                    if total_cats > 0:
+                        predictions = {c : cat_counts[c] / sum(cat_counts.values()) for c in cats}
+                        predictions_by_feature[feature][word] = predictions
+        # now for each word, figure out which tweets contain them, and build - for each tweet - a classification, that we can then compare to the real value
 
-        # # okay, now we know which tweets contain any feature
-        # # now we need to run through each of the training sets and compare to the test set
-        # # this needs to be done for each category in the project.
+        test_set = proj_obj.training_and_test_sets[0][1]
+        tweet_predictions = {}
+        for word_prediction in predictions_by_feature.values():
+            for word, predictions in word_prediction.items():
+                word_tweets = tf_idf.get('words').get(word)
+                test_set_tweets = [tweet for tweet in word_tweets if str(tweet[0]) in test_set.keys()]
+                for tweet in test_set_tweets:
+                    preds = tweet_predictions.get(tweet[0], {'predictions' : [], 'words' : [], 'category' : tweet[1]})
+                    preds['predictions'].append(predictions)
+                    preds['words'].append(word)
+                    tweet_predictions[tweet[0]] = preds
+        # now finally evaluate how well we did, in general and by word
+        word_accuracy = {}
+        for tweet_key in tweet_predictions:
+            prediction_dict = tweet_predictions[tweet_key]
+            summed_prediction = dict(functools.reduce(operator.add, map(collections.Counter, prediction_dict['predictions'])))
+            # it can happen that we evaluate a word that we have no information on. In that 
+            cat_prediction = max(summed_prediction.items(), key=operator.itemgetter(1))[0] 
+            tweet_predictions[tweet_key]['correct'] = test_set[str(tweet_key)] == cat_prediction
+            # save a per-word accuracy
+            for word in prediction_dict['words']:
+                acc = word_accuracy.get(word, [])
+                acc.append(tweet_predictions[tweet_key]['correct'])
+                word_accuracy[word] = acc
+        # and then build a nice dict full of info 
+        feature_info = {}
+        for feature in feature_words:
+            feature_info[feature] = {}
+            for word in feature_words[feature]:
+                word_dict = feature_info[feature].get(word, {})
+                if word in word_accuracy: # the word is only in the word_accuracy dict if it was in the test set
+                    word_dict['tweets_targeted'] = len(word_accuracy[word])
+                    word_dict['accuracy'] = round(len([x for x in word_accuracy[word] if x]) / len(word_accuracy[word]), 2)
+                else:
+                    word_dict['tweets_targeted'] = 0
+                    word_dict['accuracy'] = 0
+                feature_info[feature][word] = word_dict
+            accuracy_values = [d['accuracy'] for d in feature_info[feature].values()]
+            if len(accuracy_values) > 0:
+                feature_info[feature]['accuracy'] = sum(accuracy_values) / len(accuracy_values)
+                feature_info[feature]['tweets_targeted'] = len(accuracy_values)
+            else:
+                feature_info[feature]['accuracy'] = 0
+                feature_info[feature]['tweets_targeted'] = 0
+        tweets_targeted = len(tweet_predictions) / len(proj_obj.training_and_test_sets[0][1])
+        accuracy = len([d for d in tweet_predictions.values() if d['correct']]) / len(tweet_predictions)
+        accuracy_info = {'accuracy' : round(accuracy, 2), 'tweets_targeted' : round(tweets_targeted, 2) }
+        accuracy_info['features'] = feature_info
+        return accuracy_info
 
-    def matches(word, afeature):
+
+
+
+    def matches(aword, afeature):
         feature_string = afeature.lower()
         if feature_string.startswith('*') and feature_string.endswith('*'):
-            if feature_string[1:-1] in word:
+            if feature_string[1:-1] in aword:
                 return True
         elif feature_string.startswith('*'):
-            if word.endswith(feature_string[1:]):
+            if aword.endswith(feature_string[1:]):
                 return True
         elif feature_string.endswith('*'):
-            if word.startswith(feature_string[:1]):
+            if aword.startswith(feature_string[:1]):
                 return True
         else:
-            if word == feature_string :
+            if aword == feature_string :
                 return True
         return False
-
-
 
     def feature_words(self, a_feature, tf_idf):
         return_list = []

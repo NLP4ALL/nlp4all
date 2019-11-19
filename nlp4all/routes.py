@@ -104,9 +104,12 @@ def robot():
     robot_id = request.args.get('robot', 0, type=int)
     # find the analysis and check if it belongs to the user
     robot = BayesianRobot.query.get(robot_id)
-    BayesianRobot.calculate_accuracy(robot)
+    if robot.features != {}:
+        acc_dict = BayesianRobot.calculate_accuracy(robot)
+    else:
+        acc_dict = {'features' : [], 'accuracy' : 0, 'tweets_targeted' : 0, 'features' : {}}
     form = AddBayesianRobotFeatureForm()
-    analysis = BayesianAnalysis.query.get(robot.analysis)
+    # analysis = BayesianAnalysis.query.get(robot.analysis)
     if form.validate_on_submit():
         new_feature = {form.feature.data : form.reasoning.data}
         robot.features.update(new_feature)
@@ -117,7 +120,8 @@ def robot():
         db.session.commit()
     # if analysis.user == current_user.id:
     #     return render_template('robot.html', title='Robot ' + robot.name, r = robot)
-    return render_template('robot.html', title='Robot', r = robot, form = form)
+    # return redirect(url_for('robot', title='Robot', r = robot, form = form))
+    return render_template('robot.html', title='Robot', r = robot, form = form, acc_dict=acc_dict)
 
 @app.route("/shared_analysis_view", methods=['GET', 'POST'])
 def shared_analysis_view():
@@ -251,6 +255,8 @@ def analyis():
             robot = BayesianRobot(name=new_robot_form.name.data, parent = None, analysis = analysis.id, features = {}, accuracy = 0)
             db.session.add(robot)
             db.session.commit()
+            return redirect(url_for('analysis', analysis=analysis_id))
+    elif new_robot_form.validate_on_submit():
     return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, robot_form = new_robot_form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
@@ -258,11 +264,11 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = RegistrationForm()
-    form.organization.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+    form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        org = Organization.query.get(int(form.organization.data)).id
-        user = User(username=form.username.data, email=form.email.data, password=hashed_password, organization=org)
+        org = Organization.query.get(int(form.organizations.data))
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password, organizations=[org])
         db.session.add(user)
         db.session.commit()
         flash('Your account has been created! You are now able to log in', 'success')
