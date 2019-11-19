@@ -3,13 +3,14 @@
 <h5>{{ r.name }}</h5>
 <h6>Robotten kigger lige nu på disse ord:</h6>
 <table>
-<tr><th>Ord</th><th>Begrundelse</th>
-{% for f in r.features.items() %}
-<tr><td>{{ f[0] }}</td><td>{{ f[1] }}</td></tr>
+<tr><th>Søgeord</th><th>Specifikt Ord</th><th>Accuracy</th><th>#Tweets</th>
+{% for f in acc_dict.features.items() %}
+{% for d in f[1].items() %}
+<tr><td>{{ f[0] }}</td><td>{{ d[0] }}</td> <td>{{ d[1].accuracy}}</td><td>{{ d[1].tweets_targeted}}</td></tr>
+{% endfor %}
 {% endfor %}
 </table>
 <h6>Tilfoej ny feature</h6>
-
     <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
