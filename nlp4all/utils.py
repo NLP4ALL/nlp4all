@@ -7,7 +7,7 @@ import time
 import operator
 from nlp4all import db
 import random, itertools
-from nlp4all.models import BayesianAnalysis
+from nlp4all.models import BayesianAnalysis, BayesianRobot
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -132,12 +132,13 @@ def add_category(name, description):
 
 
 def  get_user_project_analyses(a_user, a_project):
-        if a_user.admin:
-                return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
-        else:
-                analyses = []
-                all_project_analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
-                return [a for a in all_project_analyses if a.shared or a.user == a_user.id]
+        return BayesianAnalysis.query.filter_by(project=a_project.id)
+        # if a_user.admin:
+        #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
+        # else:
+        #         analyses = []
+        #         all_project_analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
+        #         return [a for a in all_project_analyses if a.shared or a.user == a_user.id]
 
 
 def  get_user_projects(a_user):

@@ -64,11 +64,15 @@ class AddProjectForm(FlaskForm):
         if title:
             raise ValidationError('That project name is taken. Please choose a different one.')
 
+
 class AddBayesianAnalysisForm(FlaskForm):
     name = StringField('Title of Analysis', validators=[DataRequired()])
     shared = BooleanField('Shared project?')
     number = IntegerField("How many of each category?")
     submit = SubmitField('Create Analysis')
+
+class RunBayesianAnalysisRobot(FlaskForm):
+    run_analysis = SubmitField('Kør analysen!')
 
 class AddBayesianRobotForm(FlaskForm):
     name = StringField('Title of Robot', validators=[DataRequired()])
@@ -79,10 +83,13 @@ class AnalysisForm(FlaskForm):
     add_category_form = FormField(AddTweetCategoryForm)
 
 class AddBayesianRobotFeatureForm(FlaskForm):
-    feature = StringField('Write a word that your robot will look for', validators=[DataRequired()])
-    reasoning = StringField("Why do you think that this ")
-    submit = SubmitField("Add Word")
+    feature = StringField('Skriv et søgeterm som du vil have at din robot skal lede efter. Du kan bruge wildcard (*) til at søge flere ord. F.eks. *bank vil give alle ord som slutter med bank. bank* vil give alle ord som starter med bank, og *bank* giver alle ord som indeholder bank.')
+    reasoning = StringField("Forklar her hvorfor du tror at lige netop dette søgeterm vil være godt til at skelne mellem de to partier. Er det et emne som et af partierne taler mere om end det andet? Er det et ord som kun dét parti bruger? Skriv et 1-3 sætninger om hvorfor I vælger det.")
+    submit = SubmitField("Tilføj søgeord")
 
+class BayesianRobotForms(FlaskForm):
+    add_feature_form = FormField(AddBayesianRobotFeatureForm)
+    run_analysis_form = FormField(RunBayesianAnalysisRobot)
 
 class UpdateAccountForm(FlaskForm):
     username = StringField('Username',

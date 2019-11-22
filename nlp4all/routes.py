@@ -1,14 +1,15 @@
-import os
+import os, time
 import secrets
 import nlp4all.utils
 from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
+import datetime
 import json
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
@@ -16,10 +17,19 @@ from nlp4all.utils import get_user_projects, get_user_project_analyses
 
 @app.route("/")
 @app.route("/home")
+@app.route("/home/", methods=['GET', 'POST'])
 @login_required
 def home():
     my_projects = get_user_projects(current_user) 
     return render_template('home.html', projects=my_projects)
+
+
+@app.route("/robot_summary", methods=['GET', 'POST'])
+def robot_summary():
+    analysis_id = request.args.get('analysis', 0, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    robots = [r for r in analysis.robots if r.retired]
+    return render_template('robot_summary.html', analysis=analysis, robots=robots)
 
 @app.route("/data_table")
 def data_table():
@@ -72,16 +82,8 @@ def project():
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-    names = ["test1", "danskdf1995", "test3"]
-    buttons = []
-    for name in names:
-        button = TagButton()
-        button.set_name(name)
-        buttons.append(button)
-    for b in buttons:
-        if b.validate_on_submit():
-            return render_template('test.html', title='Test', buttons=buttons)
-    return render_template('test.html', title='Test', buttons=buttons)
+
+    return render_template('test.html', title='Test', buttons=[])
 
 
 @app.route('/_add_numbers')
@@ -104,23 +106,51 @@ def robot():
     robot_id = request.args.get('robot', 0, type=int)
     # find the analysis and check if it belongs to the user
     robot = BayesianRobot.query.get(robot_id)
-    if robot.features != {}:
-        acc_dict = BayesianRobot.calculate_accuracy(robot)
+    if robot.retired:
+        acc_dict = robot.accuracy
+        if robot.parent != None:
+            parent_robot = BayesianRobot.query.get(robot.parent)
+            parent_accuracy = parent_robot.accuracy
+            acc_dict['parent_accuracy'] = parent_accuracy['accuracy']
+            acc_dict['parent_tweets_targeted'] = parent_accuracy['tweets_targeted']
     else:
-        acc_dict = {'features' : [], 'accuracy' : 0, 'tweets_targeted' : 0, 'features' : {}}
-    form = AddBayesianRobotFeatureForm()
-    # analysis = BayesianAnalysis.query.get(robot.analysis)
-    if form.validate_on_submit():
-        new_feature = {form.feature.data : form.reasoning.data}
-        robot.features.update(new_feature)
+        acc_dict = {'features' : [], 'accuracy' : 0, 'tweets_targeted' : 0, 'features' : {}, 'table_data' : []}
+    print(robot.features)
+    if request.method == "POST" and 'delete' in request.form.to_dict():
+        del robot.features[request.form.to_dict()['delete']]
         flag_modified(robot, "features")
         db.session.add(robot)
         db.session.merge(robot)
         db.session.flush()
         db.session.commit()
-    # if analysis.user == current_user.id:
-    #     return render_template('robot.html', title='Robot ' + robot.name, r = robot)
-    # return redirect(url_for('robot', title='Robot', r = robot, form = form))
+        redirect(url_for('robot', robot=robot_id))
+    form = BayesianRobotForms()
+    if request.method == "POST" and 'add_feature_form-submit' in request.form.to_dict():
+        if " " not in form.add_feature_form.data and len(form.add_feature_form.feature.data) > 3 and len(form.add_feature_form.reasoning.data) > 15 and len(robot.features) <= 20:
+            new_feature = {form.add_feature_form.feature.data : form.add_feature_form.reasoning.data}
+            robot.features.update(new_feature)
+            flag_modified(robot, "features")
+            db.session.add(robot)
+            db.session.merge(robot)
+            db.session.flush()
+            db.session.commit()
+            return redirect(url_for('robot', robot=robot_id))
+    form = BayesianRobotForms()
+    if request.method == "POST" and 'run_analysis_form-run_analysis' in request.form.to_dict():
+        if len(robot.features) > 0:
+            robot.accuracy = robot.calculate_accuracy()
+            flag_modified(robot, "accuracy")
+            db.session.merge(robot)
+            robot.accuracy = BayesianRobot.calculate_accuracy(robot)
+            robot.retired = True
+            robot.time_retired = datetime.datetime.utcnow()
+            child_robot = robot.clone()
+            db.session.add(child_robot)
+            db.session.flush()
+            robot.child = child_robot.id
+            db.session.add(robot)
+            db.session.commit()
+            return redirect(url_for('robot', robot = robot.id))
     return render_template('robot.html', title='Robot', r = robot, form = form, acc_dict=acc_dict)
 
 @app.route("/shared_analysis_view", methods=['GET', 'POST'])
@@ -130,10 +160,16 @@ def shared_analysis_view():
     all_words = []
     if analysis_id != 0:
         analysis = BayesianAnalysis.query.get(analysis_id)
-        if not analysis.shared:
-            return(redirect(url_for('home')))
-        tweet_info = {t : {"correct": 0, "incorrect" : 0, "%" : 0} for t in analysis.tweets}
-        for tag in analysis.tags:
+        # if not analysis.shared:
+        #     return(redirect(url_for('home')))
+        if analysis.shared:
+            tweet_info = {t : {"correct": 0, "incorrect" : 0, "%" : 0} for t in analysis.tweets}
+        else:
+            tweet_info = {t.tweet : {"correct" : 0, "incorrect" : 0, "%" : 0} for t in analysis.tags}
+        # for tag in analysis.tags:
+        non_empty_tags = [t for t in analysis.tags if t.tweet != None]
+        for tag in non_empty_tags:
+            user = User.query.get(tag.user)
             tweet = Tweet.query.get(tag.tweet)
             all_words.extend(tweet.words)
             tweet_info[tweet.id]["full_text"] = tweet.full_text
@@ -171,7 +207,7 @@ def shared_analysis_view():
     # we don't need to sort this since we put it in a datatable anyway
     # print(word_info)
     # sorted_word_info = sorted([w for w in word_info], key=lambda x: x['counts'], reverse=True)
-    return render_template('shared_analysis_view.html', title='Oversigt over analyse', tweets = tweet_info, word_info = word_info, **data)
+    return render_template('shared_analysis_view.html', title='Oversigt over analyse', tweets = tweet_info, word_info = word_info, analysis=analysis, **data)
 
 
 
@@ -184,26 +220,30 @@ def word():
     return render_template('word.html', title='Word examples')
 
 @app.route("/analysis", methods=['GET', 'POST'])
-def analyis():
+def analysis():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
+    if len(analysis.robots) < 1:
+        robot = BayesianRobot(name =current_user.username + "s robot", analysis=analysis.id)
+        db.session.add(robot)
+        db.session.flush()
+        db.session.commit()
+        return redirect(url_for('analysis', analysis=analysis_id))
     ## check if user has access to this.
     ## either it is a shared project. In that case the user needs to be a member of 
     # projects.organization
     # or it is not a shared project, in which case the user must be the owner.
-    owned = False
-    print(analysis.shared, analysis.user, current_user.id, current_user.admin)
-    if analysis.shared :
-        if project.organization in [org.id for org in current_user.organizations]:
-            owned = True
-    if analysis.user == current_user.id or current_user.admin:#or current_user.
-        owned = True
-    print(owned)
-    if owned == False:
-        return redirect(url_for('home'))
+    # owned = False
+    # if analysis.shared :
+    #     if project.organization in [org.id for org in current_user.organizations]:
+    #         owned = True
+    # if analysis.user == current_user.id or current_user.admin:#or current_user.
+    #     owned = True
+    # if owned == False:
+    #     return redirect(url_for('home'))
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
     tweets = project.tweets
     the_tweet = None
@@ -221,17 +261,13 @@ def analyis():
     form = TaggingForm()
     form.choices.choices  = [( str(c.id), c.name ) for c in categories]
     number_of_tagged = len(analysis.tags)
-    new_robot_form = AddBayesianRobotForm()
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
     data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
-    print(data['chart_data'])
     # filter robots that are retired, and sort them alphabetically
-    robots = [r for r in analysis.robots if not r.retired]
-    data['robots'] = sorted(robots, key= lambda r: r.name)
-    data['any_robots'] = len(data['robots']) > 0
+    # data['robots'] = sorted(robots, key= lambda r: r.name)
     data['analysis_data'] = analysis.data
     data['user'] = current_user
     data['user_role'] = current_user.roles
@@ -251,13 +287,7 @@ def analyis():
         db.session.commit()
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
-    elif new_robot_form.validate_on_submit():
-            robot = BayesianRobot(name=new_robot_form.name.data, parent = None, analysis = analysis.id, features = {}, accuracy = 0)
-            db.session.add(robot)
-            db.session.commit()
-            return redirect(url_for('analysis', analysis=analysis_id))
-    elif new_robot_form.validate_on_submit():
-    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, robot_form = new_robot_form, **data)
+    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -448,9 +478,6 @@ def reset_request():
         return redirect(url_for('login'))
     return render_template('reset_request.html', title='Reset Password', form=form)
 
-@app.route("/analysis")
-def analysis():
-    return redirect(url_for('home'))
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):

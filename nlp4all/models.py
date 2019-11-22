@@ -15,17 +15,20 @@ def load_user(user_id):
 class BayesianRobot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(25))
-    parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'))
+    parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
+    child = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
-    features = db.Column(JSON)
-    accuracy = db.Column(db.Float)
+    features = db.Column(JSON, default = {})
+    accuracy = db.Column(JSON, default = {})
     retired = db.Column(db.Boolean, default=False)
+    time_retired = db.Column(db.DateTime)
 
     def clone(self):
         new_robot = BayesianRobot()
-        new_robot.filters = self.filters
+        new_robot.name = self.name
+        new_robot.analysis = self.analysis
         new_robot.features = self.features
-        new_robot.parent = self
+        new_robot.parent = self.id
         return(new_robot)
     
 
@@ -140,26 +143,50 @@ class BayesianRobot(db.Model):
         feature_info = {}
         for feature in feature_words:
             feature_info[feature] = {}
+            feature_info[feature]['words'] = {}
             for word in feature_words[feature]:
                 word_dict = feature_info[feature].get(word, {})
                 if word in word_accuracy: # the word is only in the word_accuracy dict if it was in the test set
                     word_dict['tweets_targeted'] = len(word_accuracy[word])
                     word_dict['accuracy'] = round(len([x for x in word_accuracy[word] if x]) / len(word_accuracy[word]), 2)
-                else:
-                    word_dict['tweets_targeted'] = 0
-                    word_dict['accuracy'] = 0
-                feature_info[feature][word] = word_dict
-            accuracy_values = [d['accuracy'] for d in feature_info[feature].values()]
+                    feature_info[feature]['words'][word] = word_dict
+                # else:
+                #     # if it's not in the test set, we just take it out.
+                #     word_dict['tweets_targeted'] = 0
+                #     word_dict['accuracy'] = 0
+                # feature_info[feature]['words'][word] = word_dict
+            
+            
+            accuracy_values = [d['accuracy'] for d in feature_info[feature]['words'].values()]
+            targeted_values = [d['tweets_targeted'] for d in feature_info[feature]['words'].values()]
             if len(accuracy_values) > 0:
                 feature_info[feature]['accuracy'] = sum(accuracy_values) / len(accuracy_values)
-                feature_info[feature]['tweets_targeted'] = len(accuracy_values)
+                feature_info[feature]['tweets_targeted'] = sum(targeted_values)
             else:
                 feature_info[feature]['accuracy'] = 0
                 feature_info[feature]['tweets_targeted'] = 0
-        tweets_targeted = len(tweet_predictions) / len(proj_obj.training_and_test_sets[0][1])
+        tweets_targeted = 0
+        table_data = []
+        for f in feature_info:
+            tweets_targeted = tweets_targeted + feature_info[f]['tweets_targeted']
+            feat_dict = {}
+            feat_dict['word'] = f
+            feat_dict['accuracy'] = feature_info[f]['accuracy']
+            feat_dict['tweets_targeted'] = feature_info[f]['tweets_targeted']
+            feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+            table_data.append(feat_dict)
+            for word in feature_info[f]['words']:
+                feat_dict = {}
+                feat_dict['word'] = word
+                feat_dict['accuracy'] = feature_info[f]['words'][word]['accuracy']
+                feat_dict['tweets_targeted'] = feature_info[f]['words'][word]['tweets_targeted']
+                feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+                table_data.append(feat_dict)
+
         accuracy = len([d for d in tweet_predictions.values() if d['correct']]) / len(tweet_predictions)
-        accuracy_info = {'accuracy' : round(accuracy, 2), 'tweets_targeted' : round(tweets_targeted, 2) }
+        accuracy_info = {'accuracy' : round(accuracy, 2), 'tweets_targeted' : tweets_targeted}
         accuracy_info['features'] = feature_info
+        accuracy_info['table_data'] = table_data
         return accuracy_info
 
 
@@ -174,7 +201,8 @@ class BayesianRobot(db.Model):
             if aword.endswith(feature_string[1:]):
                 return True
         elif feature_string.endswith('*'):
-            if aword.startswith(feature_string[:1]):
+            # if aword.startswith(feature_string[:1]): ## this was a bug. Leave it in if people want to see it.
+            if aword.startswith(feature_string[:-1]):
                 return True
         else:
             if aword == feature_string :
@@ -325,6 +353,7 @@ class TweetTag(db.Model):
     category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE"))
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 class BayesianAnalysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)

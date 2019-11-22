@@ -86,7 +86,7 @@ print(cat_names)
 df_cat = all_cats[cat_names.index('danskdf1995')]
 ehl_cat = all_cats[cat_names.index('enhedslisten')]
 cat_ids = list([df_cat.id, ehl_cat.id])
-nlp4all.utils.add_project(name="DF og EL", description="Kan du kende forskel på DF og Enhedslisten?", org = org.id, cat_ids = cat_ids)
+nlp4all.utils.add_project(name="Projekt 1: DF og EL", description="Kan du kende forskel på DF og Enhedslisten?", org = org.id, cat_ids = cat_ids)
 analysis = BayesianAnalysis(user = 2, name="Færdig Analyse", project=1, data = {"counts" : 0, "words" : {}})
 db.session.add(analysis)
 db.session.commit()
