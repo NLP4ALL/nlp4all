@@ -1,5 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
+<div class="content-section">
+    <table>
+        <tr>
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{ analysis.id }}">Til Tweets</a>
+            </td>
+            {% if not analysis.shared %}
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+</div>
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item">
         <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Hvor mange gættede I rigtigt?</a>

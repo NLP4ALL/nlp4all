@@ -1,0 +1,38 @@
+<canvas id="myChart" width="300" height="300"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        datasets: [
+            {% for d in chart_data.data_points %}
+        {
+            label: '{{ d.label }}',
+            data: [{{d.estimate}}],
+            backgroundColor: ['{{ d.bg_color }}'],
+        },
+        {% endfor %}
+        
+        ]
+    },
+    options: {
+        responsive : true,
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        legend: {
+            display: true,
+            position: 'bottom'
+        },
+        title: {
+            display: true,
+            text: '{{ chart_data.title }}'
+        }
+    }
+});
+<

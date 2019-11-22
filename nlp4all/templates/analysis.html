@@ -1,6 +1,19 @@
 {% extends "layout.html" %}
-
 {% block content %}
+<div class="content-section">
+    <table>
+        <tr>
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Se statistikker for ord og tweets</a>
+            </td>
+            {% if not analysis.shared %}
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+</div>
 <div class="content-section">
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
@@ -42,38 +55,5 @@
         </form>
     </div>
 </div>
-{% if any_robots and not analysis.shared %}
-{% for r in robots %}
-<div class="content-section">
-<h3><a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ r.id }}">{{ r.name }} </a></h3>
-</div>
-{% endfor %}
-{% endif %}
-{% if not analysis.shared %}
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">{{ legend }}</legend>
-            <div class="form-group">
-                {{ robot_form.name.label(class="form-control-label") }}
-                {% if robot_form.name.errors %}
-                    {{ robot_form.name(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in robot_form.name.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ robot_form.name(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-        </fieldset>
-        <div class="form-group">
-            {{ robot_form.submit(class="btn btn-outline-info") }}
-        </div>
-    </form>
-{% else %}
-<p><a href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id}}">Se klassens fælles analyse her.</a></p>
-{% endif %}
 
 {% endblock content %}
