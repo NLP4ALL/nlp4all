@@ -127,7 +127,7 @@ def robot():
     form = BayesianRobotForms()
     if request.method == "POST" and 'add_feature_form-submit' in request.form.to_dict():
         if " " not in form.add_feature_form.data and len(form.add_feature_form.feature.data) > 3 and len(form.add_feature_form.reasoning.data) > 15 and len(robot.features) <= 20:
-            new_feature = {form.add_feature_form.feature.data : form.add_feature_form.reasoning.data}
+            new_feature = {form.add_feature_form.feature.data.strip() : form.add_feature_form.reasoning.data}
             robot.features.update(new_feature)
             flag_modified(robot, "features")
             db.session.add(robot)
@@ -291,19 +291,19 @@ def analysis():
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('home'))
-    form = RegistrationForm()
-    form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
-    if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        org = Organization.query.get(int(form.organizations.data))
-        user = User(username=form.username.data, email=form.email.data, password=hashed_password, organizations=[org])
-        db.session.add(user)
-        db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    #if current_user.is_authenticated:
+    return redirect(url_for('home'))
+    #form = RegistrationForm()
+    #form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+    #if form.validate_on_submit():
+        #hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        #org = Organization.query.get(int(form.organizations.data))
+        #user = User(username=form.username.data, email=form.email.data, password=hashed_password, organizations=[org])
+        #db.session.add(user)
+        #db.session.commit()
+        #flash('Your account has been created! You are now able to log in', 'success')
+        #return redirect(url_for('login'))
+    #return render_template('register.html', title='Register', form=form)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
