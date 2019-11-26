@@ -93,6 +93,11 @@ class BayesianRobot(db.Model):
         # initialize test_set_tweets so we dont need to calculate it twice
         test_set_tweets = set()
         cats = [c.id for c in proj_obj.categories]
+        
+        # make one for individual words too so we can more easily access them later, and make a  list of category names for viewing
+        word_category_predictions = {}
+        cat_names = {cat.id : cat.name for cat in Project.query.get(analysis_obj.project).categories}
+        
         for feature in feature_words:
             predictions_by_feature[feature] = {}
             for word in feature_words[feature]:
@@ -112,11 +117,14 @@ class BayesianRobot(db.Model):
                     # if there are no words in the training set to learn from, we simply ignore the word and do not append anything here
                     if total_cats > 0:
                         predictions = {c : cat_counts[c] / sum(cat_counts.values()) for c in cats}
+                        category_dict = {"category_prediction" : cat_names[max(predictions.items(), key=operator.itemgetter(1))[0]]}
+                        word_category_predictions[word] = category_dict
                         predictions_by_feature[feature][word] = predictions
         # now for each word, figure out which tweets contain them, and build - for each tweet - a classification, that we can then compare to the real value
 
         test_set = proj_obj.training_and_test_sets[0][1]
         tweet_predictions = {}
+
         for word_prediction in predictions_by_feature.values():
             for word, predictions in word_prediction.items():
                 word_tweets = tf_idf.get('words').get(word)
@@ -129,8 +137,13 @@ class BayesianRobot(db.Model):
         # now finally evaluate how well we did, in general and by word
         word_accuracy = {}
         for tweet_key in tweet_predictions:
-            prediction_dict = tweet_predictions[tweet_key]
+            prediction_dict = tweet_predictions[tweet_key].copy()
+            # for d in prediction_dict['predictions']:
+            #     if 'category_prediction' in d.keys():
+            #         del d['category_prediction']
             summed_prediction = dict(functools.reduce(operator.add, map(collections.Counter, prediction_dict['predictions'])))
+            ## the old code that makes summed_prediction also includes the newly added "category_prediction". Since we don't want to
+            ## sum that, we remove it first
             # it can happen that we evaluate a word that we have no information on. In that 
             cat_prediction = max(summed_prediction.items(), key=operator.itemgetter(1))[0] 
             tweet_predictions[tweet_key]['correct'] = test_set[str(tweet_key)] == cat_prediction
@@ -171,18 +184,24 @@ class BayesianRobot(db.Model):
             tweets_targeted = tweets_targeted + feature_info[f]['tweets_targeted']
             feat_dict = {}
             feat_dict['word'] = f
+            feat_dict['category_prediction'] = "N/A"
             feat_dict['accuracy'] = feature_info[f]['accuracy']
             feat_dict['tweets_targeted'] = feature_info[f]['tweets_targeted']
             feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+            # calculate the most often predicted category. This isn't trivial - should it be by total tweets in test set, or just the most common
+            # category across its words? Well, it's obvious. Boo. It needs to be weighted by how many tweets there are.
+            # NO  NO NO! I thought about that wrong. We just want the average of each of the category prediction for each word.
+            ca_tid_scores = {cat_id : 0 for cat_id in cat_names}
+            print(feat_dict)
             table_data.append(feat_dict)
             for word in feature_info[f]['words']:
                 feat_dict = {}
                 feat_dict['word'] = word
+                feat_dict['category_prediction'] = word_category_predictions[word]['category_prediction']
                 feat_dict['accuracy'] = feature_info[f]['words'][word]['accuracy']
                 feat_dict['tweets_targeted'] = feature_info[f]['words'][word]['tweets_targeted']
                 feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
                 table_data.append(feat_dict)
-
         accuracy = len([d for d in tweet_predictions.values() if d['correct']]) / len(tweet_predictions)
         accuracy_info = {'accuracy' : round(accuracy, 2), 'tweets_targeted' : tweets_targeted}
         accuracy_info['features'] = feature_info
@@ -403,5 +422,4 @@ class BayesianAnalysis(db.Model):
                         preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
                         predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
 
-        # print (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
