@@ -2,6 +2,8 @@
 tweet_data/
 data/
 venv/
+site.db
+nlp4all/site.db
 .vscode/
 test/bin
 test/include
