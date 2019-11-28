@@ -202,7 +202,10 @@ class BayesianRobot(db.Model):
                 feat_dict['tweets_targeted'] = feature_info[f]['words'][word]['tweets_targeted']
                 feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
                 table_data.append(feat_dict)
-        accuracy = len([d for d in tweet_predictions.values() if d['correct']]) / len(tweet_predictions)
+        if len(tweet_predictions) == 0:
+            accuracy = 0
+        else:
+            accuracy = len([d for d in tweet_predictions.values() if d['correct']]) / len(tweet_predictions)
         accuracy_info = {'accuracy' : round(accuracy, 2), 'tweets_targeted' : tweets_targeted}
         accuracy_info['features'] = feature_info
         accuracy_info['table_data'] = table_data
