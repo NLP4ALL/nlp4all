@@ -10,7 +10,7 @@ from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetT
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
-import json
+import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
 
@@ -115,7 +115,6 @@ def robot():
             acc_dict['parent_tweets_targeted'] = parent_accuracy['tweets_targeted']
     else:
         acc_dict = {'features' : [], 'accuracy' : 0, 'tweets_targeted' : 0, 'features' : {}, 'table_data' : []}
-    print(robot.features)
     if request.method == "POST" and 'delete' in request.form.to_dict():
         del robot.features[request.form.to_dict()['delete']]
         flag_modified(robot, "features")
@@ -226,7 +225,28 @@ def analysis():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
-    if len(analysis.robots) < 1:
+    if 'tag' in request.form.to_dict():
+        # category = TweetTagCategory.query.get(int(form.choices.data))
+        tag_info = ast.literal_eval(request.form['tag'])
+        tweet_id = tag_info[0]
+        category_id = tag_info[1]
+        the_tweet = Tweet.query.get(tweet_id)
+        category = TweetTagCategory.query.get(category_id)
+        the_tweet = Tweet.query.get(tweet_id)
+        analysis.data = analysis.updated_data(the_tweet, category)
+        ## all this  stuff is necessary  because the database backend doesnt resgister
+        ## changes on JSON
+        flag_modified(analysis, "data")
+        db.session.add(analysis)
+        db.session.merge(analysis)
+        db.session.flush()
+        db.session.commit()
+        tag = TweetTag (category = category.id, analysis = analysis.id, tweet=the_tweet.id, user = current_user.id)
+        db.session.add(tag)
+        db.session.commit()
+        # redirect(url_for('home'))
+        return redirect(url_for('analysis', analysis=analysis_id))
+    if len(analysis.robots) < 1: #TODO: move the creation of a robot to the creation of an analysis.
         robot = BayesianRobot(name =current_user.username + "s robot", analysis=analysis.id)
         db.session.add(robot)
         db.session.flush()
@@ -244,7 +264,7 @@ def analysis():
     #     owned = True
     # if owned == False:
     #     return redirect(url_for('home'))
-    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
     tweets = project.tweets
     the_tweet = None
     if analysis.shared:
@@ -271,6 +291,7 @@ def analysis():
     data['analysis_data'] = analysis.data
     data['user'] = current_user
     data['user_role'] = current_user.roles
+    data['tag_options'] = project.categories
 
     if form.validate_on_submit() and form.data:
         category = TweetTagCategory.query.get(int(form.choices.data))
@@ -291,19 +312,19 @@ def analysis():
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
-    #if current_user.is_authenticated:
-    return redirect(url_for('home'))
-    #form = RegistrationForm()
-    #form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
-    #if form.validate_on_submit():
-        #hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        #org = Organization.query.get(int(form.organizations.data))
-        #user = User(username=form.username.data, email=form.email.data, password=hashed_password, organizations=[org])
-        #db.session.add(user)
-        #db.session.commit()
-        #flash('Your account has been created! You are now able to log in', 'success')
-        #return redirect(url_for('login'))
-    #return render_template('register.html', title='Register', form=form)
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RegistrationForm()
+    form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        org = Organization.query.get(int(form.organizations.data))
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password, organizations=[org])
+        db.session.add(user)
+        db.session.commit()
+        flash('Your account has been created! You are now able to log in', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():

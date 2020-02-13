@@ -22,3 +22,8 @@ flaskblog/.DS_Store
 nlp4all/.DS_Store
 nlp4all/.DS_Store
 *.db
+*.ipynb
+*.xlsx
+*.txt
+*.db
+*.csv
