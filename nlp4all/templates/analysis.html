@@ -37,7 +37,20 @@
     margin-left:auto;margin-right:auto;width:50%;height:45%;
 }
 </style>
+<div class="tab-content" id="searchTerms">
     <div class="content-section">
+        <table class="table">
+            <tr><th>Options</th></tr>
+            <tr>
+            {% for tag_option in tag_options %}
+                <td><form action="" method="post"><button type="submit" value="{{(tweet.id, tag_option.id)}}" name="tag">{{ tag_option.name }}</button></form></td>
+            {% endfor %}
+            </tr>
+        </table>
+    </div>
+</div>
+
+    <!-- <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
@@ -53,7 +66,7 @@
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
-    </div>
+    </div> -->
 </div>
 
 {% endblock content %}

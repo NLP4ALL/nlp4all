@@ -148,12 +148,8 @@ def  get_user_projects(a_user):
         if a_user.admin:
                 my_projects = Project.query.all()
         else:
-                print("not admin")
                 user_orgs = [org.id for org in a_user.organizations]
-                print(user_orgs)
                 my_projects = Project.query.filter(Project.organization.in_(user_orgs)).all()
-                print([p.organization for p in Project.query.all()])
-        
         return(my_projects)
 
 def add_project(name, description, org, cat_ids):
