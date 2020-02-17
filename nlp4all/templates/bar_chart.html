@@ -24,6 +24,14 @@ var myChart = new Chart(ctx, {
                     beginAtZero: true
                 }
             }]
+        },
+        legend: {
+            display: true,
+            position: 'bottom'
+        },
+        title: {
+            display: true,
+            text: '{{ chart_data.title }}'
         }
     }
 });

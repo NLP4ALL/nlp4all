@@ -1,50 +1,104 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h5>{{ r.name }}</h5>
-<h6>Robotten kigger lige nu på disse ord:</h6>
-<table>
-<tr><th>Ord</th><th>Begrundelse</th>
-{% for f in r.features.items() %}
-<tr><td>{{ f[0] }}</td><td>{{ f[1] }}</td></tr>
-{% endfor %}
-</table>
-<h6>Tilfoej ny feature</h6>
 
+<table class="table"> 
+    <tr>
+{%if r.parent != None %}
+<td><a href="{{ url_for('robot') }}?robot={{ r.parent}}"><<<< Forrige Resultater</a></td>
+{% endif %}
+<td><a href="{{ url_for('analysis') }}?analysis={{ r.analysis}}">Til Tweets</a></td>
+<td><a href="{{ url_for('robot_summary') }}?analysis={{ r.analysis}}">Robot-Oversigt</a></td>
+{%if r.child != None %}
+<td><a href="{{ url_for('robot') }}?robot={{ r.child}}">Arbejd videre med næste robot >>>></a></td>
+{% endif %}
+</table>
+<h5>{{ r.name }} {% if r.retired %} (Færdig) {% endif %}</h5>
+{% if r.retired %}
+<div class="content-section">
+<p>Antal tweets som I fanger: {{ acc_dict.tweets_targeted }}
+{% if r.parent != None %}
+Sidste gang var det: {{ acc_dict.parent_tweets_targeted }}
+{% endif %}
+</p>
+<p>Tweets som jeres ord gætter korrekt: {{ acc_dict.accuracy * 100 }}% 
+{% if r.parent != None %}
+Sidste gang var det: {{ acc_dict.parent_accuracy }}%
+{% endif %}
+</p>
+<p><b>Score: {{ acc_dict.accuracy * acc_dict.tweets_targeted }}
+{% if r.parent != None %}
+Sidste gang var det: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted }}
+{% endif %}
+</b></p>
+</div>
+{% endif %}
+{% if not r.retired %}
+<ul class="nav nav-tabs" id="searchTerms" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Søgetermer</a>
+    </li>
+{% endif %}
+</ul>
+{% if not r.retired %}
+<div class="tab-content" id="searchTerms">
     <div class="content-section">
+        <table class="table">
+            <tr><th>Term</th><th>Forklaring</th></tr>
+            {% for feature in r.features.items() %}
+                <tr><td>{{ feature[0] }}</td><td>{{ feature [1] }}</td><td><form action="" method="post"><button type="submit" value="{{feature[0]}}" name="delete">Delete</button></form></td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if r.retired %}
+<div class="tab-content" id="searchResults">
+            {% set table_data = acc_dict.table_data %}
+            {% set table_name = "words" %}
+            {% include "data_table.html" %}
+</div>
+{% endif %}
+{% if not r.retired %}
         <form method="POST" action="">
-            {{ form.hidden_tag() }}
+            {{ form.add_feature_form.hidden_tag() }}
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">Tilføj et nyt ord til din robot</legend>
                 <div class="form-group">
-                    {{ form.feature.label(class="form-control-label") }}
-                    {% if form.feature.errors %}
-                        {{ form.feature(class="form-control form-control-lg is-invalid") }}
+                    {{ form.add_feature_form.feature.label(class="form-control-label") }}
+                    {% if form.add_feature_form.feature.errors %}
+                        {{ form.add_feature_form.feature(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.feature.errors %}
+                            {% for error in form.add_feature_form.feature.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.feature(class="form-control form-control-lg") }}
+                        {{ form.add_feature_form.feature(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.reasoning.label(class="form-control-label") }}
-                    {% if form.reasoning.errors %}
-                        {{ form.reasoning(class="form-control form-control-lg is-invalid") }}
+                    {{ form.add_feature_form.reasoning.label(class="form-control-label") }}
+                    {% if form.add_feature_form.reasoning.errors %}
+                        {{ form.add_feature_form.reasoning(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.reasoning.errors %}
+                            {% for error in form.add_feature_form.reasoning.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.reasoning(class="form-control ") }}
+                        {{ form.add_feature_form.reasoning(class="form-control ") }}
                     {% endif %}
                 </div>
 
             </fieldset>
             <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
+                {{ form.add_feature_form.submit(class="btn btn-outline-info") }}
+            </div>
+            <div class="form-group">
+                {{ form.run_analysis_form.run_analysis(class="btn btn-outline-info") }}
             </div>
         </form>
+    </div>
+{% endif %}
 {% endblock content %}
