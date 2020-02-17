@@ -1,6 +1,9 @@
 .gitignore
 tweet_data/
 data/
+venv/
+site.db
+nlp4all/site.db
 .vscode/
 test/bin
 test/include
@@ -18,3 +21,9 @@ nlp4all/site.db
 flaskblog/.DS_Store
 nlp4all/.DS_Store
 nlp4all/.DS_Store
+*.db
+*.ipynb
+*.xlsx
+*.txt
+*.db
+*.csv

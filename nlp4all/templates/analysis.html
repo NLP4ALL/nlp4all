@@ -1,12 +1,25 @@
 {% extends "layout.html" %}
-
 {% block content %}
-{{ true_category }}
+<div class="content-section">
+    <table>
+        <tr>
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Se statistikker for ord og tweets</a>
+            </td>
+            {% if not analysis.shared %}
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+</div>
 <div class="content-section">
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
 </div>
 <div class="content-section">
+<p> {{ tweet.time_posted }} </p>
 {% for tup in word_tuples %}
 <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%">{{ tup.0 }}</span>
 {% endfor %}
@@ -14,7 +27,7 @@
 <style type="text/css">
 {% for tup in word_tuples %}
 .{{tup.1}}-{{tup.2}} {
-    color : hsl({{tup.3}}, {{tup.2 }}% , 50%);
+    color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
 }   
 {% endfor %}
 </style>
@@ -24,7 +37,20 @@
     margin-left:auto;margin-right:auto;width:50%;height:45%;
 }
 </style>
+<div class="tab-content" id="searchTerms">
     <div class="content-section">
+        <table class="table">
+            <tr><th>Options</th></tr>
+            <tr>
+            {% for tag_option in tag_options %}
+                <td><form action="" method="post"><button type="submit" value="{{(tweet.id, tag_option.id)}}" name="tag">{{ tag_option.name }}</button></form></td>
+            {% endfor %}
+            </tr>
+        </table>
+    </div>
+</div>
+
+    <!-- <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
@@ -40,37 +66,7 @@
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
-    </div>
+    </div> -->
 </div>
-{% if any_robots %}
-{% for r in robots %}
-<div class="content-section">
-<h3><a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ r.id }}">{{ r.name }} </a></h3>
-</div>
-{% endfor %}
-{% else %}no robots{% endif %}
-
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">{{ legend }}</legend>
-            <div class="form-group">
-                {{ robot_form.name.label(class="form-control-label") }}
-                {% if robot_form.name.errors %}
-                    {{ robot_form.name(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in robot_form.name.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ robot_form.name(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-        </fieldset>
-        <div class="form-group">
-            {{ form.submit(class="btn btn-outline-info") }}
-        </div>
-    </form>
 
 {% endblock content %}

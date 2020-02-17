@@ -8,7 +8,7 @@
     <div class="content-section">
 {% for p in projects %}
 <a class="nav-item nav-link" href="{{ url_for('project') }}?project={{ p.id }}">{{ p.name }}</a>
-<p>I dette projekt skal du træne en robot til at kende forskel på tweets fra Dansk Folkeparti og Enhedslisten.</p>
+<p>{{ p.description }} </p>
 {% endfor %}
 </div>
 {% endblock content %}

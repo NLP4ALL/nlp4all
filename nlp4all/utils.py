@@ -6,6 +6,8 @@ from datetime import datetime
 import time
 import operator
 from nlp4all import db
+import random, itertools
+from nlp4all.models import BayesianAnalysis, BayesianRobot
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -128,10 +130,68 @@ def add_category(name, description):
         db.session.add(category)
         db.session.commit()
 
-def add_project(name, org, cats):
-        project = Project(name = name, organization = org, categories = cats)
+
+def  get_user_project_analyses(a_user, a_project):
+        return BayesianAnalysis.query.filter_by(project=a_project.id)
+        # if a_user.admin:
+        #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
+        # else:
+        #         analyses = []
+        #         all_project_analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
+        #         return [a for a in all_project_analyses if a.shared or a.user == a_user.id]
+
+
+def  get_user_projects(a_user):
+        # people have access to projects iif they are part of the organizatioin of those 
+        # projects, or  because the user is an admiin
+        my_projects = []
+        if a_user.admin:
+                my_projects = Project.query.all()
+        else:
+                user_orgs = [org.id for org in a_user.organizations]
+                my_projects = Project.query.filter(Project.organization.in_(user_orgs)).all()
+        return(my_projects)
+
+def add_project(name, description, org, cat_ids):
+        print(description)
+        cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
+        tweet_objs = [t for cat in cats_objs for t in cat.tweets]
+        tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
+        tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
+        training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
+        project = Project(name = name, description = description, organization = org, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
         db.session.add(project)
         db.session.commit()
+        return(project)
+
+def create_n_train_and_test_sets(n, dict_of_tweets_and_cats):
+        # takes a list of tups each containing a tweet_id and tweet_category
+        return_list = []
+        half = int(len(dict_of_tweets_and_cats) / 2)
+        for n in range(n):
+                d1, d2 = split_dict(dict_of_tweets_and_cats)
+                return_list.append( (d1, d2) )
+        return return_list
+
+
+def split_dict(adict):
+        keys = list(adict.keys())
+        n = len(keys) // 2
+        random.shuffle(keys)
+        return ( { k : adict[k] for k in keys[:n] } , { k : adict[k] for k in keys[n:] } )
+
+def tf_idf_from_tweets_and_cats_objs(tweets, cats):
+        tf_idf = {}
+        tf_idf['cat_counts'] = { cat.id : 0 for cat in cats}
+        tf_idf['words'] = {}
+        all_words = sorted(list(set([word for t in tweets for word in t.words])))
+        for tweet in tweets:
+                tf_idf['cat_counts'][tweet.category] = tf_idf['cat_counts'][tweet.category] + 1
+                for word  in tweet.words:
+                        the_list = tf_idf['words'].get(word, [])
+                        the_list.append((tweet.id, tweet.category))
+                        tf_idf['words'][word] = the_list
+        return tf_idf
 
 def twitter_date_to_unix(date_str):
         date_rep = '%a %b %d %H:%M:%S %z %Y'
@@ -162,6 +222,7 @@ def add_tweet_from_dict(indict, category):
                 text = " ".join([clean_word(word) for word in t.split()])
         )
         db.session.add(a_tweet)
+        db.session.commit()
 
 def add_role(role_name):
         role = Role(name=role_name)
