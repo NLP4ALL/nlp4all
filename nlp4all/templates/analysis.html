@@ -27,7 +27,7 @@
 <style type="text/css">
 {% for tup in word_tuples %}
 .{{tup.1}}-{{tup.2}} {
-    color : hsl({{tup.3}}, {{tup.2 }}% , 50%);
+    color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
 }   
 {% endfor %}
 </style>
