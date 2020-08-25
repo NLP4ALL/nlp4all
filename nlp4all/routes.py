@@ -14,7 +14,6 @@ import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
 
-
 @app.route("/")
 @app.route("/home")
 @app.route("/home/", methods=['GET', 'POST'])
@@ -98,6 +97,14 @@ def ajax():
     b = request.args.get('b', 0, type=int)
     number = a + b
     return render_template('ajax.html', title='Test')
+
+
+@app.route("/upload_netlogo_data", methods=['GET', 'POST'])
+def upload_netlogo_data():
+    t = request.args.get('input', 'hej', type=str)
+    print(request.args.to_dict())
+    print(t)
+    return "hej"
 
 
 @app.route("/robot", methods=['GET', 'POST'])
