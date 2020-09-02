@@ -71,6 +71,14 @@ class AddBayesianAnalysisForm(FlaskForm):
     number = IntegerField("How many of each category?")
     submit = SubmitField('Create Analysis')
 
+# Telma's form for selecting an analysis type
+class AddAnalysisForm(FlaskForm):
+    name = StringField('Title of Analysis', validators=[DataRequired()])
+    method = SelectField('What kind of analysis do you want to run?', choices=[(1, 'Naive Bayes'), (2, 'Logistic Regression')], validators=[DataRequired()])
+    shared = BooleanField('Shared project?')
+    number = IntegerField("How many of each category?")
+    submit = SubmitField('Create Analysis')
+
 class RunBayesianAnalysisRobot(FlaskForm):
     run_analysis = SubmitField('Kør analysen!')
 
