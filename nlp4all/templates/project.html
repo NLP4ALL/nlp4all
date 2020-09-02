@@ -32,6 +32,9 @@
                     {{ form.name(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
+            <div>
+                Type of analysis: {{ form.method(size=1) }}
+            </div>
 
                 <div class="form-check">
                     {{ form.shared(class="form-check-input") }}
