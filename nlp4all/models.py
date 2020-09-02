@@ -402,27 +402,47 @@ class BayesianAnalysis(db.Model):
         return self.data
     
     def get_predictions_and_words(self, words):
-        # take each word  and  calculate a probabilty for each category
+        #this function takes the 'words' from one tweet, 
+        # it then finds all the categories in the project
+        # and calculates the probability that the words provided from the tweet predict each of those categories.
+        #
+        # first get the categories
         categories = Project.query.get(self.project).categories
         category_names = [c.name for c in categories if c.name in self.data.keys()]
+        # create empty dicts to put data in
         preds = {}
         predictions = {}
+        # this is for when we have tagged no tweets in a particular category. We just assign 0 as the probability because we don't know anything about that category
         if self.data['counts'] == 0:
             predictions = {c : {w : 0} for w in words for c in category_names}
-            # predictions = {word : {category : 0 for category in category_names} for word in words}
+        # if we have tagged at least one word as beloging to a category
         else:
-            for w in words: # only categorize each word once
+            # then for each word in thet tweet
+            for w in words: 
+                # create an entry for that word in the predictions dictionary
+                # i.e. if the word is 'dansk', we now have a 
+                # preds['dansk']
                 preds[w] = {c : 0 for c in category_names}
+                # then for each category in the project
                 for cat in category_names:
+                    # add a new dictionary in the predictions dictionary
                     predictions[cat] = predictions.get(cat, {})
+                    # then calculate  bayesian probabilities
+                    # ba = what is the probabilyth that this tweet is category B, given that we see the word A
+                    # a = prob of the word in general
+                    # b = prob of the category in general
                     prob_ba = self.data[cat]['words'].get(w, 0) / self.data[cat]['counts']
                     prob_a = self.data[cat]['counts'] / self.data['counts'] 
                     prob_b = sum([self.data[c]['words'].get(w, 0) for c in category_names]) / self.data['counts']
+                    # specal case for "never seen the category before" = just assign probability 0
+                    # we special case this because prob_b is in the denominatory and if it is 0, we get division by 0 error
                     if  prob_b == 0:
                         preds[w][cat] = 0
                         predictions[cat][w] = 0
+                    # then calcualte and round (otherwise we get 17 decimals)
                     else:
                         preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
                         predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
-
+        # finally, we iterate over the predictions.items (probabilities for each word) and 
+        # take the averages (i.e. we sum, and then divide by the numbers)t
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
