@@ -8,7 +8,7 @@ import operator
 from nlp4all import db
 import random, itertools
 from nlp4all.models import BayesianAnalysis, BayesianRobot
-
+import pandas as pd
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
     no_colors = 1 if no_colors == 0 else no_colors
@@ -258,3 +258,25 @@ def create_bar_chart_data(predictions, title=""):
 def hsl_color_to_string(hsltup):
         return(f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)")
          
+
+## logirstic regression
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
+
+# for the results
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+tfidfconverter = TfidfVectorizer(analyzer='word', max_features=2000, min_df=3, max_df=0.7)   # added analyzer
+logreg = LogisticRegression()
+
+# make pd df
+
+def make_pandas_df(cat_list):
+        tweets = Tweet.query.all()
+        tweet_id = list(tweet.id for tweet in tweets)
+        tweet_text = list(tweet.text for tweet in tweets)
+        cats = list(tweet.handle for tweet in tweets)
+        tweet_zip = list(zip(tweet_id, tweet_text, cats))
+        tweet_pd = pd.DataFrame(tweet_zip, columns=['id', 'text', 'handle'])
+        tweet_df = tweet_pd[tweet_pd['handle'].isin(cat_list)]
+        return(tweet_df)

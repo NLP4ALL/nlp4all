@@ -1,11 +1,13 @@
 from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from nlp4all import db, login_manager, app
+from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 import collections
 import collections, functools, operator 
 import statistics
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+import pandas as pd
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -18,6 +20,7 @@ class BayesianRobot(db.Model):
     parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
     child = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id'))
+    #analysis_method = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.method'), default=None)
     features = db.Column(JSON, default = {})
     accuracy = db.Column(JSON, default = {})
     retired = db.Column(db.Boolean, default=False)
@@ -377,19 +380,107 @@ class TweetTag(db.Model):
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+#class LogRegAnalysis(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+#    name = db.Column(db.String(50))
+#    tags = db.relationship('TweetTag') # this also tells us which tweets
+#    data = db.Column(JSON)
+#    project = db.Column(db.Integer, db.ForeignKey('project.id'))
+#    robots = db.relationship('BayesianRobot')
+#    shared = db.Column(db.Boolean, default=False)
+#    tweets = db.Column(JSON, default=[])
+#    method = db.Column(db.String(50), nullable =False) ### add method to db
+
+class LogRegAnalysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    tweets = db.Column(JSON, default=[])
+    method = db.Column(db.String(50))
+    #tags = db.relationship('TweetTag') # this also tells us which tweets
+    
+    def get_project(self):
+        return Project.query.get(self.project)
+
+    def get_tweets(self, cat_list):
+        # to be modified later
+        #cat_list = ['enhedslisten', 'danskdf1995'] # 
+
+        tweet_df = utils.make_pandas_df(cat_list)
+
+
+        return(tweet_df)
+
+    def logreg_alltweets(self, tweet_df):
+        tweet_text = tweet_df['text']
+        categories = tweet_df['handle']
+
+        # tf-idf
+        X = utils.tfidfconverter.fit_transform(tweet_text).toarray()
+        # add indexes to check
+        tweet_df['ix_values'] = tweet_df.index.values
+
+        # split into training and testing sets
+        X_train, X_test, y_train, y_test = utils.train_test_split(X, categories, test_size=0.2, random_state=4)
+        
+        # filter df
+        test_index = y_test.index.values
+        test_id =  tweet_df[tweet_df['id'].isin(test_index)]
+        # fit the model with data
+        utils.logreg.fit(X_train,y_train)
+
+        # predict
+        y_pred=utils.logreg.predict(X_test) # category
+        y_probs=utils.logreg.predict_proba(X_test) # probability
+        y_cats = utils.logreg.classes_ # category order
+        
+        # make a df with results
+        prob_df = round(pd.DataFrame(y_probs,columns=y_cats).set_index(test_index),2)
+        log_df = pd.DataFrame(y_test)
+        
+        log_df = log_df.merge(prob_df,  left_index=True, right_index=True) # add handle == right cat
+        # add predictions
+        log_df['predicted_cat'] = y_pred
+
+        # merge with test id df
+        log_df=log_df.merge(test_id, left_index=True, right_index=True)
+        results_df = log_df.iloc[:, 0:6]
+
+        #Analysis + results
+        logreg_matrix = confusion_matrix(y_test, y_pred) 
+        total=sum(logreg_matrix[0]), sum(logreg_matrix[1])
+        #total_1 = 
+        logreg_class = classification_report(y_test, y_pred)
+        logreg_accuracy = round(accuracy_score(y_test, y_pred),2)
+
+        return(results_df, logreg_matrix, logreg_class, logreg_accuracy, total)
+
+class Analysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id')) 
+    name = db.Column(db.String(50)) 
+    project = db.Column(db.Integer, db.ForeignKey('project.id'))
+    method = db.Column(db.String(50))
+
+
 class BayesianAnalysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user = db.Column(db.Integer, db.ForeignKey('user.id'))
-    name = db.Column(db.String(50))
-    tags = db.relationship('TweetTag') # this also tells us which tweets
+    user = db.Column(db.Integer, db.ForeignKey('user.id')) # this one we keep
+    name = db.Column(db.String(50)) # this on we keep
+    tags = db.relationship('TweetTag') # this one 
     data = db.Column(JSON)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
+    method = db.Column(db.String(50), default="Naive Bayes") ### add method to db
+    
 
     def get_project(self):
         return Project.query.get(self.project)
+
+    def get_method(self):
+        return Project.query.get(self.method)
 
     def updated_data(self, tweet, category):
         self.data['counts'] = self.data['counts'] + 1
@@ -446,3 +537,35 @@ class BayesianAnalysis(db.Model):
         # finally, we iterate over the predictions.items (probabilities for each word) and 
         # take the averages (i.e. we sum, and then divide by the numbers)t
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
+
+    def logreg_alltweets(self, tweet_data):
+        #categories
+        cats = list(tweet.handle for tweet in tweet_data)
+        # text as the body of the analysis
+        tweet_text = list(tweet.text for tweet in tweet_data)
+        # convert to a tf-idf
+        X = utils.tfidfconverter.fit_transform(tweet_text).toarray() # from utils
+        
+        # split into training and testing set
+        X_train, X_test, y_train, y_test = utils.train_test_split(X, cats, test_size=0.2, random_state=0)
+
+        # fit the model with data
+        utils.logreg.fit(X_train,y_train)
+
+        # predict
+        y_pred=utils.logreg.predict(X_test)
+        #y_probs=utils.logreg.predict_proba(X_test)
+        #return y_pred
+        logreg_matrix = confusion_matrix(y_test, y_pred) 
+        logreg_class = classification_report(y_test, y_pred)
+        logreg_accuracy = accuracy_score(y_test, y_pred)
+        
+        return(logreg_matrix, logreg_class, logreg_accuracy)
+
+#class AnalysisCopy(BayesianAnalysis):
+# Define the Logistic Regression - Predictions table
+
+#logreg_preds = db.Table('logreg_table',
+#    db.Column('tweets', db.Integer, db.ForeignKey('user.id')),
+#    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+#)

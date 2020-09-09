@@ -27,3 +27,10 @@ nlp4all/.DS_Store
 *.txt
 *.db
 *.csv
+site.db
+
+db_init_telma.py
+
+migrations
+tweet_data
+init_dbt.py

@@ -6,14 +6,14 @@ from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AddAnalysisForm
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, LogRegAnalysis
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
 import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
-
+import pandas as pd
 
 @app.route("/")
 @app.route("/home")
@@ -74,7 +74,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets )
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets , method=method)
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -225,6 +225,9 @@ def analysis():
         return redirect(url_for('login'))
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
+    analysis_method = analysis.method
+    if analysis_method == 'Logistic Regression':
+        return redirect(url_for('log_analysis'))
     project = Project.query.get(analysis.project)
     if 'tag' in request.form.to_dict():
         # category = TweetTagCategory.query.get(int(form.choices.data))
@@ -310,6 +313,28 @@ def analysis():
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
     return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
+
+@app.route("/log_analysis")
+def log_analysis():
+    # get current project
+    project = Project.query.get(1)
+
+    cats =project.categories
+    cat_list =[]
+    for i in range(len(cats)):
+        cat_list.append(cats[i].name)
+    analysis=LogRegAnalysis()
+    tweet_data = analysis.get_tweets(cat_list)
+    #analysis_id = request.args.get('analysis', 1, type=int)
+    #analysis = BayesianAnalysis.query.get(analysis_id)
+    ## change to get tweets from the project instead
+    #tweets = project.query.get(tweets).all()
+    results, logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_alltweets(tweet_data)
+    db.session.add(analysis)
+    db.session.merge(analysis)
+    db.session.flush()
+    db.session.commit()
+    return render_template('log_analysis.html', title='Logistic Analysis', analysis=analysis, total=total, lg_matrix=logreg_matrix, lg_class = logreg_class, lg_acc=logreg_accuracy, results=results)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
