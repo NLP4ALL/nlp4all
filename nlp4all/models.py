@@ -393,11 +393,12 @@ class TweetTag(db.Model):
 #    method = db.Column(db.String(50), nullable =False) ### add method to db
 
 class LogRegAnalysis(db.Model):
+    __tablename__ = 'log_reg_analysis'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    tweets = db.Column(JSON, default=[])
-    method = db.Column(db.String(50))
-    #tags = db.relationship('TweetTag') # this also tells us which tweets
+    #name = db.Column(db.String(50))
+    #data = db.Column(JSON, default=[])
+    #method = db.Column(db.String(50))
+    #hello = db.Column(db.String(50))
     
     def get_project(self):
         return Project.query.get(self.project)
@@ -407,8 +408,6 @@ class LogRegAnalysis(db.Model):
         #cat_list = ['enhedslisten', 'danskdf1995'] # 
 
         tweet_df = utils.make_pandas_df(cat_list)
-
-
         return(tweet_df)
 
     def logreg_alltweets(self, tweet_df):
@@ -454,6 +453,23 @@ class LogRegAnalysis(db.Model):
         logreg_accuracy = round(accuracy_score(y_test, y_pred),2)
 
         return(results_df, logreg_matrix, logreg_class, logreg_accuracy, total)
+
+    def updated_tweets(self, results_df):
+    
+        #for i in results_df.columns[i]: # create columns
+        #    if results_df.columns[i] not in self.data.keys():
+        #       self.data[results_df.columns[i]] = {'counts' : 0, 'words' : {}}
+        #self.data[category.name]['counts'] = (self.data[category.name].get('counts', 0)) + 1
+        for t in range(len(results_df)):
+            if results_df['id'].iloc[t] not in self.data.keys():
+                tweet_id = str(results_df['id'].iloc[t])
+                self.data[tweet_id] = {'correct_cat' : {}, 'predicted_cat':{}, 'cat_1' : 0, 'cat_2' : 0, 'id' : 0, 'text': {}}
+            
+        #   self.data[category.name] = {'counts' : 0, 'words' : {}}
+            #loop to save the pd dataframe into json to this analysis object
+            self.data[tweet_id]['correct_cat'][t] = results_df['correct_cat'].iloc[t]
+
+        return self.data
 
 class Analysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)

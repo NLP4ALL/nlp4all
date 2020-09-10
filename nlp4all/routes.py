@@ -74,7 +74,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets , method=method)
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, method=method)
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -226,7 +226,7 @@ def analysis():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     analysis_method = analysis.method
-    if analysis_method == 'Logistic Regression':
+    if analysis_method == '2':
         return redirect(url_for('log_analysis'))
     project = Project.query.get(analysis.project)
     if 'tag' in request.form.to_dict():
@@ -330,11 +330,38 @@ def log_analysis():
     ## change to get tweets from the project instead
     #tweets = project.query.get(tweets).all()
     results, logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_alltweets(tweet_data)
+    #db.session.add(analysis)
+    #db.session.merge(analysis)
+    #db.session.flush()
+    #db.session.commit()
+    return render_template('log_analysis.html', title='Logistic Analysis', analysis=analysis, total=total, lg_matrix=logreg_matrix, lg_class = logreg_class, lg_acc=logreg_accuracy, results=results)
+
+@app.route("/log_all_tweets")
+def log_all_tweets():
+    # get current project
+    project = Project.query.get(1)
+
+    cats =project.categories
+    cat_list =[]
+    for i in range(len(cats)):
+        cat_list.append(cats[i].name)
+    analysis=LogRegAnalysis()
+    tweet_data = analysis.get_tweets(cat_list)
+    #analysis_id = request.args.get('analysis', 1, type=int)
+    #analysis = BayesianAnalysis.query.get(analysis_id)
+    ## change to get tweets from the project instead
+    #tweets = project.query.get(tweets).all()
+    results, logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_alltweets(tweet_data)
     db.session.add(analysis)
     db.session.merge(analysis)
     db.session.flush()
     db.session.commit()
-    return render_template('log_analysis.html', title='Logistic Analysis', analysis=analysis, total=total, lg_matrix=logreg_matrix, lg_class = logreg_class, lg_acc=logreg_accuracy, results=results)
+    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis,  results=results, column_names=results.columns.values, row_data=list(results.values.tolist()),
+                           link_column="link", zip=zip)
+
+@app.route("/sort_table")
+def sort_table():
+    return render_template('sort_table.html')
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
