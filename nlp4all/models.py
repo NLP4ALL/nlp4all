@@ -8,6 +8,7 @@ import collections, functools, operator
 import statistics
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import pandas as pd
+#from sqlalchemy.ext.declarative import declared_attr
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -263,7 +264,7 @@ class User(db.Model, UserMixin):
     organizations = db.relationship('Organization', secondary='user_orgs')
     admin = db.Column(db.Boolean, default=False)
     roles = db.relationship('Role', secondary='user_roles')
-    analyses = db.relationship('BayesianAnalysis')
+    analyses = db.relationship('BayesianAnalysis') # Bayesian modified
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
@@ -339,7 +340,7 @@ class Project(db.Model):
     name = db.Column(db.String(50))
     description = db.Column(db.String)
     organization = db.Column(db.Integer, db.ForeignKey('organization.id'))
-    analyses = db.relationship('BayesianAnalysis')
+    analyses = db.relationship('BayesianAnalysis') # Bayesian modified
     categories = db.relationship('TweetTagCategory', secondary='project_categories')
     tf_idf = db.Column(JSON)
     tweets = db.relationship('Tweet', secondary='tweet_project')
@@ -376,27 +377,39 @@ class TweetTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
     category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
-    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE"))
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-#class LogRegAnalysis(db.Model):
+#class ConfusionMatrix(db.Model):
+    #id = db.Column(db.Integer, primary_key=True)
+    #analysis = db.Column(db.Integer, db.ForeignKey('analysis.id', ondelete="CASCADE"))
+    #data = db.Column(JSON)
+
+    
+#class Analysis(db.Model):
+#    __abstract__ = True
 #    id = db.Column(db.Integer, primary_key=True)
-#    user = db.Column(db.Integer, db.ForeignKey('user.id'))
-#    name = db.Column(db.String(50))
-#    tags = db.relationship('TweetTag') # this also tells us which tweets
-#    data = db.Column(JSON)
-#    project = db.Column(db.Integer, db.ForeignKey('project.id'))
-#    robots = db.relationship('BayesianRobot')
-#    shared = db.Column(db.Boolean, default=False)
-#    tweets = db.Column(JSON, default=[])
-#    method = db.Column(db.String(50), nullable =False) ### add method to db
+#    @declared_attr
+#    def user(cls):
+#        return db.Column(db.Integer, ForeignKey('user.id'))
+#    #user = db.Column(db.Integer, db.ForeignKey('user.id')) 
+#    name = db.Column(db.String(50)) 
+#    @declared_attr
+#    def project(cls):
+#        return db.Column(db.Integer, ForeignKey('project.id'))
+#    #project = db.Column(db.Integer, db.ForeignKey('project.id'))
+#    method = db.Column(db.String(50), default ='1')
+
 
 class LogRegAnalysis(db.Model):
     __tablename__ = 'log_reg_analysis'
     id = db.Column(db.Integer, primary_key=True)
     #name = db.Column(db.String(50))
-    #data = db.Column(JSON, default=[])
+    #data = db.Column(JSON)
+    #parent = db.Column(db.Integer, db.ForeignKey('analysis.id'))
+    #shared = db.Column(db.Boolean, default=False)
+    #tweets = db.Column(JSON, default=[])
     #method = db.Column(db.String(50))
     #hello = db.Column(db.String(50))
     
@@ -405,7 +418,7 @@ class LogRegAnalysis(db.Model):
 
     def get_tweets(self, cat_list):
         # to be modified later
-        #cat_list = ['enhedslisten', 'danskdf1995'] # 
+        #cat_list = ['enhedslisten', 'danskdf1995'] 
 
         tweet_df = utils.make_pandas_df(cat_list)
         return(tweet_df)
@@ -435,27 +448,41 @@ class LogRegAnalysis(db.Model):
         
         # make a df with results
         prob_df = round(pd.DataFrame(y_probs,columns=y_cats).set_index(test_index),2)
-        log_df = pd.DataFrame(y_test)
+        prob_df['correct_cat'] = y_test
+        prob_df['predicted_cat'] = y_pred
+        prob_df = prob_df.sort_index()
+        prob_df['tweet_id'] = list(test_id['id']) # just to check that it matches with the index
+        prob_df['text'] = list(test_id['text'])
+        prob_df['handle'] = list(test_id['handle']) # doublecheck
+        results_df = prob_df.iloc[:, 0:6]
+        results_df['correct'] = list(results_df['correct_cat'] == results_df['predicted_cat'])
+        #log_df = pd.DataFrame(y_test)
         
-        log_df = log_df.merge(prob_df,  left_index=True, right_index=True) # add handle == right cat
+        #log_df = log_df.merge(prob_df,  left_index=True, right_index=True) # add handle == right cat
         # add predictions
-        log_df['predicted_cat'] = y_pred
+        #log_df['predicted_cat'] = y_pred
 
         # merge with test id df
-        log_df=log_df.merge(test_id, left_index=True, right_index=True)
-        results_df = log_df.iloc[:, 0:6]
+        #log_df=log_df.merge(test_id, left_index=True, right_index=True)
+        
 
+        return(results_df)
+
+    def logreg_results(self, results_df):
+        # get the columns from the analysed data
+        y_pred = results_df['predicted_cat']
+        y_test = results_df['correct_cat']
         #Analysis + results
         logreg_matrix = confusion_matrix(y_test, y_pred) 
-        total=sum(logreg_matrix[0]), sum(logreg_matrix[1])
+        total=[sum(logreg_matrix[0]), sum(logreg_matrix[1]), logreg_matrix[0][0]+ logreg_matrix[1][0], logreg_matrix[0][0]+ logreg_matrix[1][0]]
         #total_1 = 
         logreg_class = classification_report(y_test, y_pred)
         logreg_accuracy = round(accuracy_score(y_test, y_pred),2)
 
-        return(results_df, logreg_matrix, logreg_class, logreg_accuracy, total)
+        return(logreg_matrix, logreg_class, logreg_accuracy, total)
 
-    def updated_tweets(self, results_df):
-    
+    def updated_tweet_data(self, results_df):
+        #self.data['counts'] = self.data['counts'] + 1
         #for i in results_df.columns[i]: # create columns
         #    if results_df.columns[i] not in self.data.keys():
         #       self.data[results_df.columns[i]] = {'counts' : 0, 'words' : {}}
@@ -471,32 +498,25 @@ class LogRegAnalysis(db.Model):
 
         return self.data
 
-class Analysis(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user = db.Column(db.Integer, db.ForeignKey('user.id')) 
-    name = db.Column(db.String(50)) 
-    project = db.Column(db.Integer, db.ForeignKey('project.id'))
-    method = db.Column(db.String(50))
 
 
 class BayesianAnalysis(db.Model):
+    #__tablename__ = 'bayesian_analysis'
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id')) # this one we keep
-    name = db.Column(db.String(50)) # this on we keep
+    name = db.Column(db.String(50)) # this one we keep
     tags = db.relationship('TweetTag') # this one 
     data = db.Column(JSON)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
-    method = db.Column(db.String(50), default="Naive Bayes") ### add method to db
+    method = db.Column(db.String(50), default="1") ### add method to db
     
 
     def get_project(self):
         return Project.query.get(self.project)
 
-    def get_method(self):
-        return Project.query.get(self.method)
 
     def updated_data(self, tweet, category):
         self.data['counts'] = self.data['counts'] + 1
@@ -581,7 +601,3 @@ class BayesianAnalysis(db.Model):
 #class AnalysisCopy(BayesianAnalysis):
 # Define the Logistic Regression - Predictions table
 
-#logreg_preds = db.Table('logreg_table',
-#    db.Column('tweets', db.Integer, db.ForeignKey('user.id')),
-#    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
-#)
