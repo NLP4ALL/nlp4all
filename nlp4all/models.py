@@ -395,9 +395,9 @@ class TweetTag(db.Model):
 class LogRegAnalysis(db.Model):
     __tablename__ = 'log_reg_analysis'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    data = db.Column(JSON, default=[])
-    method = db.Column(db.String(50))
+    #name = db.Column(db.String(50))
+    #data = db.Column(JSON, default=[])
+    #method = db.Column(db.String(50))
     #hello = db.Column(db.String(50))
     
     def get_project(self):
@@ -405,7 +405,7 @@ class LogRegAnalysis(db.Model):
 
     def get_tweets(self, cat_list):
         # to be modified later
-        #cat_list = ['enhedslisten', 'danskdf1995'] 
+        #cat_list = ['enhedslisten', 'danskdf1995'] # 
 
         tweet_df = utils.make_pandas_df(cat_list)
         return(tweet_df)
@@ -435,41 +435,27 @@ class LogRegAnalysis(db.Model):
         
         # make a df with results
         prob_df = round(pd.DataFrame(y_probs,columns=y_cats).set_index(test_index),2)
-        prob_df['correct_cat'] = y_test
-        prob_df['predicted_cat'] = y_pred
-        prob_df = prob_df.sort_index()
-        prob_df['tweet_id'] = list(test_id['id']) # just to check that it matches with the index
-        prob_df['text'] = list(test_id['text'])
-        prob_df['handle'] = list(test_id['handle']) # doublecheck
-        results_df = prob_df.iloc[:, 0:6]
-        results_df['correct'] = list(results_df['correct_cat'] == results_df['predicted_cat'])
-        #log_df = pd.DataFrame(y_test)
+        log_df = pd.DataFrame(y_test)
         
-        #log_df = log_df.merge(prob_df,  left_index=True, right_index=True) # add handle == right cat
+        log_df = log_df.merge(prob_df,  left_index=True, right_index=True) # add handle == right cat
         # add predictions
-        #log_df['predicted_cat'] = y_pred
+        log_df['predicted_cat'] = y_pred
 
         # merge with test id df
-        #log_df=log_df.merge(test_id, left_index=True, right_index=True)
-        
+        log_df=log_df.merge(test_id, left_index=True, right_index=True)
+        results_df = log_df.iloc[:, 0:6]
 
-        return(results_df)
-
-    def logreg_results(self, results_df):
-        # get the columns from the analysed data
-        y_pred = results_df['predicted_cat']
-        y_test = results_df['correct_cat']
         #Analysis + results
         logreg_matrix = confusion_matrix(y_test, y_pred) 
-        total=[sum(logreg_matrix[0]), sum(logreg_matrix[1]), logreg_matrix[0][0]+ logreg_matrix[1][0], logreg_matrix[0][0]+ logreg_matrix[1][0]]
+        total=sum(logreg_matrix[0]), sum(logreg_matrix[1])
         #total_1 = 
         logreg_class = classification_report(y_test, y_pred)
         logreg_accuracy = round(accuracy_score(y_test, y_pred),2)
 
-        return(logreg_matrix, logreg_class, logreg_accuracy, total)
+        return(results_df, logreg_matrix, logreg_class, logreg_accuracy, total)
 
-    def updated_tweet_data(self, results_df):
-        #self.data['counts'] = self.data['counts'] + 1
+    def updated_tweets(self, results_df):
+    
         #for i in results_df.columns[i]: # create columns
         #    if results_df.columns[i] not in self.data.keys():
         #       self.data[results_df.columns[i]] = {'counts' : 0, 'words' : {}}

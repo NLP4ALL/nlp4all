@@ -329,9 +329,7 @@ def log_analysis():
     #analysis = BayesianAnalysis.query.get(analysis_id)
     ## change to get tweets from the project instead
     #tweets = project.query.get(tweets).all()
-    results = analysis.logreg_alltweets(tweet_data)
-    logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_results(results)
-    
+    results, logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_alltweets(tweet_data)
     #db.session.add(analysis)
     #db.session.merge(analysis)
     #db.session.flush()
@@ -353,36 +351,13 @@ def log_all_tweets():
     #analysis = BayesianAnalysis.query.get(analysis_id)
     ## change to get tweets from the project instead
     #tweets = project.query.get(tweets).all()
-    #logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_alltweets(tweet_data)
-    results = analysis.logreg_alltweets(tweet_data)
-    logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_results(results)
-    tweet_info = {}#results['text']
-    tweet_info = {results['tweet_id'].iloc[t] : {"Category" : '', "Predicted category" : '', "danskdf1995" : 0, "enhedslisten" : 0} for t in range(len(results))}
-    for tweet in range(len(tweet_info)):
-        tweet_info[results['tweet_id'].iloc[tweet]]["Tweet"] = results['text'].iloc[tweet]
-        tweet_info[results['tweet_id'].iloc[tweet]]["Category"] = results['correct_cat'].iloc[tweet]
-        tweet_info[results['tweet_id'].iloc[tweet]]["Predicted category"]  =  results['predicted_cat'].iloc[tweet]
-        tweet_info[results['tweet_id'].iloc[tweet]]["danskdf1995"]  = results['danskdf1995'].iloc[tweet]
-        tweet_info[results['tweet_id'].iloc[tweet]]["enhedslisten"]  = results['enhedslisten'].iloc[tweet]
-        if tweet_info[results['tweet_id'].iloc[tweet]]["Predicted category"] == tweet_info[results['tweet_id'].iloc[tweet]]["Category"]:
-            tweet_info[results['tweet_id'].iloc[tweet]]["Correct"] = 1
-        else:
-            tweet_info[results['tweet_id'].iloc[tweet]]["Correct"] = 0
-    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["danskdf1995"], reverse=True)
-        
-    tweet_info
-    tweet_info = [t[1] for t in tweet_info]
-    word_info = []
-    all_words = []
-
-    word_info = {word : {'predictions' : results['correct_cat'].iloc[word], 'counts' : results['correct_cat'].iloc[word]} for word in range(len(results))}
-    data = {}
-    data = { 'prob1' : {'prob1' : results['danskdf1995'].iloc[word], 'prob2' : results['enhedslisten'].iloc[word]} for word in range(len(results))}
-    #db.session.add(analysis)
-    #db.session.merge(analysis)
-    #db.session.flush()
-    #db.session.commit()
-    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis,  results=results, column_names=results.columns.values, row_data=list(results.values.tolist()),link_column="link", zip=zip, tweets = tweet_info, word_info = word_info, tweet_info=tweet_info) #, tweets = tweet_info, word_info = word_info, analysis=analysis, **data)
+    results, logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_alltweets(tweet_data)
+    db.session.add(analysis)
+    db.session.merge(analysis)
+    db.session.flush()
+    db.session.commit()
+    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis,  results=results, column_names=results.columns.values, row_data=list(results.values.tolist()),
+                           link_column="link", zip=zip)
 
 @app.route("/sort_table")
 def sort_table():
