@@ -3,21 +3,15 @@
 {% block content %}
     <h1> Logistic Regression </h1>
     <td>
-        <a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{ analysis.id }}">Til Tweets</a>
+        <a class="nav-item nav-link" href="{{ url_for('log_all_tweets') }}">Til Tweets</a>
     </td>
-    <p>Based on all tweets</p>
-    <div class="content-section">
-        <table class="table table-bordered">
-            <thead><tr><th><a class="nav-item nav-link" href="{{ url_for('home') }}">Confusion Matrix</a></th><th>Korrekt</th><th>Forkert</th><th>Total</th></tr></thead>
-            <tbody><tr><th>DF</th><td>{{ lg_matrix[0][0] }}</td><td>{{ lg_matrix[0][1] }}</td><<th>{{ total[0] }}</th></tbody></tr>
-            <tbody><tr><th>Enhedslisten</th></td><td>{{ lg_matrix[1][1] }}</td><td>{{ lg_matrix[1][0] }}</td><th>{{ total[1] }}</th></tbody></tr>
-            
-        </table>
-        <p></p>
+    
+            {% set lg_matrix = lg_matrix %}
+            {% set table_name = "DF vs Enhedslisten" %}
+            {% include "matrix.html" %}
+
+    <p></p>
        
-        <p>{{ lg_class }} </p>
-        <p>Accuracy = {{ lg_acc }} </p>
-        
     </div>
 {% endblock content %}
 
