@@ -34,3 +34,5 @@ db_init_telma.py
 migrations
 tweet_data
 init_dbt.py
+telmatweets.json
+fig.html

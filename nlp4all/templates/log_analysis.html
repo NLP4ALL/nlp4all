@@ -3,16 +3,19 @@
 {% block content %}
     <h1> Logistic Regression </h1>
     <td>
-        <a class="nav-item nav-link" href="{{ url_for('log_all_tweets') }}">Til Tweets</a>
+        <a class="nav-item nav-link" href="{{ url_for('log_all_tweets') }}?analysis={{ analysis.id }}">Til Tweets</a>
     </td>
     <p>Based on all tweets</p>
     <div class="content-section">
             
         {% set lg_matrix = lg_matrix %}
-        {% set table_name = "DF vs Enhedslisten" %}
+        {% set table_name = cat_names[0] + " vs " + cat_names[1] %}
         {% include "matrix.html" %}
 
         <p></p>
+
+        <p>Accuracy = {{ lg_acc }}</p>
+        
     </div>
 {% endblock content %}
 

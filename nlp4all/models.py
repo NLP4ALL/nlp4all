@@ -381,11 +381,6 @@ class TweetTag(db.Model):
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-#class ConfusionMatrix(db.Model):
-    #id = db.Column(db.Integer, primary_key=True)
-    #analysis = db.Column(db.Integer, db.ForeignKey('analysis.id', ondelete="CASCADE"))
-    #data = db.Column(JSON)
-
     
 #class Analysis(db.Model):
 #    __abstract__ = True
@@ -405,6 +400,7 @@ class TweetTag(db.Model):
 class LogRegAnalysis(db.Model):
     __tablename__ = 'log_reg_analysis'
     id = db.Column(db.Integer, primary_key=True)
+    project = db.Column(db.Integer, db.ForeignKey('project.id'))
     #name = db.Column(db.String(50))
     #data = db.Column(JSON)
     #parent = db.Column(db.Integer, db.ForeignKey('analysis.id'))
@@ -424,12 +420,13 @@ class LogRegAnalysis(db.Model):
         return(tweet_df)
 
     def logreg_alltweets(self, tweet_df):
-        tweet_text = tweet_df['text']
+        tweet_text = list(tweet_df['text'])
         categories = tweet_df['handle']
 
         # tf-idf
         X = utils.tfidfconverter.fit_transform(tweet_text).toarray()
-        # add indexes to check
+
+        # add indexes to keep track
         tweet_df['ix_values'] = tweet_df.index.values
 
         # split into training and testing sets
@@ -437,7 +434,7 @@ class LogRegAnalysis(db.Model):
         
         # filter df
         test_index = y_test.index.values
-        test_id =  tweet_df[tweet_df['id'].isin(test_index)]
+        test_id =  tweet_df[tweet_df['ix_values'].isin(test_index)]
         # fit the model with data
         utils.logreg.fit(X_train,y_train)
 
@@ -452,19 +449,11 @@ class LogRegAnalysis(db.Model):
         prob_df['predicted_cat'] = y_pred
         prob_df = prob_df.sort_index()
         prob_df['tweet_id'] = list(test_id['id']) # just to check that it matches with the index
-        prob_df['text'] = list(test_id['text'])
+        prob_df['full_text'] = list(test_id['full_text'])
         prob_df['handle'] = list(test_id['handle']) # doublecheck
+        prob_df['text'] = list(test_id['text'])
         results_df = prob_df.iloc[:, 0:6]
         results_df['correct'] = list(results_df['correct_cat'] == results_df['predicted_cat'])
-        #log_df = pd.DataFrame(y_test)
-        
-        #log_df = log_df.merge(prob_df,  left_index=True, right_index=True) # add handle == right cat
-        # add predictions
-        #log_df['predicted_cat'] = y_pred
-
-        # merge with test id df
-        #log_df=log_df.merge(test_id, left_index=True, right_index=True)
-        
 
         return(results_df)
 

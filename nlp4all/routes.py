@@ -227,7 +227,12 @@ def analysis():
     analysis = BayesianAnalysis.query.get(analysis_id)
     analysis_method = analysis.method
     if analysis_method == '2':
-        return redirect(url_for('log_analysis'))
+        project = Project.query.get(analysis.project) # this is still done with the Bayesian robot?
+        db.session.add(analysis)
+        db.session.merge(analysis)
+        db.session.flush()
+        db.session.commit()
+        return redirect(url_for('log_analysis', analysis=analysis_id))
     project = Project.query.get(analysis.project)
     if 'tag' in request.form.to_dict():
         # category = TweetTagCategory.query.get(int(form.choices.data))
@@ -314,76 +319,94 @@ def analysis():
         return redirect(url_for('analysis', analysis=analysis_id))
     return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
 
-@app.route("/log_analysis")
+@app.route("/log_analysis", methods=['GET', 'POST'])
 def log_analysis():
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id) # tobesolved
     # get current project
-    project = Project.query.get(1)
+    project = analysis.get_project()
 
+    loganalysis=LogRegAnalysis(project=project.id)
+
+    
     cats =project.categories
     cat_list =[]
+    cat_names =[]
     for i in range(len(cats)):
-        cat_list.append(cats[i].name)
-    analysis=LogRegAnalysis()
-    tweet_data = analysis.get_tweets(cat_list)
+        cat_list.append(cats[i].id)
+        cat_names.append(cats[i].name)
+   
+    
+    tweet_data = loganalysis.get_tweets(cat_list)
     #analysis_id = request.args.get('analysis', 1, type=int)
     #analysis = BayesianAnalysis.query.get(analysis_id)
     ## change to get tweets from the project instead
     #tweets = project.query.get(tweets).all()
-    results = analysis.logreg_alltweets(tweet_data)
-    logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_results(results)
+    results = loganalysis.logreg_alltweets(tweet_data)
+    logreg_matrix, logreg_class, logreg_accuracy, total = loganalysis.logreg_results(results)
     #db.session.add(analysis)
     #db.session.merge(analysis)
     #db.session.flush()
     #db.session.commit()
-    return render_template('log_analysis.html', title='Logistic Analysis', analysis=analysis, total=total, lg_matrix=logreg_matrix, lg_class = logreg_class, lg_acc=logreg_accuracy, results=results)
+    return render_template('log_analysis.html', title='Logistic Analysis', analysis=analysis, total=total, lg_matrix=logreg_matrix, lg_class = logreg_class, lg_acc=logreg_accuracy, results=results, cat_names=cat_names)
 
-@app.route("/log_all_tweets")
+@app.route("/log_all_tweets", methods=['GET', 'POST'])
 def log_all_tweets():
     # get current project
-    project = Project.query.get(1)
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id) # tobesolved
+    # get current project
+    project = analysis.get_project()
+
+    loganalysis=LogRegAnalysis()
 
     cats =project.categories
     cat_list =[]
+    cat_names =[]
     for i in range(len(cats)):
-        cat_list.append(cats[i].name)
-    analysis=LogRegAnalysis()
-    tweet_data = analysis.get_tweets(cat_list)
-    #analysis_id = request.args.get('analysis', 1, type=int)
-    #analysis = BayesianAnalysis.query.get(analysis_id)
-    ## change to get tweets from the project instead
-    #tweets = project.query.get(tweets).all()
-    results = analysis.logreg_alltweets(tweet_data)
-    logreg_matrix, logreg_class, logreg_accuracy, total = analysis.logreg_results(results)
-    tweet_info = {}#results['text']
+        cat_list.append(cats[i].id)
+        cat_names.append(cats[i].name)
+
+    tweet_data = loganalysis.get_tweets(cat_list)
+
+    results = loganalysis.logreg_alltweets(tweet_data)
+    logreg_matrix, logreg_class, logreg_accuracy, total = loganalysis.logreg_results(results)
+    
+    tweet_info = {}
     tweet_info = {results['tweet_id'].iloc[t] : {"category" : '', "prediction" : 0, "full_text" : ''} for t in range(len(results))}
     for tweet in range(len(tweet_info)):
-        tweet_info[results['tweet_id'].iloc[tweet]]["full_text"] = results['text'].iloc[tweet]
+        tweet_info[results['tweet_id'].iloc[tweet]]["full_text"] = results['full_text'].iloc[tweet]
         tweet_info[results['tweet_id'].iloc[tweet]]["category"] = results['correct_cat'].iloc[tweet]
         #if results['correct_cat'] == results['predicted_cat']:
         tweet_info[results['tweet_id'].iloc[tweet]]["prediction"]  =  results['predicted_cat'].iloc[tweet]
         #else:
-        tweet_info[results['tweet_id'].iloc[tweet]]["prob cat 1"]  = results['danskdf1995'].iloc[tweet]
-        tweet_info[results['tweet_id'].iloc[tweet]]["prob cat 2"]  = results['enhedslisten'].iloc[tweet]
+        tweet_info[results['tweet_id'].iloc[tweet]]["prob "+ cat_names[0]]  = results[cat_names[0]].iloc[tweet]
+        tweet_info[results['tweet_id'].iloc[tweet]]["prob " + cat_names[1]]  = results[cat_names[1]].iloc[tweet]
         if tweet_info[results['tweet_id'].iloc[tweet]]["category"] == tweet_info[results['tweet_id'].iloc[tweet]]["prediction"]:
             tweet_info[results['tweet_id'].iloc[tweet]]["correct"]  = 1
         else: 
             tweet_info[results['tweet_id'].iloc[tweet]]["correct"]  = 0
-    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["prob cat 1"], reverse=True)
+    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["prob "+ cat_names[0]], reverse=True)
         
     tweet_info = [t[1] for t in tweet_info]
 
     info = {}
-    info = {cat_list[i] : {"precision" : 0, "recall" : 0, "TP" : 0, " TN" : 0} for i in range(len(cat_list))}
+    info = {cat_names[i] : {"name" : '' ,"precision" : 0, "recall" : 0} for i in range(len(cat_list))}
     #for t in range(len(info)):
-    info[cat_list[0]]['precision'] = round(logreg_matrix[0][0] /(logreg_matrix[0][0]+logreg_matrix[1][0]),2)
-    info[cat_list[1]]['precision'] = round(logreg_matrix[1][1] /(logreg_matrix[0][1]+logreg_matrix[1][1]),2)
-
+    info[cat_names[0]]['name'] = cat_names[0]
+    info[cat_names[1]]['name'] = cat_names[1]
+    info[cat_names[0]]['precision'] = round(logreg_matrix[0][0] /(logreg_matrix[0][0]+logreg_matrix[1][0]),2)
+    info[cat_names[1]]['precision'] = round(logreg_matrix[1][1] /(logreg_matrix[0][1]+logreg_matrix[1][1]),2)
+    info[cat_names[0]]['recall'] = round(logreg_matrix[0][0] /(logreg_matrix[0][0]+logreg_matrix[0][1]),2)
+    info[cat_names[1]]['recall'] = round(logreg_matrix[1][1] /(logreg_matrix[1][0]+logreg_matrix[1][1]),2)
+    info = sorted([t for t in info.items()], key=lambda x:x[1]["precision"], reverse=True)
+    info = [t[1] for t in info]
     #db.session.add(analysis)
     #db.session.merge(analysis)
     #db.session.flush()
     #db.session.commit()
     
-    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis,  results=results, tweet_info=tweet_info, total=total, lg_matrix=logreg_matrix, lg_class = logreg_class, lg_acc=logreg_accuracy)
+    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis,  results=results, tweet_info=tweet_info, total=total, lg_matrix=logreg_matrix, lg_acc=logreg_accuracy, info=info, cat_names=cat_names)
 
 @app.route("/sort_table")
 def sort_table():

@@ -1,12 +1,10 @@
 
-    <div class="content-section">
         <h1> {{ table_name }} </h1>
         <table class="table table-bordered">
-            <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted cat 1</th><th>Predicted cat 2</th><th>Korrekte</th></tr></thead>
-            <tbody><tr><th>True cat 1</th><td>{{ lg_matrix[0][0] }}</td><td>{{ lg_matrix[0][1] }}</td><<th>{{ lg_matrix[0][0] }} / {{ total[0] }}</th></tbody></tr>
-            <tbody><tr><th>True cat 2</th></td><td>{{ lg_matrix[1][0] }}</td><td>{{ lg_matrix[1][1] }}</td><th>{{ lg_matrix[1][1] }} / {{ total[1] }}</th></tbody></tr>
+            <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th><th>Correct predictions</th></tr></thead>
+            <tbody><tr><th>True {{ cat_names[0] }}</th><td>{{ lg_matrix[0][0] }}</td><td>{{ lg_matrix[0][1] }}</td><<th>{{ lg_matrix[0][0] }} / {{ total[0] }}</th></tbody></tr>
+            <tbody><tr><th>True {{ cat_names[1] }}</th></td><td>{{ lg_matrix[1][0] }}</td><td>{{ lg_matrix[1][1] }}</td><th>{{ lg_matrix[1][1] }} / {{ total[1] }}</th></tbody></tr>
             
         </table>
 
         
-    </div>
