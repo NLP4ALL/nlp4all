@@ -338,10 +338,7 @@ def log_analysis():
    
     
     tweet_data = loganalysis.get_tweets(cat_list)
-    #analysis_id = request.args.get('analysis', 1, type=int)
-    #analysis = BayesianAnalysis.query.get(analysis_id)
-    ## change to get tweets from the project instead
-    #tweets = project.query.get(tweets).all()
+    
     results = loganalysis.logreg_alltweets(tweet_data)
     logreg_matrix, logreg_class, logreg_accuracy, total = loganalysis.logreg_results(results)
     #db.session.add(analysis)
@@ -377,22 +374,52 @@ def log_all_tweets():
     for tweet in range(len(tweet_info)):
         tweet_info[results['tweet_id'].iloc[tweet]]["full_text"] = results['full_text'].iloc[tweet]
         tweet_info[results['tweet_id'].iloc[tweet]]["category"] = results['correct_cat'].iloc[tweet]
-        #if results['correct_cat'] == results['predicted_cat']:
         tweet_info[results['tweet_id'].iloc[tweet]]["prediction"]  =  results['predicted_cat'].iloc[tweet]
-        #else:
-        tweet_info[results['tweet_id'].iloc[tweet]]["prob "+ cat_names[0]]  = results[cat_names[0]].iloc[tweet]
-        tweet_info[results['tweet_id'].iloc[tweet]]["prob " + cat_names[1]]  = results[cat_names[1]].iloc[tweet]
+        tweet_info[results['tweet_id'].iloc[tweet]]["prob_"+ cat_names[0]]  = results[cat_names[0]].iloc[tweet]
+        tweet_info[results['tweet_id'].iloc[tweet]]["prob_" + cat_names[1]]  = results[cat_names[1]].iloc[tweet]
         if tweet_info[results['tweet_id'].iloc[tweet]]["category"] == tweet_info[results['tweet_id'].iloc[tweet]]["prediction"]:
             tweet_info[results['tweet_id'].iloc[tweet]]["correct"]  = 1
         else: 
             tweet_info[results['tweet_id'].iloc[tweet]]["correct"]  = 0
-    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["prob "+ cat_names[0]], reverse=True)
         
+    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x:x[1]["prob_"+ cat_names[0]], reverse=True)
+    prob_1 = [d[1]["prob_"+ cat_names[0]] for d in tweet_info]
+    prob_2 = [d[1]["prob_"+ cat_names[1]] for d in tweet_info]
+
     tweet_info = [t[1] for t in tweet_info]
+
+    num_cat = []
+    num_pred = []
+    for t in range(len(tweet_info)):
+        if tweet_info[t]["prediction"] == cat_names[0]:
+            num_pred.append(0)
+        else:
+            num_pred.append(1)
+        if tweet_info[t]["category"] == cat_names[0]:
+            num_cat.append(0)
+        else:
+            num_cat.append(1)
+        
+    #num_cat = [d[1]["num_category"] for d in tweet_info]
+    #num_pred = [d[1]["num_pred"] for d in tweet_info]
+    
+    data = {}
+    data_points = []
+    for i in zip(prob_1, prob_2, num_cat, num_pred):
+        d= {}
+        d['p1'] = i[0]
+        d['p2'] = i[1]
+        d['n_c'] = i[2]
+        d['n_p'] = i[3]
+        data_points.append(d)
+    data['data_points'] = data_points
+
+    
+
 
     info = {}
     info = {cat_names[i] : {"name" : '' ,"precision" : 0, "recall" : 0} for i in range(len(cat_list))}
-    #for t in range(len(info)):
+    # to be shortened
     info[cat_names[0]]['name'] = cat_names[0]
     info[cat_names[1]]['name'] = cat_names[1]
     info[cat_names[0]]['precision'] = round(logreg_matrix[0][0] /(logreg_matrix[0][0]+logreg_matrix[1][0]),2)
@@ -401,12 +428,16 @@ def log_all_tweets():
     info[cat_names[1]]['recall'] = round(logreg_matrix[1][1] /(logreg_matrix[1][0]+logreg_matrix[1][1]),2)
     info = sorted([t for t in info.items()], key=lambda x:x[1]["precision"], reverse=True)
     info = [t[1] for t in info]
+
+   
+    #for d in range(len(scatter_data)):
+        #scatter
     #db.session.add(analysis)
     #db.session.merge(analysis)
     #db.session.flush()
     #db.session.commit()
     
-    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis,  results=results, tweet_info=tweet_info, total=total, lg_matrix=logreg_matrix, lg_acc=logreg_accuracy, info=info, cat_names=cat_names)
+    return render_template('log_all_tweets.html', title='All Predicted Tweets', analysis=analysis, tweet_info=tweet_info, total=total, lg_matrix=logreg_matrix, lg_acc=logreg_accuracy, info=info, cat_names=cat_names,chart_data=data)
 
 @app.route("/sort_table")
 def sort_table():

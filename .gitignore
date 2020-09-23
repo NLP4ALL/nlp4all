@@ -36,3 +36,8 @@ tweet_data
 init_dbt.py
 telmatweets.json
 fig.html
+
+line_chart.html
+line_chart2.html
+line_chart3.html
+line_chart5.html

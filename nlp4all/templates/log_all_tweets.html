@@ -25,7 +25,20 @@
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
 
-    <p>LogReg Plot</p>
+        {% set chart_data = chart_data %}
+        {% set cat_names = cat_names %}
+        {% include "line_chart4.html" %}
+
+        <p>
+            This graph shows the probabilities given to each political party, and the correct 
+            classification to either '{{ cat_names[0] }}' as 0 or '{{ cat_names[1] }}' as 1. 
+            <br> 
+            <br> 
+            The amount of overlap indicates how well the algorithm managed to categorize the tweets: the less overlap, the better our machine learning worked.
+            <br> 
+            <br> 
+            On the x-axis you can see the probabilities given for each tweet.
+        </p>
 
     </div>
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">

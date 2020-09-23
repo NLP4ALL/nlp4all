@@ -1,0 +1,59 @@
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+<canvas id="myChart" width="800" height="450"></canvas>
+
+<script>
+var ctx = document.getElementById("myChart").getContext('2d');
+
+// Define the data 
+var data = [   {% for d in chart_data.data_points %} 
+            {
+                
+                x: {{ d.p1 }},
+                y: {{ d.n_c }}  +0.01
+               
+            },
+            {% endfor %}
+         ]; // Add data values to array
+
+// Define the data 
+var data2 = [   {% for d in chart_data.data_points %} 
+            {
+                
+                x: {{ d.p2 }},
+                y: {{ d.n_c }} -0.01  // so that you can see both point ranges
+               
+            },
+            {% endfor %}
+         ]; // Add data values to array
+
+// End Defining data
+var options = {responsive: false, // Instruct chart js to respond nicely.
+    maintainAspectRatio: false, // Add to prevent default behaviour of full-width/height 
+};
+
+// End Defining data
+var myChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+        datasets: [{
+            label: '{{ cat_names[0] }}', // Name the series
+            data: data, // Specify the data values array
+            borderColor: '#2196f3', // Add custom color border            
+            backgroundColor: '#2196f3', // Add custom color background (Points and Fill)
+            pointStyle: 'rect', // modify shape
+            },
+            {
+            label: '{{ cat_names[1] }}', // Name the series
+            data: data2, // Specify the data values array
+            borderColor: '#c45850', // Add custom color border            
+            backgroundColor: '#c45850', // Add custom color background (Points and Fill)
+            pointStyle: 'rectRot',
+            },
+            ]
+    },
+    options: options
+});
+
+</script>
