@@ -272,15 +272,6 @@ logreg = LogisticRegression()
 # make pd df
 
 def make_pandas_df(cat_list):
-        #tweets = Tweet.query.all()
-        #cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_list)).all()
-        #tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-        #tweet_id = list(tweet.id for tweet in tweets)
-        #tweet_text = list(tweet.text for tweet in tweets)
-        #cats = list(tweet.handle for tweet in tweets)
-        #tweet_zip = list(zip(tweet_id, tweet_text, cats))
-        #tweet_pd = pd.DataFrame(tweet_zip, columns=['id', 'text', 'handle'])
-        #tweet_df = tweet_pd[tweet_pd['handle'].isin(cat_list)]
 
         cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_list)).all()
         tweets = [t for cat in cats_objs for t in cat.tweets]

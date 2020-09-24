@@ -146,3 +146,10 @@ class ResetPasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
+
+
+class HighlightForm(FlaskForm):
+    text = TextAreaField('selectedtext', validators=[DataRequired()])
+    start = IntegerField('start')
+    end = IntegerField('end')
+    submit = SubmitField('save text')

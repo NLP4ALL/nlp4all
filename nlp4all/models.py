@@ -264,7 +264,7 @@ class User(db.Model, UserMixin):
     organizations = db.relationship('Organization', secondary='user_orgs')
     admin = db.Column(db.Boolean, default=False)
     roles = db.relationship('Role', secondary='user_roles')
-    analyses = db.relationship('BayesianAnalysis') # Bayesian modified
+    analyses = db.relationship('BayesianAnalysis') 
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
@@ -381,7 +381,15 @@ class TweetTag(db.Model):
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    
+class Highlights(db.Model):
+    __tablename__ = 'highlights'
+    id = db.Column(db.Integer, primary_key=True)
+    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    text = db.Column(db.String(280))
+    start = db.Column(db.Integer)
+    end = db.Column(db.Integer)
+    project = db.Column(db.Integer, db.ForeignKey('project.id'))
+
 #class Analysis(db.Model):
 #    __abstract__ = True
 #    id = db.Column(db.Integer, primary_key=True)
@@ -471,10 +479,7 @@ class LogRegAnalysis(db.Model):
         return(logreg_matrix, logreg_class, logreg_accuracy, total)
 
     def updated_tweet_data(self, results_df):
-        #self.data['counts'] = self.data['counts'] + 1
-        #for i in results_df.columns[i]: # create columns
-        #    if results_df.columns[i] not in self.data.keys():
-        #       self.data[results_df.columns[i]] = {'counts' : 0, 'words' : {}}
+       
         #self.data[category.name]['counts'] = (self.data[category.name].get('counts', 0)) + 1
         for t in range(len(results_df)):
             if results_df['id'].iloc[t] not in self.data.keys():
@@ -563,30 +568,5 @@ class BayesianAnalysis(db.Model):
         # take the averages (i.e. we sum, and then divide by the numbers)t
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
-    def logreg_alltweets(self, tweet_data):
-        #categories
-        cats = list(tweet.handle for tweet in tweet_data)
-        # text as the body of the analysis
-        tweet_text = list(tweet.text for tweet in tweet_data)
-        # convert to a tf-idf
-        X = utils.tfidfconverter.fit_transform(tweet_text).toarray() # from utils
-        
-        # split into training and testing set
-        X_train, X_test, y_train, y_test = utils.train_test_split(X, cats, test_size=0.2, random_state=0)
-
-        # fit the model with data
-        utils.logreg.fit(X_train,y_train)
-
-        # predict
-        y_pred=utils.logreg.predict(X_test)
-        #y_probs=utils.logreg.predict_proba(X_test)
-        #return y_pred
-        logreg_matrix = confusion_matrix(y_test, y_pred) 
-        logreg_class = classification_report(y_test, y_pred)
-        logreg_accuracy = accuracy_score(y_test, y_pred)
-        
-        return(logreg_matrix, logreg_class, logreg_accuracy)
-
-#class AnalysisCopy(BayesianAnalysis):
-# Define the Logistic Regression - Predictions table
+    
 

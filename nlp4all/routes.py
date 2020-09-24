@@ -5,8 +5,8 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AddAnalysisForm
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, LogRegAnalysis
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AddAnalysisForm, HighlightForm
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, LogRegAnalysis, Highlights
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
@@ -293,7 +293,7 @@ def analysis():
     data = {}
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
-    data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
+    data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.text, categories) # full_text modified!!
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
     # filter robots that are retired, and sort them alphabetically
     # data['robots'] = sorted(robots, key= lambda r: r.name)
@@ -413,9 +413,6 @@ def log_all_tweets():
         d['n_p'] = i[3]
         data_points.append(d)
     data['data_points'] = data_points
-
-    
-
 
     info = {}
     info = {cat_names[i] : {"name" : '' ,"precision" : 0, "recall" : 0} for i in range(len(cat_list))}
@@ -649,3 +646,25 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+@app.route("/tweet_view", methods=['GET', 'POST'])
+def tweet_view():
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    a_tweet = None
+    if "tweet" in request.args.to_dict().keys():
+        tweet_id = request.args.get('tweet', type=int)
+        a_tweet = Tweet.query.get(tweet_id)
+    else:
+        project = Project.query.get(analysis.project)
+        tweets = project.tweets
+        a_tweet = sample(tweets, 1)[0]
+    form = HighlightForm()
+    if form.validate_on_submit():
+        sth = Highlights(text = form.text.data, start=form.start.data, end = form.end.data, project=project.id, tweet = a_tweet.id)
+        db.session.add(sth)
+        db.session.commit()
+        flash('Highlighted part has been saved', 'success')
+    
+    
+    return render_template('tweet_view.html', tweet = a_tweet, form=form)

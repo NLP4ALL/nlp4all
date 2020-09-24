@@ -82,5 +82,33 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <!-- datatables .js -->
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/dt-1.10.20/datatables.min.js"></script>
+    <script>
+      function getSelText()
+        {
+            var txt = '';
+             if (window.getSelection)
+            {
+                txt = window.getSelection();
+                start = txt.anchorOffset;
+                end = txt.focusOffset;
+                     }
+            else if (document.getSelection)
+            {
+                txt = document.getSelection();
+                start = txt.anchorOffset;
+                end = txt.focusOffset;
+                    }
+            else if (document.selection)
+            {
+                txt = document.selection.createRange().text;
+                start = txt.anchorOffset;
+                end = txt.focusOffset;
+                    }
+            else return;
+        document.aform.text.value =  txt;
+        document.aform.start.value =  start;
+        document.aform.end.value =  end;
+        }
+        </script>
 </body>
 </html>
