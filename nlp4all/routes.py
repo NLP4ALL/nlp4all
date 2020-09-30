@@ -330,11 +330,8 @@ def log_analysis():
 
     
     cats =project.categories
-    cat_list =[]
-    cat_names =[]
-    for i in range(len(cats)):
-        cat_list.append(cats[i].id)
-        cat_names.append(cats[i].name)
+    cat_list = [cats[i].id for i in range(len(cats))]
+    cat_names =[cats[i].name for i in range(len(cats))]
    
     
     tweet_data = loganalysis.get_tweets(cat_list)
@@ -352,17 +349,15 @@ def log_all_tweets():
     # get current project
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id) # tobesolved
+
     # get current project
     project = analysis.get_project()
 
-    loganalysis=LogRegAnalysis()
+    loganalysis=LogRegAnalysis(project=project.id)
 
     cats =project.categories
-    cat_list =[]
-    cat_names =[]
-    for i in range(len(cats)):
-        cat_list.append(cats[i].id)
-        cat_names.append(cats[i].name)
+    cat_list = [cats[i].id for i in range(len(cats))]
+    cat_names =[cats[i].name for i in range(len(cats))]
 
     tweet_data = loganalysis.get_tweets(cat_list)
 
@@ -370,8 +365,9 @@ def log_all_tweets():
     logreg_matrix, logreg_class, logreg_accuracy, total = loganalysis.logreg_results(results)
     
     tweet_info = {}
-    tweet_info = {results['tweet_id'].iloc[t] : {"category" : '', "prediction" : 0, "full_text" : ''} for t in range(len(results))}
+    tweet_info = {results['tweet_id'].iloc[t] : {"tweet_id": 0, "category" : '', "prediction" : 0, "full_text" : ''} for t in range(len(results))}
     for tweet in range(len(tweet_info)):
+        tweet_info[results['tweet_id'].iloc[tweet]]["tweet_id"] = results['tweet_id'].iloc[tweet]
         tweet_info[results['tweet_id'].iloc[tweet]]["full_text"] = results['full_text'].iloc[tweet]
         tweet_info[results['tweet_id'].iloc[tweet]]["category"] = results['correct_cat'].iloc[tweet]
         tweet_info[results['tweet_id'].iloc[tweet]]["prediction"]  =  results['predicted_cat'].iloc[tweet]
