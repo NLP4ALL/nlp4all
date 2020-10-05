@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>
+    See Highlighted Tweets
+</h1>
+
+
+<div>
+    
+    {% set hl_dict = hl_dict %}
+    {% include "tweet_highlight.html" %}
+
+</div>
+    
+{% endblock content %}
+
+
+
+

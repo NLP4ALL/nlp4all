@@ -1,0 +1,28 @@
+{% for tweet in hl_dict %}
+<div class="content-section">
+    
+    <a id="highlight">{{ hl_dict[tweet].text[0] }}</a>
+    
+</div>
+{% endfor %}
+
+
+<script>
+    
+
+    var element = document.getElementById("highlight");
+    {% for tweet in hl_dict %}
+    var string = element.innerHTML; 
+    
+    var i = {{ hl_dict[tweet].loc[0] }} -1;
+
+    var j = {{ hl_dict[tweet].loc[1] }};
+    
+    var redText = string.substring(i, j);
+    
+    {% endfor %} 
+
+    element.innerHTML = string.substring(0,i)+"<a style='color:red;'>"+redText+"</a>"+string.substring(j);
+
+    
+</script>

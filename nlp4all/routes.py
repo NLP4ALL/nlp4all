@@ -647,20 +647,56 @@ def reset_token(token):
 def tweet_view():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
-    a_tweet = None
+    project = Project.query.get(analysis.project)
+    categories = project.categories
+    form = HighlightForm()
+
+   # a_tweet = None
     if "tweet" in request.args.to_dict().keys():
         tweet_id = request.args.get('tweet', type=int)
         a_tweet = Tweet.query.get(tweet_id)
+        category = a_tweet.category
+        text_body = a_tweet.text
     else:
-        project = Project.query.get(analysis.project)
         tweets = project.tweets
         a_tweet = sample(tweets, 1)[0]
-    form = HighlightForm()
+        tweet_id = a_tweet.id
+        category = a_tweet.category 
+        text_body = a_tweet.text
+
+
     if form.validate_on_submit():
-        sth = Highlights(text = form.text.data, start=form.start.data, end = form.end.data, project=project.id, tweet = a_tweet.id)
+        if form.start.data < form.end.data:
+            start = form.start.data
+            end = form.end.data
+        else:
+            start = form.end.data
+            end = form.start.data
+        sth = Highlights(highlight = form.text.data, start=start, end = end, project=project.id, tweet = tweet_id, category=category, text=text_body)
+        #flag_modified(sth, "features")
         db.session.add(sth)
+        db.session.merge(sth)
+        db.session.flush()
         db.session.commit()
         flash('Highlighted part has been saved', 'success')
-    
-    
+        return redirect(url_for('tweet_view'))
+   
     return render_template('tweet_view.html', tweet = a_tweet, form=form)
+
+
+
+@app.route("/tweet_view2", methods=['GET', 'POST'])
+def tweet_view2():
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project)
+    categories = project.categories
+
+    hl = Highlights.query.all()
+    ids = [h.tweet for h in hl]
+
+    h_tweets = Tweet.query.filter(Tweet.id.in_(ids)).all()
+    hl_dict = nlp4all.utils.highlight_dict(hl, h_tweets)
+    hl_dict1 = hl_dict[list(hl_dict.keys())[0]]
+
+    return render_template('tweet_view2.html',  hl_dict=hl_dict)

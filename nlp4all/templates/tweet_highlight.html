@@ -1,0 +1,14 @@
+
+<div class="content-section">
+    {% for tweet in hl_dict %}
+    <ul>
+        <span>{{ hl_dict[tweet].text[0:hl_dict[tweet].loc[0]-1] }}</span><span style="color: pink;" >{{ hl_dict[tweet].text[hl_dict[tweet].loc[0]-1:hl_dict[tweet].loc[1]] }}</span><span>{{hl_dict[tweet].text[hl_dict[tweet].loc[1]:] }}</span>
+    </ul>
+    {% endfor %}
+    
+</div>
+
+
+
+
+

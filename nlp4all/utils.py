@@ -54,7 +54,20 @@ def create_css_info(classifications, text, list_of_categories):
         # match = re.compile(word, re.IGNORECASE) # match.sub("")
 #     words = clean_non_transparencynum(text).split()
 #     print(classifications)
-    
+
+def create_css_info_telma(hl, list_of_categories):
+    category_color_dict = assign_colors(list_of_categories)
+    tups = []
+    for a_tweet in hl: # tweet in highlighted tweets
+        tweet_id = a_tweet.tweet
+        highlight = a_tweet.text
+        category = TweetTagCategory.query.filter(TweetTagCategory.id==a_tweet.category).all()[0]
+       # print(a_tweet.text)
+      #  max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
+        the_tup = (highlight, category.name, 100*category.id, category_color_dict[category.name])
+        tups.append(the_tup)
+        
+    return(tups)
 #     categories = list(words.keys())
 #     all_words = list(words[categories[0]].keys())
 #     text_words = text.split()
@@ -264,7 +277,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
 
-stopwords = ['og','i','jeg','det','at','en','den','til','er','som','på','de','med','han','af','for','ikke','der','var','mig','sig','men','et','har','om','vi','min','havde','ham','hun','nu','over','da','fra','du','ud','sin','dem','os','op', 'man','hans','hvor','eller','hvad','skal','selv','her','alle','vil','blev','kunne','ind','når','være','dog','noget','ville','jo','deres','efter','ned','skulle','denne','end','dette','mit','også','under','have','dig','anden','hende','mine','alt','meget','sit','sine','vor','mod','disse','hvis','din','nogle','hos','blive','mange','ad','bliver','hendes','været','thi','jer','sådan','#hashtag','@twitter_ID','http://link']
+stopwords = ['og','i','jeg','det','at','en','den','til','er','som','på','de','med','han','af','for','ikke','der','var','mig','sig','men','et','har','om','vi','min','havde','ham','hun','nu','over','da','fra','du','ud','sin','dem','os','op', 'man','hans','hvor','eller','hvad','skal','selv','her','alle','vil','blev','kunne','ind','når','være','dog','noget','ville','jo','deres','efter','ned','skulle','denne','end','dette','mit','også','under','have','dig','anden','hende','mine','alt','meget','sit','sine','vor','mod','disse','hvis','din','nogle','hos','blive','mange','ad','bliver','hendes','været','thi','jer','sådan','hashtag','twitter_ID','http','link']
 # for the results
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 tfidfconverter = TfidfVectorizer(analyzer='word', max_features=2000, min_df=3, max_df=0.7, stop_words=stopwords)   # added stopwords
@@ -284,3 +297,15 @@ def make_pandas_df(cat_list):
         tweet_zip = list(zip(tweet_id, full_text, cats, tweet_text))
         tweet_df = pd.DataFrame(tweet_zip, columns=['id', 'full_text', 'handle', 'text'])
         return(tweet_df)
+
+# id: {cat, loc, highlight, full_text}
+def highlight_dict(hl, h_tweets):
+    locs = {}
+    locs = {t.tweet : {"category" : '', "loc" : [], "highlight" : ''} for t in hl}
+
+    for a_tweet in hl:
+        locs[a_tweet.tweet]['category'] = a_tweet.category
+        locs[a_tweet.tweet]['loc'] = [a_tweet.start,a_tweet.end] # get the index position
+        locs[a_tweet.tweet]['highlight'] = a_tweet.highlight
+        locs[a_tweet.tweet]['text'] = a_tweet.text#[tweet.text for tweet in h_tweets if tweet.id == a_tweet.tweet][0] #a_tweet.text
+    return(locs)

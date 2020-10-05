@@ -371,7 +371,8 @@ class Tweet(db.Model):
     links = db.Column(JSON)
     mentions = db.Column(JSON)
     url = db.Column(db.String(200), unique=True)
-    text = db.Column(db.String(300)) 
+    text = db.Column(db.String(300))
+    highlights = db.relationship('Highlights') 
     
 class TweetTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -385,6 +386,8 @@ class Highlights(db.Model):
     __tablename__ = 'highlights'
     id = db.Column(db.Integer, primary_key=True)
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    highlight = db.Column(db.String(280))
     text = db.Column(db.String(280))
     start = db.Column(db.Integer)
     end = db.Column(db.Integer)

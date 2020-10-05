@@ -1,5 +1,5 @@
-
 {% extends "layout.html" %}
+
 {% block content %}
 
 <h1>
@@ -9,6 +9,7 @@
 
 
 <p> {{ tweet.text }} </p>
+<p> {{ tweet.id }} </p>
 
 <input type="button" value="Get selection" onmousedown="getSelText()"> 
 
@@ -69,41 +70,13 @@
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
+
     </div>
 
+
+    
 {% endblock content %}
 
 
-<script language=javascript>
-    function getSelText()
-    {
-        var txt = '';
-         if (window.getSelection)
-        {
-            txt = window.getSelection();
-            start = txt.anchorOffset;
-            end = txt.focusOffset;
-                 }
-        else if (document.getSelection)
-        {
-            txt = document.getSelection();
-            start = txt.anchorOffset;
-            end = txt.focusOffset;
-                }
-        else if (document.selection)
-        {
-            txt = document.selection.createRange().text;
-            start = txt.anchorOffset;
-            end = txt.focusOffset;
-                }
-        else return;
-        
-    document.aform.selectedtext.value =  txt ;
-    }
 
 
-
-</script>
-
-    
-    
