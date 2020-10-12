@@ -25,11 +25,22 @@
 
 <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/dt-1.10.20/datatables.min.js"></script>
 <script>
-    $(document).ready( function () {
-        $('#{{table_name}}').DataTable();
-    } );
-    </script>
-    
+$(document).ready( function () {
+    $('#{{table_name}}').DataTable({
+        columnDefs: [
+            {
+                targets: 0, // Start with the last
+                render: function ( data, type, row, meta ) {
+                    if(type === 'display'){
+                        data = '<a href="{{ url_for('tweet_view') }}?tweet='+ encodeURIComponent(data)+ '">Se tweet</a>';
+                    }
+                    return data;
+                }
+            }
+        ]
+    });
+});
+</script>
 
 
 

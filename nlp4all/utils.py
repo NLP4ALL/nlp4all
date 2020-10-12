@@ -299,7 +299,7 @@ def make_pandas_df(cat_list):
         return(tweet_df)
 
 # id: {cat, loc, highlight, full_text}
-def highlight_dict(hl, h_tweets):
+def highlight_dict(hl):
     locs = {}
     locs = {t.tweet : {"category" : '', "loc" : [], "highlight" : ''} for t in hl}
 
@@ -307,5 +307,5 @@ def highlight_dict(hl, h_tweets):
         locs[a_tweet.tweet]['category'] = a_tweet.category
         locs[a_tweet.tweet]['loc'] = [a_tweet.start,a_tweet.end] # get the index position
         locs[a_tweet.tweet]['highlight'] = a_tweet.highlight
-        locs[a_tweet.tweet]['text'] = a_tweet.text#[tweet.text for tweet in h_tweets if tweet.id == a_tweet.tweet][0] #a_tweet.text
+        locs[a_tweet.tweet]['text'] = Tweet.query.get(a_tweet.tweet).text 
     return(locs)
