@@ -3,7 +3,7 @@ import secrets
 import nlp4all.utils
 from random import sample, shuffle
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, abort, jsonify
+from flask import render_template, url_for, flash, redirect, request, abort, jsonify, session
 from nlp4all import app, db, bcrypt, mail
 from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AddAnalysisForm, HighlightForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, LogRegAnalysis, Highlights
@@ -663,26 +663,30 @@ def tweet_view():
         tweet_id = a_tweet.id
         category = a_tweet.category 
         text_body = a_tweet.text
+        session['tweet_id'] = a_tweet.id
 
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() :
         if form.start.data < form.end.data:
             start = form.start.data
             end = form.end.data
         else:
             start = form.end.data
             end = form.start.data
-        sth = Highlights(highlight = form.text.data, start=start, end = end, project=project.id, tweet = tweet_id, category=category, text=text_body)
-        #flag_modified(sth, "features")
+        tweet_id_req = int(request.form.get('tweetid'))
+        sth = Highlights(highlight = form.text.data, start=start, end = end, project=project.id, tweet = tweet_id_req, category=category)
+        
         db.session.add(sth)
         db.session.merge(sth)
         db.session.flush()
         db.session.commit()
         flash('Highlighted part has been saved', 'success')
+        #flash(tweet_id_req)
+        #flash(sth.tweet)
+        #flash(tweet_id)
         return redirect(url_for('tweet_view'))
    
     return render_template('tweet_view.html', tweet = a_tweet, form=form)
-
 
 
 @app.route("/tweet_view2", methods=['GET', 'POST'])
@@ -696,7 +700,7 @@ def tweet_view2():
     ids = [h.tweet for h in hl]
 
     h_tweets = Tweet.query.filter(Tweet.id.in_(ids)).all()
-    hl_dict = nlp4all.utils.highlight_dict(hl, h_tweets)
+    hl_dict = nlp4all.utils.highlight_dict(hl)
     hl_dict1 = hl_dict[list(hl_dict.keys())[0]]
 
     return render_template('tweet_view2.html',  hl_dict=hl_dict)

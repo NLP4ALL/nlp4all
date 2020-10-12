@@ -35,12 +35,19 @@ db.session.commit()
 #user = User(username="arthurhjorth_teacher", email="arthur.hjorth@u.northwestern.edu", password=hp, organizations=[org,])
 #user.roles = [teacher_role,]
 #db.session.add(user)
-#user = User(username="arthurhjorth_student", email="hermeshjorth2011@u.northwestern.edu", password=hp, organizations=[org,])
-#user.roles = [student_role,]
-#db.session.add(user)
-#db.session.commit()
+user = User(username="telma", email="telma@email.com", password=hp, organizations=[org,])
+user.roles = [student_role,]
+db.session.add(user)
+db.session.commit()
 
-
+def clean_word(aword): # added
+    if "@" in  aword:
+        return "@twitter_ID"
+    if "#" in aword:
+        return "#hashtag"
+    if "http" in aword:
+        return "http://link"
+    return aword
 
 data_dir = 'tweet_data/'
 files = [f for f in os.listdir(data_dir) if '_out.json' in f]
@@ -67,6 +74,9 @@ for f in files:
             timestamp = datetime.fromtimestamp(unix_time)
             t = indict['full_text']
             t.replace(".", " ")
+            t.replace("!", " ")
+            t.replace("?", " ")
+            t.replace(":", " ")
             t.replace("-", " ")
             t.replace("-", " ")
             t.replace(",", " ")
@@ -75,9 +85,9 @@ for f in files:
             a_tweet = Tweet(
                 time_posted = timestamp,
                 category = category.id,
-                full_text = t,
+                full_text = indict['full_text'],
                 handle = indict['twitter_handle'],
-                text= indict['full_text'],
+                text= " ".join([clean_word(word) for word in t.split()]), # changed
                 words = [w for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
                 links = [w for w in t.split() if "http" in w],
                 hashtags = [w for w in t.split() if "#" in w],
@@ -119,6 +129,7 @@ tweet_objs = [t for cat in cats_objs for t in cat.tweets]
 tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
 tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
 training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
+
 
 #project = Project(name="DF og Ehl", organization=org.id, categories=cats)
 #project= add_project(name="DF og ehl", description="", org=org, cat_ids=cats)

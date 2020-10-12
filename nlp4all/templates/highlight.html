@@ -1,0 +1,111 @@
+
+
+<input type="button" value="Get selection" onmousedown="getSelText()"> 
+
+
+
+<div class="content-section">
+    <h2>Save Text</h1>
+        <form method="POST" action="" name= aform >
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                
+                <div name="selectedtext">
+                    {{ form.text.label(class="form-control-label") }}
+                    {% if form.text.errors %}
+                        {{ form.text(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.text.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.text(class="form-control form-control-lg") }}
+                    {% endif %}
+                    
+                </div>
+    
+
+                <div class="form-group">
+                    {{ form.start.label(class="form-control-label") }}
+                    {% if form.start.errors %}
+                        {{ form.start(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.start.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.start(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.end.label(class="form-control-label") }}
+                    {% if form.end.errors %}
+                        {{ form.end(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.end.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.end(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                
+
+                <div value = "{{ tweet.id }}" >
+                    {{ form.hidden.label(class="form-control-label") }}
+                    {% if form.hidden.errors %}
+                        {{ form.hidden(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.hidden.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.hidden(value = "{{ tweet.id }}" ) }}
+                        
+                    {% endif %}
+                    
+                    <input type="hidden" name="tweetid" value="{{tweet.id}}" />
+                    
+                </div>
+            </fieldset>
+            <div class="form-group" >
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+
+    </div>
+
+<script>
+    function getSelText()
+      {
+          var txt = '';
+           if (window.getSelection)
+          {
+              txt = window.getSelection();
+              start = txt.anchorOffset;
+              end = txt.focusOffset;
+                   }
+          else if (document.getSelection)
+          {
+              txt = document.getSelection();
+              start = txt.anchorOffset;
+              end = txt.focusOffset;
+                  }
+          else if (document.selection)
+          {
+              txt = document.selection.createRange().text;
+              start = txt.anchorOffset;
+              end = txt.focusOffset;
+                  }
+          else return;
+      document.aform.text.value =  txt;
+      document.aform.start.value =  start;
+      document.aform.end.value =  end;
+      }
+
+</script>

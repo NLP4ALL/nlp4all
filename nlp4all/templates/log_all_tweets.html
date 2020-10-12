@@ -40,11 +40,13 @@
             On the x-axis you can see the probabilities given for each tweet.
         </p>
 
+        
+
     </div>
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         {% set table_data = tweet_info %}
         {% set table_name = "tweets" %}
-        {% include "data_table.html" %}
+        {% include "data_table_link.html" %}
     </div>
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
         

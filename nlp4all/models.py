@@ -388,7 +388,7 @@ class Highlights(db.Model):
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
     category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
     highlight = db.Column(db.String(280))
-    text = db.Column(db.String(280))
+    #text = db.Column(db.String(280))
     start = db.Column(db.Integer)
     end = db.Column(db.Integer)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
@@ -418,7 +418,6 @@ class LogRegAnalysis(db.Model):
     #shared = db.Column(db.Boolean, default=False)
     #tweets = db.Column(JSON, default=[])
     #method = db.Column(db.String(50))
-    #hello = db.Column(db.String(50))
     
     def get_project(self):
         return Project.query.get(self.project)

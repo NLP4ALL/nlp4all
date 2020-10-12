@@ -9,70 +9,15 @@
 
 
 <p> {{ tweet.text }} </p>
-<p> {{ tweet.id }} </p>
-
-<input type="button" value="Get selection" onmousedown="getSelText()"> 
-
 
 
 <div class="content-section">
-    <h2>Save Text</h1>
-        <form method="POST" action="" name= aform>
-            {{ form.hidden_tag() }}
-            <fieldset class="form-group">
-                
-                <div name="selectedtext">
-                    {{ form.text.label(class="form-control-label") }}
-                    {% if form.text.errors %}
-                        {{ form.text(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.text.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.text(class="form-control form-control-lg") }}
-                    {% endif %}
-                    
-                </div>
+            
     
+    {% include "highlight.html" %}
 
-                <div class="form-group">
-                    {{ form.start.label(class="form-control-label") }}
-                    {% if form.start.errors %}
-                        {{ form.start(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.start.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.start(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    {{ form.end.label(class="form-control-label") }}
-                    {% if form.end.errors %}
-                        {{ form.end(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.end.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.end(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
     
-            </fieldset>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
-        </form>
-
-    </div>
-
+</div>
 
     
 {% endblock content %}
