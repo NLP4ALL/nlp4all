@@ -14,6 +14,7 @@ import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
 import pandas as pd
+import operator
 
 @app.route("/")
 @app.route("/home")
@@ -318,6 +319,66 @@ def analysis():
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
     return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
+
+
+@app.route("/confmatrix", methods=['GET', 'POST'])
+def confmatrix():
+    # so now it is still tied to an analysis
+    analysis_id = 2#request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project)
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
+    cat_names = [c.name for c in categories]
+    tweets = project.tweets
+    threshold = 0.15
+
+    # loop 
+    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : ''} for t in tweets}
+    words = {t.id : '' for t in tweets}
+
+    for a_tweet in tweets: # change to testing set?
+        words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = analysis.get_predictions_and_words(set(a_tweet.words))
+        # if no data
+        if bool(matrix_data[a_tweet.id]['predictions']) == False:  
+            matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
+        # if prob == 0
+        elif matrix_data[a_tweet.id]['predictions'][cat_names[0]] == 0.0 and matrix_data[a_tweet.id]['predictions'][cat_names[1]] == 0.0:
+            matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
+        # else select the bigger prob
+        else: 
+            matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
+        # add real category
+        matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
+
+    # filter threshold tweets
+    good_tweets = {t: {'pred_cat': matrix_data.get(t, {}).get('pred_cat')[0], 'pred_prob' : matrix_data.get(t, {}).get('pred_cat')[1], 'real_cat' : matrix_data.get(t, {}).get('real_cat')} for t in matrix_data if matrix_data.get(t, {}).get('pred_cat')[1] >= threshold}
+    # tweets not exceeding the threshold
+    bad_tweets = {t: {'pred_cat': matrix_data.get(t, {}).get('pred_cat')[0], 'pred_prob' : matrix_data.get(t, {}).get('pred_cat')[1], 'real_cat' : matrix_data.get(t, {}).get('real_cat')} for t in matrix_data if matrix_data.get(t, {}).get('pred_cat')[1] < threshold}
+
+    m_info = sorted([t for t in good_tweets.items()], key=lambda x:x[1]["pred_prob"], reverse=True)
+    
+    # add matrix classes
+    for t in m_info:
+        if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
+            t[1]['class'] = 'TP'
+        elif t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
+            t[1]['class'] = 'TN'
+        # predicted 'yes', although was 'no'
+        elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
+            t[1]['class'] = 'FP'
+        # predicted 'no', although was 'yes'
+        elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
+            t[1]['class'] = 'FN'
+
+    class_list = [t[1]['class'] for t in m_info]
+    # count different occurences
+    matrix_classes = {i:class_list.count(i) for i in class_list}
+    
+    # update data
+
+    # commit etc
+
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names)
 
 @app.route("/log_analysis", methods=['GET', 'POST'])
 def log_analysis():

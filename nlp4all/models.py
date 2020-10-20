@@ -393,6 +393,20 @@ class Highlights(db.Model):
     end = db.Column(db.Integer)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
 
+class ConfusionMatrix(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+   #  user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
+    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    ## tags ?
+   # time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
+    pred_probability = db.Column(JSON) # or integer in percentages?
+
+    def get_project(self):
+        return Project.query.get(self.project)
+
 #class Analysis(db.Model):
 #    __abstract__ = True
 #    id = db.Column(db.Integer, primary_key=True)
@@ -502,6 +516,7 @@ class BayesianAnalysis(db.Model):
     user = db.Column(db.Integer, db.ForeignKey('user.id')) # this one we keep
     name = db.Column(db.String(50)) # this one we keep
     tags = db.relationship('TweetTag') # this one 
+    matrices = db.relationship('ConfusionMatrix')
     data = db.Column(JSON)
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')

@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+        <h1> "Confusing Matrix" </h1>
+        <table class="table table-bordered">
+            <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th><th>Correct predictions</th></tr></thead>
+            <tbody><tr><th>True {{ cat_names[0] }}</th><td>{{ matrix_classes['TP'] }}</td><td>{{ matrix_classes['FN'] }}</td><<th>{{ matrix_classes['TP'] }} / / all_cat1 </th></tbody></tr>
+            <tbody><tr><th>True {{ cat_names[1] }}</th></td><td>{{ matrix_classes['FP'] }}</td><td>{{ matrix_classes['TN'] }}</td><th>{{ matrix_classes['TN'] }} / all_cat2 </th></tbody></tr>
+            
+        </table>
+
+{% endblock content %}    
