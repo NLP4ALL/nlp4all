@@ -426,3 +426,16 @@ class BayesianAnalysis(db.Model):
                         predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
 
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
+
+class ConfusionMatrix(db.Model):
+    # TODO: independent of analysis ==> access all tweets (?)
+    id = db.Column(db.Integer, primary_key=True)
+   #  user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
+    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
+    pred_probability = db.Column(JSON) # or integer in percentages?
+
+    def get_project(self):
+        return Project.query.get(self.project)
