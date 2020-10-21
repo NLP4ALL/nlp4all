@@ -13,7 +13,7 @@ import datetime
 import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
-
+import operator
 
 @app.route("/")
 @app.route("/home")
@@ -516,3 +516,95 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+@app.route("/create_matrix", methods=['GET', 'POST'])
+def create_matrix():
+    if form.validate_on_submit():
+        userid = current_user.id
+        categories = form.category.data
+        tweets = Tweet.query.filter(Tweet.category.in_(categories)).all()
+        
+        matrix = ConfusionMatrix(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets )
+        db.session.add(matrix)
+        db.session.commit()
+        return(redirect(url_for('create_matrix')))
+    return render_template('create_matrix.html')
+
+
+
+@app.route("/matrix", methods=['GET', 'POST'])
+def matrix():
+    # so now it is still tied to an analysis
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project) # how to get a project without analysis?
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
+    cat_names = [c.name for c in categories]
+    matrix = 
+   # tweets = project.tweets
+    threshold = 0.15 # make interactive with a form
+    tnt_sets = project.training_and_test_sets
+    a_training_set = sample(tnt_sets, 1)[0]
+    train_tweets = a_training_set[0].keys()
+    test_tweets = a_training_set[1].keys()
+
+
+    # train on the training set:
+    for tweet_id in train_tweets:
+        
+        tweet = Tweet.query.get(tweet_id)
+        category_id = tweet.category
+        category = TweetTagCategory.query.get(category_id)
+        self.trainset = matrix.update_trainset(tweet, category) 
+    flag_modified(confusionmatrix, "data")
+    db.session.add(confusionmatrix)
+    db.session.merge(confusionmatrix)
+    db.session.flush()
+    db.session.commit()
+    # loop 
+    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : ''} for t in tweets}
+    words = {t.id : '' for t in tweets}
+
+    for a_tweet in tweets: # change to testing set?
+        words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = analysis.get_predictions_and_words(set(a_tweet.words))
+        # if no data
+        if bool(matrix_data[a_tweet.id]['predictions']) == False:  
+            matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
+        # if prob == 0
+        elif matrix_data[a_tweet.id]['predictions'][cat_names[0]] == 0.0 and matrix_data[a_tweet.id]['predictions'][cat_names[1]] == 0.0:
+            matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
+        # else select the bigger prob
+        else: 
+            matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
+        # add real category
+        matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
+
+    # filter threshold tweets
+    good_tweets = {t: {'pred_cat': matrix_data.get(t, {}).get('pred_cat')[0], 'pred_prob' : matrix_data.get(t, {}).get('pred_cat')[1], 'real_cat' : matrix_data.get(t, {}).get('real_cat')} for t in matrix_data if matrix_data.get(t, {}).get('pred_cat')[1] >= threshold}
+    # tweets not exceeding the threshold
+    bad_tweets = {t: {'pred_cat': matrix_data.get(t, {}).get('pred_cat')[0], 'pred_prob' : matrix_data.get(t, {}).get('pred_cat')[1], 'real_cat' : matrix_data.get(t, {}).get('real_cat')} for t in matrix_data if matrix_data.get(t, {}).get('pred_cat')[1] < threshold}
+
+    m_info = sorted([t for t in good_tweets.items()], key=lambda x:x[1]["pred_prob"], reverse=True)
+    
+    # add matrix classes
+    for t in m_info:
+        if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
+            t[1]['class'] = 'TP'
+        elif t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
+            t[1]['class'] = 'TN'
+        # predicted 'yes', although was 'no'
+        elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
+            t[1]['class'] = 'FP'
+        # predicted 'no', although was 'yes'
+        elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
+            t[1]['class'] = 'FN'
+
+    class_list = [t[1]['class'] for t in m_info]
+    # count different occurences
+    matrix_classes = {i:class_list.count(i) for i in class_list}
+    
+    # update data
+
+    # commit etc
+
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names)
