@@ -314,12 +314,19 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
 
-# Define the ProjectCategories association table
+# Define the MatrixCategories association table
 class MatrixCategories(db.Model):
     __tablename__ = 'matrix_categories'
     id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('matrix.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
+    matrix_id = db.Column(db.Integer(), db.ForeignKey('matrix.id', ondelete='CASCADE'))
+    category_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
+
+# Define the Tweet-Matrix association table
+class TweetMatrix(db.Model):
+    __tablename__ = 'tweet_matrix'
+    id = db.Column(db.Integer(), primary_key=True)
+    tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
+    matrix = db.Column(db.Integer(), db.ForeignKey('matrix.id', ondelete='CASCADE'))
 
 # class Post(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -359,7 +366,7 @@ class TweetTagCategory(db.Model):
     tweets = db.relationship('Tweet')
     tags = db.relationship('TweetTag')
     projects = db.relationship('Project', secondary='project_categories')
-    matrices = db.relationship('ConfusionMatrix', secondary='matrix_categories')
+    #matrices = db.relationship('ConfusionMatrix', secondary='matrix_categories')
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -437,21 +444,21 @@ class BayesianAnalysis(db.Model):
 class ConfusionMatrix(db.Model):
     # TODO: independent of analysis ==> access all tweets (?)
     id = db.Column(db.Integer, primary_key=True)
-    #user = db.Column(db.Integer, db.ForeignKey('user.id'))
-    #category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
-    categories = db.relationship('TweetTagCategory', secondary='matrix_categories')
+    categories = db.Column(db.Integer)
+    #categories = db.relationship('TweetTagCategory', secondary='matrix_categories')
+    tweets = db.relationship('Tweet', secondary='tweet_matrix') # add these later?
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
-    #tweets = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
-    tweets = db.Column(JSON, default=[])
+    #tweets = db.Column(JSON, default=[])
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
-    trainset = db.Column(JSON) 
+    tf_idf = db.Column(JSON)
+    training_and_test_sets = db.Column(JSON)
+
 
     def get_project(self):
         return Project.query.get(self.project)
 
     def update_trainset(self, tweet, category):
         self.trainset['counts'] = self.trainset['counts'] + 1
-        
         if category.name not in self.trainset.keys():
             self.trainset[category.name] = {'counts' : 0, 'words' : {}}
         self.trainset[category.name]['counts'] = (self.trainset[category.name].get('counts', 0)) + 1
