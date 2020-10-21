@@ -172,10 +172,10 @@ def add_matrix(cat_ids):
         tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
         tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
         training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
-        matrix = ConfusionMatrix(categories = cats_objs, tweets = tweet_ids, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
+        matrix = ConfusionMatrix(categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
         db.session.add(matrix)
         db.session.commit()
-        return(project)
+        return(matrix)
 
 def create_n_train_and_test_sets(n, dict_of_tweets_and_cats):
         # takes a list of tups each containing a tweet_id and tweet_category
