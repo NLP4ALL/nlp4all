@@ -316,17 +316,17 @@ class UserRoles(db.Model):
 
 # Define the Matrix-Categories association table
 class MatrixCategories(db.Model):
-    __tablename__ = 'matrix_categories'
+    __tablename__ = 'confusionmatrix_categories'
     id = db.Column(db.Integer(), primary_key=True)
-    matrix_id = db.Column(db.Integer(), db.ForeignKey('matrix.id', ondelete='CASCADE'))
+    matrix_id = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
     category_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
 
 # Define the Tweet-Matrix association table
 class TweetMatrix(db.Model):
-    __tablename__ = 'tweet_matrix'
+    __tablename__ = 'tweet_confusionmatrix'
     id = db.Column(db.Integer(), primary_key=True)
     tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
-    matrix = db.Column(db.Integer(), db.ForeignKey('matrix.id', ondelete='CASCADE'))
+    matrix = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
 
 # class Post(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -444,11 +444,11 @@ class BayesianAnalysis(db.Model):
 class ConfusionMatrix(db.Model):
     # TODO: independent of analysis ==> access all tweets (?)
     id = db.Column(db.Integer, primary_key=True)
-    categories = db.Column(db.Integer)
-    #categories = db.relationship('TweetTagCategory', secondary='matrix_categories')
-    #tweets = db.relationship('Tweet', secondary='tweet_matrix') # add these later?
+    #categories = db.Column(db.Integer)
+    categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
+    tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix') # add these later?
     #analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
-    tweets = db.Column(JSON, default=[])
+    #tweets = db.Column(JSON, default=[])
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
