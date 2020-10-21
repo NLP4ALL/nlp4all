@@ -314,6 +314,12 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
 
+# Define the ProjectCategories association table
+class MatrixCategories(db.Model):
+    __tablename__ = 'matrix_categories'
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('matrix.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
 
 # class Post(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -353,6 +359,7 @@ class TweetTagCategory(db.Model):
     tweets = db.relationship('Tweet')
     tags = db.relationship('TweetTag')
     projects = db.relationship('Project', secondary='project_categories')
+    matrices = db.relationship('ConfusionMatrix', secondary='matrix_categories')
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -430,12 +437,27 @@ class BayesianAnalysis(db.Model):
 class ConfusionMatrix(db.Model):
     # TODO: independent of analysis ==> access all tweets (?)
     id = db.Column(db.Integer, primary_key=True)
-   #  user = db.Column(db.Integer, db.ForeignKey('user.id'))
-    category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    #user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    #category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    categories = db.relationship('TweetTagCategory', secondary='matrix_categories')
     analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
-    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    #tweets = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    tweets = db.Column(JSON, default=[])
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
-    pred_probability = db.Column(JSON) # or integer in percentages?
+    trainset = db.Column(JSON) 
 
     def get_project(self):
         return Project.query.get(self.project)
+
+    def update_trainset(self, tweet, category):
+        self.trainset['counts'] = self.trainset['counts'] + 1
+        
+        if category.name not in self.trainset.keys():
+            self.trainset[category.name] = {'counts' : 0, 'words' : {}}
+        self.trainset[category.name]['counts'] = (self.trainset[category.name].get('counts', 0)) + 1
+        for w in set(tweet.words):
+            val = self.trainset[category.name]['words'].get(w, 0)
+            self.trainset[category.name]['words'][w] = val + 1
+        return self.trainset
+    
+

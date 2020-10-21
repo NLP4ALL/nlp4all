@@ -27,3 +27,14 @@ nlp4all/.DS_Store
 *.txt
 *.db
 *.csv
+
+telmatweets.json
+db_init_telma.py
+migrations*
+init_dbt.py
+fig.html
+
+line_chart2*
+line_chart3*
+line_chart5*
+.gitignore
