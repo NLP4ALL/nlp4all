@@ -450,6 +450,7 @@ class ConfusionMatrix(db.Model):
     #analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
     #tweets = db.Column(JSON, default=[])
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
+    train_data = db.Column(JSON)
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
 
@@ -457,14 +458,45 @@ class ConfusionMatrix(db.Model):
     def get_project(self):
         return Project.query.get(self.project)
 
-    def update_trainset(self, tweet, category):
-        self.trainset['counts'] = self.trainset['counts'] + 1
-        if category.name not in self.trainset.keys():
-            self.trainset[category.name] = {'counts' : 0, 'words' : {}}
-        self.trainset[category.name]['counts'] = (self.trainset[category.name].get('counts', 0)) + 1
+    def updated_data(self, tweet, category):
+        self.train_data['counts'] = self.train_data['counts'] + 1
+        
+        if category.name not in self.train_data.keys():
+            self.train_data[category.name] = {'counts' : 0, 'words' : {}}
+        self.train_data[category.name]['counts'] = (self.train_data[category.name].get('counts', 0)) + 1
         for w in set(tweet.words):
-            val = self.trainset[category.name]['words'].get(w, 0)
-            self.trainset[category.name]['words'][w] = val + 1
-        return self.trainset
+            val = self.train_data[category.name]['words'].get(w, 0)
+            self.train_data[category.name]['words'][w] = val + 1
+        return self.train_data
+
+    def get_predictions_and_words(self, words):
+        # take each word  and  calculate a probabilty for each category
+        #categories = models.Project.query.get(project).categories
+        #categories = [c.id for c in proj_obj.categories]
+        categories = self.categories
+        #category_names = [c.name for c in proj_obj.categories if c.name in self.data.keys()]
+        category_names = [c.name for c in categories]# if c.name in self.train_data.keys()]
+        preds = {}
+        predictions = {}
+        if self.train_data['counts'] == 0:
+            predictions = {c : {w : 0} for w in words for c in category_names}
+            # predictions = {word : {category : 0 for category in category_names} for word in words}
+        else:
+            for w in words: # only categorize each word once
+                preds[w] = {c : 0 for c in category_names}
+                for cat in category_names:
+                    predictions[cat] = predictions.get(cat, {})
+                    prob_ba = self.train_data[cat]['words'].get(w, 0) / self.train_data[cat]['counts']
+                    prob_a = self.train_data[cat]['counts'] / self.train_data['counts'] 
+                    prob_b = sum([self.train_data[c]['words'].get(w, 0) for c in category_names]) / self.train_data['counts']
+                    if  prob_b == 0:
+                        preds[w][cat] = 0
+                        predictions[cat][w] = 0
+                    else:
+                        preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
+                        predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
+
+        return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
+
     
 
