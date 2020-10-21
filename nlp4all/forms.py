@@ -78,6 +78,11 @@ class AddBayesianRobotForm(FlaskForm):
     name = StringField('Title of Robot', validators=[DataRequired()])
     submit = SubmitField('Create New Robot')
 
+class CreateMatrixForm(FlaskForm):
+    categories = SelectMultipleField('Categories to compare', validators=[DataRequired()])
+    #threshold =  # add here maybe?
+    submit = SubmitField('Create Matrix')
+
 class AnalysisForm(FlaskForm):
     robort_form = FormField(AddBayesianRobotForm)
     add_category_form = FormField(AddTweetCategoryForm)
