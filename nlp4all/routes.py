@@ -539,41 +539,41 @@ def create_matrix():
 
 
 
-@app.route("/matrix", methods=['GET', 'POST'])
-def matrix():
+@app.route("/matrix/<matrix_id>", methods=['GET', 'POST'])
+def matrix(matrix_id):
     # so now it is still tied to an analysis
-    analysis_id = request.args.get('analysis', 1, type=int)
-    analysis = BayesianAnalysis.query.get(analysis_id)
-    project = Project.query.get(analysis.project) # how to get a project without analysis?
-    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
+    #matrix_id = request.args.get('matrix', 1, type=int)
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in matrix.categories])).all() # TODO: pretty sure we can just get project.categories
     cat_names = [c.name for c in categories]
     #matrix = 
    # tweets = project.tweets
-    threshold = 0.15 # make interactive with a form
-    tnt_sets = project.training_and_test_sets
+    threshold = 0.2 # make interactive with a form
+    tnt_sets = matrix.training_and_test_sets
     a_training_set = sample(tnt_sets, 1)[0]
-    train_tweets = a_training_set[0].keys()
-    test_tweets = a_training_set[1].keys()
+    train_tweet_ids = a_training_set[0].keys()
+    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_training_set[1].keys()]
 
 
     # train on the training set:
-    for tweet_id in train_tweets:
+    for tweet_id in train_tweet_ids:
         
         tweet = Tweet.query.get(tweet_id)
         category_id = tweet.category
         category = TweetTagCategory.query.get(category_id)
-        self.trainset = matrix.update_trainset(tweet, category) 
-    flag_modified(confusionmatrix, "data")
-    db.session.add(confusionmatrix)
-    db.session.merge(confusionmatrix)
+        matrix.train_data = matrix.updated_data(tweet, category) 
+    flag_modified(matrix, "train_data")
+    db.session.add(matrix)
+    db.session.merge(matrix)
     db.session.flush()
     db.session.commit()
-    # loop 
-    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : ''} for t in tweets}
-    words = {t.id : '' for t in tweets}
 
-    for a_tweet in tweets: # change to testing set?
-        words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = analysis.get_predictions_and_words(set(a_tweet.words))
+    # loop 
+    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : ''} for t in test_tweets}
+    words = {t.id : '' for t in test_tweets}
+
+    for a_tweet in test_tweets: # change to testing set?
+        words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = matrix.get_predictions_and_words(set(a_tweet.words))
         # if no data
         if bool(matrix_data[a_tweet.id]['predictions']) == False:  
             matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
