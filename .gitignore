@@ -38,3 +38,4 @@ line_chart2*
 line_chart3*
 line_chart5*
 .gitignore
+nlp4all/site.db
