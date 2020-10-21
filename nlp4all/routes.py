@@ -5,8 +5,8 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, CreateMatrixForm
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, ConfusionMatrix
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
@@ -519,16 +519,23 @@ def reset_token(token):
 
 @app.route("/create_matrix", methods=['GET', 'POST'])
 def create_matrix():
+    form = CreateMatrixForm()
+
+    form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
+   
     if form.validate_on_submit():
-        userid = current_user.id
-        categories = form.category.data
-        tweets = Tweet.query.filter(Tweet.category.in_(categories)).all()
+        #userid = current_user.id
         
-        matrix = ConfusionMatrix(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets )
+        cats = [int(n) for n in form.categories.data]
+        tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
+        # tnt_set = 
+        matrix = nlp4all.utils.add_matrix(cat_ids=cats)
+        
+       # matrix = ConfusionMatrix(tweets = tweets, categories = cats)
         db.session.add(matrix)
         db.session.commit()
         return(redirect(url_for('create_matrix')))
-    return render_template('create_matrix.html')
+    return render_template('create_matrix.html', form=form)
 
 
 
@@ -540,7 +547,7 @@ def matrix():
     project = Project.query.get(analysis.project) # how to get a project without analysis?
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
     cat_names = [c.name for c in categories]
-    matrix = 
+    #matrix = 
    # tweets = project.tweets
     threshold = 0.15 # make interactive with a form
     tnt_sets = project.training_and_test_sets
