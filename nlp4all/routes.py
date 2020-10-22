@@ -5,7 +5,7 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, CreateMatrixForm
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, CreateMatrixForm, ThresholdForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, ConfusionMatrix
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
@@ -545,10 +545,13 @@ def matrix(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     categories = matrix.categories
     cat_names = [c.name for c in categories]
-
-    threshold = 0.2 # make interactive with a form
+    form = ThresholdForm()
+    if form.validate_on_submit():
+        threshold = form.threshold.data
+    else:
+        threshold = 0.2
     tnt_sets = matrix.training_and_test_sets
-    a_tnt_set = sample(tnt_sets, 1)[0]
+    a_tnt_set = tnt_sets[0] #sample(tnt_sets, 1)[0]
     train_tweet_ids = a_tnt_set[0].keys()
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
@@ -610,6 +613,8 @@ def matrix(matrix_id):
     
     # update data
 
-    # commit etc
+    # commit etc ??
 
-    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names)
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form)
+
+
