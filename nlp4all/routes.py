@@ -605,8 +605,6 @@ def matrix(matrix_id):
     # tweets not exceeding the threshold
     bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < threshold], key=lambda x:x[1]["certainty"], reverse=True)
 
-    #m_info = sorted([t for t in good_tweets.items()], key=lambda x:x[1]["pred_prob"], reverse=True)
-    
     # add matrix classes
     for t in good_tweets:
         if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
@@ -619,6 +617,14 @@ def matrix(matrix_id):
         # predicted 'no', although was 'yes'
         elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
             t[1]['class'] = 'FN'
+
+    matrix.matrix_data['good_tweets'] = {i[0]: i[1] for i in good_tweets}
+    matrix.matrix_data['bad_tweets'] = {i[0]: i[1] for i in bad_tweets}
+    flag_modified(matrix, "matrix_data")
+    db.session.add(matrix)
+    db.session.merge(matrix)
+    db.session.flush()
+    db.session.commit()
 
     class_list = [t[1]['class'] for t in good_tweets]
     # count different occurences
