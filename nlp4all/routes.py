@@ -546,12 +546,25 @@ def matrix(matrix_id):
     categories = matrix.categories
     cat_names = [c.name for c in categories]
     form = ThresholdForm()
+    tnt_sets = matrix.training_and_test_sets
+
+    if "tnt_nr" in request.args.to_dict().keys():
+        tnt_nr = request.args.get('tnt_nr', type=int)
+        a_tnt_set = tnt_sets[tnt_nr]
+    else:
+        a_tnt_set = tnt_sets[0]
+
     if form.validate_on_submit():
         threshold = form.threshold.data
+        if form.shuffle.data:
+            tnt_list = list(range(0, len(tnt_sets)))
+            tnt_nr = sample(tnt_list, 1)[0]
+            a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
+            return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
     else:
         threshold = 0.2
-    tnt_sets = matrix.training_and_test_sets
-    a_tnt_set = tnt_sets[0] #sample(tnt_sets, 1)[0]
+        
+
     train_tweet_ids = a_tnt_set[0].keys()
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
@@ -614,7 +627,7 @@ def matrix(matrix_id):
     # update data
 
     # commit etc ??
-
+        
     return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form)
 
 
