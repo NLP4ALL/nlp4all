@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField, TextAreaField, SelectMultipleField, SelectField, RadioField, FormField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField, TextAreaField, SelectMultipleField, SelectField, RadioField, FormField, FloatField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from nlp4all.models import User, Project 
 from wtforms.fields.core import Label
@@ -82,6 +82,11 @@ class CreateMatrixForm(FlaskForm):
     categories = SelectMultipleField('Categories to compare', validators=[DataRequired()])
     #threshold =  # add here maybe?
     submit = SubmitField('Create Matrix')
+
+class ThresholdForm(FlaskForm):
+    #categories = SelectMultipleField('Categories to compare', validators=[DataRequired()])
+    threshold =  FloatField("Set a threshold between 0 and 1", validators=[DataRequired()])
+    submit = SubmitField('Update threshold')
 
 class AnalysisForm(FlaskForm):
     robort_form = FormField(AddBayesianRobotForm)
