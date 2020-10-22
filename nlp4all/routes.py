@@ -520,24 +520,17 @@ def reset_token(token):
 @app.route("/create_matrix", methods=['GET', 'POST'])
 def create_matrix():
     form = CreateMatrixForm()
-
     form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
    
     if form.validate_on_submit():
-        #userid = current_user.id
-        
         cats = [int(n) for n in form.categories.data]
         tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
-        # tnt_set = 
         matrix = nlp4all.utils.add_matrix(cat_ids=cats)
-        
-       # matrix = ConfusionMatrix(tweets = tweets, categories = cats)
+    
         db.session.add(matrix)
         db.session.commit()
         return(redirect(url_for('create_matrix')))
     return render_template('create_matrix.html', form=form)
-
-
 
 @app.route("/matrix/<matrix_id>", methods=['GET', 'POST'])
 def matrix(matrix_id):
@@ -629,11 +622,33 @@ def matrix(matrix_id):
     class_list = [t[1]['class'] for t in good_tweets]
     # count different occurences
     matrix_classes = {i:class_list.count(i) for i in class_list}
-    
-    # update data
-
-    # commit etc ??
+    len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets)]
         
-    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form)
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix)
 
+# just to try the jQuery thingie
+@app.route("/matrix_2/<matrix_id>", methods=['GET', 'POST'])
+def matrix_2(matrix_id):
+    matrix = ConfusionMatrix.query.get(matrix_id)
 
+    return render_template('confmatrix_2.html', matrix = matrix)   
+
+@app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
+def matrix_tweets(matrix_id):
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    #data = 
+    return render_template('cm_tweets.html')
+
+@app.route('/get_measurement_keys_and_students', methods=['POST', 'GET'])
+def get_measurement_keys_and_students():
+    matrix_id = request.args.get('matrix_id')
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    students = [1,2,3]
+    #measurements = set()
+    #for dp in activity.data_points:
+    #    measurements.add(dp.data['measurement'])
+    #    students.add(dp.data['users'])
+    #students = sorted(list(students))
+    #students.append("all")
+    #measurements = sorted(list(measurements))
+    return jsonify(students)

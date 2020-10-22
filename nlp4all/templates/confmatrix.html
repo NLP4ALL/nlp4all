@@ -5,10 +5,20 @@
     <h1> "Confusing Matrix" </h1>
     <table class="table table-bordered" >
         <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
-        <tbody><tr><th>True {{ cat_names[0] }}</th><td>{{ matrix_classes['TP'] }}</td><td>{{ matrix_classes['FN'] }}</td></tbody></tr>
-        <tbody><tr><th>True {{ cat_names[1] }}</th></td><td>{{ matrix_classes['FP'] }}</td><td>{{ matrix_classes['TN'] }}</td></tbody></tr>
+        <tbody><tr><th>True {{ cat_names[0] }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix_classes['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix_classes['FN'] }}</a></td></tbody></tr>
+        <tbody><tr><th>True {{ cat_names[1] }}</th></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FP">{{ matrix_classes['FP'] }}</a></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TN">{{ matrix_classes['TN'] }}</a></td></tbody></tr>
         
     </table>
+    
+    <ul>
+    <p>Accuracy: </p>
+    <p>Tweets in matrix: {{ len_data[0] / (len_data[2]) }}</p>
+    <p>Excluded tweets: {{ len_data[1] / (len_data[2]) }}</p>
+    </ul>
+
+    
+
+    <div>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
@@ -28,7 +38,7 @@
             {{ form.submit(class="btn btn-outline-info") }}
         </div>
     </form>
+</div>
         
 {% endblock content %}  
-
 
