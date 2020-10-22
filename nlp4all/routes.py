@@ -541,23 +541,19 @@ def create_matrix():
 
 @app.route("/matrix/<matrix_id>", methods=['GET', 'POST'])
 def matrix(matrix_id):
-    # so now it is still tied to an analysis
-    #matrix_id = request.args.get('matrix', 1, type=int)
+    
     matrix = ConfusionMatrix.query.get(matrix_id)
-    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in matrix.categories])).all() # TODO: pretty sure we can just get project.categories
+    categories = matrix.categories
     cat_names = [c.name for c in categories]
-    #matrix = 
-   # tweets = project.tweets
+
     threshold = 0.2 # make interactive with a form
     tnt_sets = matrix.training_and_test_sets
-    a_training_set = sample(tnt_sets, 1)[0]
-    train_tweet_ids = a_training_set[0].keys()
-    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_training_set[1].keys()]
-
+    a_tnt_set = sample(tnt_sets, 1)[0]
+    train_tweet_ids = a_tnt_set[0].keys()
+    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
     # train on the training set:
     for tweet_id in train_tweet_ids:
-        
         tweet = Tweet.query.get(tweet_id)
         category_id = tweet.category
         category = TweetTagCategory.query.get(category_id)
@@ -569,10 +565,10 @@ def matrix(matrix_id):
     db.session.commit()
 
     # loop 
-    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : ''} for t in test_tweets}
+    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
     words = {t.id : '' for t in test_tweets}
 
-    for a_tweet in test_tweets: # change to testing set?
+    for a_tweet in test_tweets: 
         words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = matrix.get_predictions_and_words(set(a_tweet.words))
         # if no data
         if bool(matrix_data[a_tweet.id]['predictions']) == False:  
@@ -583,30 +579,32 @@ def matrix(matrix_id):
         # else select the bigger prob
         else: 
             matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
+            # certainty = difference in predictions
+            matrix_data[a_tweet.id]['certainty'] = abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])
         # add real category
         matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
 
     # filter threshold tweets
-    good_tweets = {t: {'pred_cat': matrix_data.get(t, {}).get('pred_cat')[0], 'pred_prob' : matrix_data.get(t, {}).get('pred_cat')[1], 'real_cat' : matrix_data.get(t, {}).get('real_cat')} for t in matrix_data if matrix_data.get(t, {}).get('pred_cat')[1] >= threshold}
+    good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= threshold], key=lambda x:x[1]["certainty"], reverse=True)
     # tweets not exceeding the threshold
-    bad_tweets = {t: {'pred_cat': matrix_data.get(t, {}).get('pred_cat')[0], 'pred_prob' : matrix_data.get(t, {}).get('pred_cat')[1], 'real_cat' : matrix_data.get(t, {}).get('real_cat')} for t in matrix_data if matrix_data.get(t, {}).get('pred_cat')[1] < threshold}
+    bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < threshold], key=lambda x:x[1]["certainty"], reverse=True)
 
-    m_info = sorted([t for t in good_tweets.items()], key=lambda x:x[1]["pred_prob"], reverse=True)
+    #m_info = sorted([t for t in good_tweets.items()], key=lambda x:x[1]["pred_prob"], reverse=True)
     
     # add matrix classes
-    for t in m_info:
-        if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
+    for t in good_tweets:
+        if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
             t[1]['class'] = 'TP'
-        elif t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
+        elif t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
             t[1]['class'] = 'TN'
         # predicted 'yes', although was 'no'
-        elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
+        elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
             t[1]['class'] = 'FP'
         # predicted 'no', although was 'yes'
-        elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
+        elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
             t[1]['class'] = 'FN'
 
-    class_list = [t[1]['class'] for t in m_info]
+    class_list = [t[1]['class'] for t in good_tweets]
     # count different occurences
     matrix_classes = {i:class_list.count(i) for i in class_list}
     
