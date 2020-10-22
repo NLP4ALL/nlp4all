@@ -442,13 +442,10 @@ class BayesianAnalysis(db.Model):
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
 class ConfusionMatrix(db.Model):
-    # TODO: independent of analysis ==> access all tweets (?)
+   
     id = db.Column(db.Integer, primary_key=True)
-    #categories = db.Column(db.Integer)
     categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
     tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix') # add these later?
-    #analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE")) # bayesian_ modified in analysis
-    #tweets = db.Column(JSON, default=[])
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
     train_data = db.Column(JSON)
     tf_idf = db.Column(JSON)

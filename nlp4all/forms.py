@@ -84,7 +84,7 @@ class CreateMatrixForm(FlaskForm):
     submit = SubmitField('Create Matrix')
 
 class ThresholdForm(FlaskForm):
-    #categories = SelectMultipleField('Categories to compare', validators=[DataRequired()])
+    shuffle = BooleanField('Shuffle tweets')
     threshold =  FloatField("Set a threshold between 0 and 1", validators=[DataRequired()])
     submit = SubmitField('Update threshold')
 
