@@ -625,13 +625,7 @@ def matrix(matrix_id):
     len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
     accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ len_data[3], 3)
     return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix, accuracy = accuracy)
-
-# just to try the jQuery thingie
-@app.route("/matrix_2/<matrix_id>", methods=['GET', 'POST'])
-def matrix_2(matrix_id):
-    matrix = ConfusionMatrix.query.get(matrix_id)
-
-    return render_template('confmatrix_2.html', matrix = matrix)   
+  
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
 def matrix_tweets(matrix_id):
@@ -662,16 +656,9 @@ def excluded_tweets(matrix_id):
     cm_info = [t[1] for t in cm_info]
     return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix)
 
-@app.route('/get_measurement_keys_and_students', methods=['POST', 'GET'])
-def get_measurement_keys_and_students():
-    matrix_id = request.args.get('matrix_id')
-    matrix = ConfusionMatrix.query.get(matrix_id)
-    students = [1,2,3]
-    #measurements = set()
-    #for dp in activity.data_points:
-    #    measurements.add(dp.data['measurement'])
-    #    students.add(dp.data['users'])
-    #students = sorted(list(students))
-    #students.append("all")
-    #measurements = sorted(list(measurements))
-    return jsonify(students)
+
+@app.route("/my_matrices", methods=['GET', 'POST'])
+def my_matrices():
+    matrices = ConfusionMatrix.query.all()
+
+    return render_template('my_matrices.html', matrices=matrices) 
