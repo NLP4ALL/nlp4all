@@ -636,8 +636,14 @@ def matrix_2(matrix_id):
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
 def matrix_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
-    #data = 
-    return render_template('cm_tweets.html')
+    cm = tnt_nr = request.args.get('cm', type=str)
+    id_c = [{int(k):{'certainty':v['certainty']} for k, v in matrix.matrix_data['good_tweets'].items() if v['class'] == cm}][0]
+    tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
+
+    cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
+    cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
+    cm_info = [t[1] for t in cm_info]
+    return render_template('cm_tweets.html', cm_info = cm_info)
 
 @app.route('/get_measurement_keys_and_students', methods=['POST', 'GET'])
 def get_measurement_keys_and_students():

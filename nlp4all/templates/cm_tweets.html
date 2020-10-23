@@ -1,1 +1,11 @@
-<p>hello</p>
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+
+    {% set table_data = cm_info %}
+    {% set table_name = "table_name" %}
+    {% include "data_table.html" %}
+
+</div>
+
+{% endblock content %}
