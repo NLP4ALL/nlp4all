@@ -622,9 +622,9 @@ def matrix(matrix_id):
     class_list = [t[1]['class'] for t in good_tweets]
     # count different occurences
     matrix_classes = {i:class_list.count(i) for i in class_list}
-    len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets)]
-        
-    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix)
+    len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
+    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ len_data[3], 3)
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix, accuracy = accuracy)
 
 # just to try the jQuery thingie
 @app.route("/matrix_2/<matrix_id>", methods=['GET', 'POST'])
