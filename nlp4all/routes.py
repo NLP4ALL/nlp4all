@@ -661,4 +661,16 @@ def excluded_tweets(matrix_id):
 def my_matrices():
     matrices = ConfusionMatrix.query.all()
 
-    return render_template('my_matrices.html', matrices=matrices) 
+    form = CreateMatrixForm()
+    form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
+   
+    if form.validate_on_submit():
+        cats = [int(n) for n in form.categories.data]
+        tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
+        matrix = nlp4all.utils.add_matrix(cat_ids=cats)
+    
+        db.session.add(matrix)
+        db.session.commit()
+        return(redirect(url_for('my_matrices')))
+
+    return render_template('my_matrices.html', matrices=matrices, form=form) 
