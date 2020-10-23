@@ -451,10 +451,6 @@ class ConfusionMatrix(db.Model):
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
 
-
-    def get_project(self):
-        return Project.query.get(self.project)
-
     def updated_data(self, tweet, category):
         self.train_data['counts'] = self.train_data['counts'] + 1
         
@@ -467,12 +463,9 @@ class ConfusionMatrix(db.Model):
         return self.train_data
 
     def get_predictions_and_words(self, words):
-        # take each word  and  calculate a probabilty for each category
-        #categories = models.Project.query.get(project).categories
-        #categories = [c.id for c in proj_obj.categories]
+        
         categories = self.categories
-        #category_names = [c.name for c in proj_obj.categories if c.name in self.data.keys()]
-        category_names = [c.name for c in categories]# if c.name in self.train_data.keys()]
+        category_names = [c.name for c in categories]
         preds = {}
         predictions = {}
         if self.train_data['counts'] == 0:
