@@ -643,7 +643,7 @@ def matrix_tweets(matrix_id):
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
-    return render_template('cm_tweets.html', cm_info = cm_info)
+    return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix)
 
 @app.route('/get_measurement_keys_and_students', methods=['POST', 'GET'])
 def get_measurement_keys_and_students():
