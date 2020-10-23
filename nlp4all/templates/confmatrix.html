@@ -10,15 +10,15 @@
         
     </table>
     
-    <ul>
-    <p>Accuracy: {{ accuracy }} </p>
-    <p>Tweets in matrix: {{ len_data[0] / (len_data[2]) }}</p>
-    <p>Excluded tweets: {{ len_data[1] / (len_data[2]) }}</p>
-    </ul>
-
+        <ul>
+        <p>Accuracy: {{ accuracy }} </p>
+        <p>Tweets in matrix: {{ len_data[0] / (len_data[2]) }}</p>
+        <p><a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">Excluded tweets: </a> {{ len_data[1] / (len_data[2]) }} </p>
+        </ul>
     
 
-    <div>
+    <div class="content-section">
+    <h3> Modify parameters </h3>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">

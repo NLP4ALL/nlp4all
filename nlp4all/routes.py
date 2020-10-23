@@ -645,6 +645,23 @@ def matrix_tweets(matrix_id):
     cm_info = [t[1] for t in cm_info]
     return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix)
 
+@app.route("/excluded_tweets/<matrix_id>", methods=['GET', 'POST'])
+def excluded_tweets(matrix_id):
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    cm = tnt_nr = request.args.get('cm', type=str)
+    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'][0]} for k, v in matrix.matrix_data['bad_tweets'].items()}][0]
+    tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
+
+    cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
+    for t in cm_info:
+        if cm_info[t]['predicted category'] == cm_info[t]['category']:
+            cm_info[t]['correct'] = 1
+        else:
+            cm_info[t]['correct'] = 0
+    cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
+    cm_info = [t[1] for t in cm_info]
+    return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix)
+
 @app.route('/get_measurement_keys_and_students', methods=['POST', 'GET'])
 def get_measurement_keys_and_students():
     matrix_id = request.args.get('matrix_id')
