@@ -194,6 +194,23 @@ def split_dict(adict):
         random.shuffle(keys)
         return ( { k : adict[k] for k in keys[:n] } , { k : adict[k] for k in keys[n:] } )
 
+# new split to training and testing - with changing the relative sizes
+def n_split_dict(adict, split):
+    keys = list(adict.keys())
+    n = int(len(keys) * split)
+    random.shuffle(keys)
+    ## TODO: equally distributed categories in both sets
+    return ( { k : adict[k] for k in keys[:n] } , { k : adict[k] for k in keys[n:] } )
+
+def create_n_split_tnt_sets(n, split, dict_of_tweets_and_cats):
+    return_list = []
+    #half = int(len(dict_of_tweets_and_cats) / 2)
+    for n in range(n):
+        d1, d2 = n_split_dict(dict_of_tweets_and_cats, split)
+        return_list.append( (d1, d2) )
+    return return_list
+
+
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
         tf_idf = {}
         tf_idf['cat_counts'] = { cat.id : 0 for cat in cats}
