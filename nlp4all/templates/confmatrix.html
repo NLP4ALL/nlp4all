@@ -3,6 +3,9 @@
 {% block content %}
 
     <h1> Confusion Matrix </h1>
+    <br>
+    <p><i>Trained on {{ train_set_size }} tweets. </i></p>
+   
     <table class="table table-bordered" >
         <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
         <tbody><tr><th>True {{ cat_names[0] }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix_classes['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix_classes['FN'] }}</a></td></tbody></tr>
@@ -12,8 +15,8 @@
     
         <ul>
         <p>Accuracy: {{ accuracy }} </p>
-        <p>Tweets in matrix: {{ len_data[0] / (len_data[2]) }}</p>
-        <p><a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">Excluded tweets: </a> {{ len_data[1] / (len_data[2]) }} </p>
+        <p>Tweets in matrix: {{ len_data[0] }} / {{ (len_data[2]) }}</p>
+        <p> Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ len_data[1] }} </a>  / {{ (len_data[2]) }} </p>
         </ul>
     
 
