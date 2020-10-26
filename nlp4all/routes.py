@@ -572,6 +572,7 @@ def matrix(matrix_id):
         return redirect(url_for('matrix', matrix_id=matrix.id))
 
     train_tweet_ids = a_tnt_set[0].keys()
+    train_set_size = len(a_tnt_set[0].keys())
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
     # train on the training set:
@@ -640,7 +641,7 @@ def matrix(matrix_id):
     len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
     accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ len_data[3], 3)
 
-    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix, accuracy = accuracy)
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix, accuracy = accuracy, train_set_size=train_set_size)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
