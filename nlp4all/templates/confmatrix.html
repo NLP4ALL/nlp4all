@@ -15,8 +15,8 @@
     
         <ul>
         <p>Accuracy: {{ accuracy }} </p>
-        <p>Tweets in matrix: {{ len_data[0] }} / {{ (len_data[2]) }}</p>
-        <p> Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ len_data[1] }} </a>  / {{ (len_data[2]) }} </p>
+        <p>Tweets in matrix: <a href="{{ url_for('included_tweets', matrix_id=matrix.id) }}">{{ len_data[0] }}</a>  / {{ (len_data[2]) }}</p>
+        <p>Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ len_data[1] }} </a>  / {{ (len_data[2]) }} </p>
         </ul>
     
 
