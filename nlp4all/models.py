@@ -1,6 +1,6 @@
 from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from nlp4all import db, login_manager, app
+from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 import collections
@@ -450,6 +450,7 @@ class ConfusionMatrix(db.Model):
     train_data = db.Column(JSON)
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
+    threshold = db.Column(db.Float())
 
     def updated_data(self, tweet, category):
         self.train_data['counts'] = self.train_data['counts'] + 1
@@ -461,6 +462,11 @@ class ConfusionMatrix(db.Model):
             val = self.train_data[category.name]['words'].get(w, 0)
             self.train_data[category.name]['words'][w] = val + 1
         return self.train_data
+
+    def update_tnt_set(self, ratio):
+        tweet_id_and_cat = { t.id : t.category for t in self.tweets}
+        self.training_and_test_sets = utils.create_n_split_tnt_sets(30, ratio, tweet_id_and_cat)
+        return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):
         
