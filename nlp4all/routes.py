@@ -525,7 +525,8 @@ def create_matrix():
     if form.validate_on_submit():
         cats = [int(n) for n in form.categories.data]
         tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
-        matrix = nlp4all.utils.add_matrix(cat_ids=cats)
+        ratio = form.ratio.data
+        matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio)
     
         db.session.add(matrix)
         db.session.commit()
@@ -542,21 +543,33 @@ def matrix(matrix_id):
     tnt_sets = matrix.training_and_test_sets
 
     if "tnt_nr" in request.args.to_dict().keys():
-        tnt_nr = request.args.get('tnt_nr', type=int)
-        a_tnt_set = tnt_sets[tnt_nr]
+            tnt_nr = request.args.get('tnt_nr', type=int)
+            a_tnt_set = tnt_sets[tnt_nr]
     else:
         a_tnt_set = tnt_sets[0]
 
     if form.validate_on_submit():
-        threshold = form.threshold.data
+        if form.threshold.data:
+            matrix.threshold = form.threshold.data
+            flag_modified(matrix, "threshold")
+            db.session.add(matrix)
+            db.session.merge(matrix)
+            db.session.flush()
+            db.session.commit()
+        if form.ratio.data:
+            ratio = form.ratio.data * 0.01
+            matrix.training_and_test_sets = matrix.update_tnt_set(ratio)
+            flag_modified(matrix, "training_and_test_sets")
+            db.session.add(matrix)
+            db.session.merge(matrix)
+            db.session.flush()
+            db.session.commit()
         if form.shuffle.data:
             tnt_list = list(range(0, len(tnt_sets)))
             tnt_nr = sample(tnt_list, 1)[0]
             a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
             return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
-    else:
-        threshold = 0.2
-        
+        return redirect(url_for('matrix', matrix_id=matrix.id))
 
     train_tweet_ids = a_tnt_set[0].keys()
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
@@ -573,7 +586,7 @@ def matrix(matrix_id):
     db.session.flush()
     db.session.commit()
 
-    # loop 
+    # predictions for the test set
     matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
     words = {t.id : '' for t in test_tweets}
 
@@ -594,9 +607,9 @@ def matrix(matrix_id):
         matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
 
     # filter threshold tweets
-    good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= threshold], key=lambda x:x[1]["certainty"], reverse=True)
+    good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
     # tweets not exceeding the threshold
-    bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < threshold], key=lambda x:x[1]["certainty"], reverse=True)
+    bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
 
     # add matrix classes
     for t in good_tweets:
@@ -619,18 +632,21 @@ def matrix(matrix_id):
     db.session.flush()
     db.session.commit()
 
-    class_list = [t[1]['class'] for t in good_tweets]
     # count different occurences
-    matrix_classes = {i:class_list.count(i) for i in class_list}
+    class_list = [t[1]['class'] for t in good_tweets]
+    matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+    for i in set(class_list):
+        matrix_classes[i] = class_list.count(i)
     len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
     accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ len_data[3], 3)
+
     return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix, accuracy = accuracy)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
 def matrix_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
-    cm = tnt_nr = request.args.get('cm', type=str)
+    cm = tnt_nr = request.args.get('cm', type=str) ### check this !?
     id_c = [{int(k):{'certainty':v['certainty']} for k, v in matrix.matrix_data['good_tweets'].items() if v['class'] == cm}][0]
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
 
@@ -642,7 +658,7 @@ def matrix_tweets(matrix_id):
 @app.route("/excluded_tweets/<matrix_id>", methods=['GET', 'POST'])
 def excluded_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
-    cm = tnt_nr = request.args.get('cm', type=str)
+    cm = tnt_nr = request.args.get('cm', type=str) ## check this !?
     id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'][0]} for k, v in matrix.matrix_data['bad_tweets'].items()}][0]
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
 
@@ -667,7 +683,8 @@ def my_matrices():
     if form.validate_on_submit():
         cats = [int(n) for n in form.categories.data]
         tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
-        matrix = nlp4all.utils.add_matrix(cat_ids=cats)
+        ratio = form.ratio.data*0.01 # convert back to decimals
+        matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio)
     
         db.session.add(matrix)
         db.session.commit()

@@ -164,16 +164,15 @@ def add_project(name, description, org, cat_ids):
         db.session.commit()
         return(project)
 
-def add_matrix(cat_ids):
-       # print(description)
+def add_matrix(cat_ids, ratio):
         cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
         tweet_objs = [t for cat in cats_objs for t in cat.tweets]
         tweet_ids = [t.id for t in tweet_objs]
         tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
         tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
-        training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
+        training_and_test_sets = create_n_split_tnt_sets(30, ratio, tweet_id_and_cat)
         matrix_data = {'good_tweets': {}, 'bad_tweets' : {}}
-        matrix = ConfusionMatrix(categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets, train_data = {"counts" : 0, "words" : {}}, matrix_data = matrix_data)
+        matrix = ConfusionMatrix(categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets, train_data = {"counts" : 0, "words" : {}}, matrix_data = matrix_data, threshold = 0.2)
         db.session.add(matrix)
         db.session.commit()
         return(matrix)
