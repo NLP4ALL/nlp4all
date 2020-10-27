@@ -547,6 +547,7 @@ def matrix(matrix_id):
             a_tnt_set = tnt_sets[tnt_nr]
     else:
         a_tnt_set = tnt_sets[0]
+        tnt_nr = 0
 
     if form.validate_on_submit():
         if form.threshold.data:
@@ -569,7 +570,7 @@ def matrix(matrix_id):
             tnt_nr = sample(tnt_list, 1)[0]
             a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
             return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
-        return redirect(url_for('matrix', matrix_id=matrix.id))
+        return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr))
 
     train_tweet_ids = a_tnt_set[0].keys()
     train_set_size = len(a_tnt_set[0].keys())
