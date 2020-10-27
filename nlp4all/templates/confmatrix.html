@@ -4,7 +4,7 @@
 
     <h1> Confusion Matrix </h1>
     <br>
-    <p><i>Trained on {{ train_set_size }} tweets. </i></p>
+    <p><i>Trained on {{ matrix.data.nr_train_tweets }} tweets. </i></p>
    
     <table class="table table-bordered" >
         <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
@@ -15,9 +15,9 @@
     
         <ul>
         <p>Current certainty threshold: {{ matrix.threshold }}</p>
-        <p>Accuracy: {{ accuracy }} </p>
-        <p>Tweets in matrix: <a href="{{ url_for('included_tweets', matrix_id=matrix.id) }}">{{ len_data[0] }}</a>  / {{ (len_data[2]) }}</p>
-        <p>Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ len_data[1] }} </a>  / {{ (len_data[2]) }} </p>
+        <p>Accuracy: {{ matrix.data.accuracy }} </p>
+        <p>Tweets in matrix: <a href="{{ url_for('included_tweets', matrix_id=matrix.id) }}">{{ matrix.data.nr_included }}</a>  / {{ matrix.data.nr_test_tweets }}</p>
+        <p>Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ matrix.data.nr_excluded }} </a>  / {{ matrix.data.nr_test_tweets }} </p>
         </ul>
     
 
@@ -42,9 +42,9 @@
                         <span>{{ error }}</span>
                     {% endfor %}
                 </div>
-            {% else %}
-                {{ form.ratio(class="form-control form-control-lg") }}
-            {% endif %}
+                {% else %}
+                    {{ form.ratio(class="form-control form-control-lg") }}
+                {% endif %}
             </div>
             <div class="form-check">
                 {{ form.shuffle(class="form-check-input") }}

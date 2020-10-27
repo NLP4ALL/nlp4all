@@ -85,9 +85,9 @@ class CreateMatrixForm(FlaskForm):
 
 class ThresholdForm(FlaskForm):
     shuffle = BooleanField('Shuffle tweets')
-    threshold =  FloatField("Set a threshold between 0 and 1", validators=[DataRequired()])
-    ratio = IntegerField('Change training tweets proportion (%)', validators=[DataRequired()])
-    submit = SubmitField('Update threshold')
+    threshold =  FloatField("Set a threshold between 0 and 1")
+    ratio = IntegerField('Change training tweets proportion (%)')
+    submit = SubmitField('Update')
 
 class AnalysisForm(FlaskForm):
     robort_form = FormField(AddBayesianRobotForm)
