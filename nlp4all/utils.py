@@ -165,6 +165,7 @@ def add_project(name, description, org, cat_ids):
         return(project)
 
 def add_matrix(cat_ids, ratio, userid):
+        ratio=round(ratio,3)
         cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
         tweet_objs = [t for cat in cats_objs for t in cat.tweets]
         tweet_ids = [t.id for t in tweet_objs]

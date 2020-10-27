@@ -4,7 +4,7 @@
 
     <h1> Confusion Matrix </h1>
     <br>
-    <p><i>Trained on {{ matrix.data.nr_train_tweets }} tweets. </i></p>
+    <p><i>Trained on {{ matrix.data.nr_train_tweets }} tweets. </i></p><p><a href="{{ url_for('matrix_overview') }}">See overview over all matrices</a></p>
    
     <table class="table table-bordered" >
         <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>

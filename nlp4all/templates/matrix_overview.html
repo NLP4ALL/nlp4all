@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+  <h2>My Matrices</h2>
+<div>
+  {% set matrices = matrices %}
+  {% include "matrix_summary.html" %}
+</div>
+
+{% endblock content %}
