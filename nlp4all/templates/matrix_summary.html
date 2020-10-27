@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-section">
+    <h1>Overview over your matrices</h1>
+{% for m in matrices %}
+<div class="content-section">
+<a href= {{ url_for('matrix', matrix_id=m.id) }}>See matrix {{ m.id }}</a>
+<table class="table">
+
+<tr><td><b>Categories: </b></td><td>
+    {% for c in m.categories %}
+    {{ c.name }} 
+    {% endfor %}</td></tr>
+<tr><td><b>Threshold: </b> </td><td>{{ m.threshold }} </td></tr>
+<tr><td><b>Ratio: </b> </td><td>{{ m.ratio }}</td></tr>
+<tr><td><b>Accuracy: </b></td><td>{{ m.data.accuracy }}</td></tr>
+
+</table>
+</div>
+{% endfor %}
+</div>
+
+{% endblock content %}
