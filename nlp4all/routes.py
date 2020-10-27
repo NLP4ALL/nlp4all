@@ -666,7 +666,8 @@ def matrix_tweets(matrix_id):
 
 @app.route("/my_matrices", methods=['GET', 'POST'])
 def my_matrices():
-    matrices = ConfusionMatrix.query.all()
+    userid = current_user.id
+    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
 
     form = CreateMatrixForm()
     form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
@@ -724,8 +725,8 @@ def excluded_tweets(matrix_id):
     return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
 
 
-@app.route("/matrix_summary", methods=['GET', 'POST'])
-def matrix_summary():
+@app.route("/matrix_overview", methods=['GET', 'POST'])
+def matrix_overview():
     userid = current_user.id
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
-    return render_template('matrix_summary.html', matrices=matrices)
+    return render_template('matrix_overview.html', matrices=matrices)
