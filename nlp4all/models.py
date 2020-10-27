@@ -444,13 +444,16 @@ class BayesianAnalysis(db.Model):
 class ConfusionMatrix(db.Model):
    
     id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
     categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
     tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix') # add these later?
-    matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN (+ probability?)
+    matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN
     train_data = db.Column(JSON)
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
     threshold = db.Column(db.Float())
+    ratio = db.Column(db.Float())
+    data = db.Column(JSON)
 
     def updated_data(self, tweet, category):
         self.train_data['counts'] = self.train_data['counts'] + 1
@@ -463,9 +466,9 @@ class ConfusionMatrix(db.Model):
             self.train_data[category.name]['words'][w] = val + 1
         return self.train_data
 
-    def update_tnt_set(self, ratio):
+    def update_tnt_set(self):
         tweet_id_and_cat = { t.id : t.category for t in self.tweets}
-        self.training_and_test_sets = utils.create_n_split_tnt_sets(30, ratio, tweet_id_and_cat)
+        self.training_and_test_sets = utils.create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)
         return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):
