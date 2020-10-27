@@ -40,3 +40,4 @@ line_chart5*
 .gitignore
 nlp4all/site.db
 nlp4all/templates/confmatrix_2.html
+hide.html
