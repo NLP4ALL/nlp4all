@@ -558,8 +558,8 @@ def matrix(matrix_id):
             db.session.flush()
             db.session.commit()
         if form.ratio.data:
-            ratio = form.ratio.data * 0.01
-            matrix.training_and_test_sets = matrix.update_tnt_set(ratio)
+            matrix.ratio = round(form.ratio.data * 0.01,3)
+            matrix.training_and_test_sets = matrix.update_tnt_set()
             flag_modified(matrix, "training_and_test_sets")
             db.session.add(matrix)
             db.session.merge(matrix)
@@ -639,10 +639,15 @@ def matrix(matrix_id):
     matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
-    len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
-    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ len_data[3], 3)
-
-    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, len_data=len_data, matrix=matrix, accuracy = accuracy, train_set_size=train_set_size)
+    #len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
+    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(matrix.matrix_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}
+    flag_modified(matrix, "data")
+    db.session.add(matrix)
+    db.session.merge(matrix)
+    db.session.flush()
+    db.session.commit()
+    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, matrix=matrix)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
@@ -667,10 +672,11 @@ def my_matrices():
     form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
    
     if form.validate_on_submit():
+        userid = current_user.id
         cats = [int(n) for n in form.categories.data]
         tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
         ratio = form.ratio.data*0.01 # convert back to decimals
-        matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio)
+        matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio, userid = userid)
     
         db.session.add(matrix)
         db.session.commit()
@@ -716,3 +722,10 @@ def excluded_tweets(matrix_id):
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
+
+
+@app.route("/matrix_summary", methods=['GET', 'POST'])
+def matrix_summary():
+    userid = current_user.id
+    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
+    return render_template('matrix_summary.html', matrices=matrices)
