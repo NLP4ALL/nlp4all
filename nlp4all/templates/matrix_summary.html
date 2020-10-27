@@ -1,14 +1,19 @@
 
-<div class="content-section">
+<button id="show">Show details</button>
+<button id="hide">Hide detals</button>
+
+<div class="content-section" id="matrix-info">
+       
 
 {% for m in matrices %}
 <div class="content-section">
-<a href= {{ url_for('matrix', matrix_id=m.id) }}>Matrix {{ m.id }}</a>
-<table class="table">
 
-<tr><td><b>Categories: </b></td><td> 
+<b><a href= {{ url_for('matrix', matrix_id=m.id) }}>Matrix {{ m.id }}</a></b>
+</br>
+<tr><td><i><b>Categories: </b></td><td> 
     {{ m.categories[0].name }} and {{ m.categories[1].name }}
-    </td></tr>
+</i></td></tr>
+<table class="table" id="table_m" style="display: none" >
 <tr><td><b>Threshold: </b> </td><td>{{ m.threshold }} </td></tr>
 <tr><td><b>Ratio: </b> </td><td>{{ m.ratio }}</td></tr>
 <tr><td><b>Accuracy: </b></td><td>{{ m.data.accuracy }}</td></tr>
@@ -18,3 +23,17 @@
 {% endfor %}
 </div>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+$("#matrix-info").ready(function(){
+    $("table").each(function() {
+        $("#hide").click(function(){
+            $("table").hide();
+        });
+        $("#show").click(function(){
+            $("table").show();
+        });
+    })
+});
+</script>
