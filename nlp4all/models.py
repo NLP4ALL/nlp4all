@@ -497,5 +497,53 @@ class ConfusionMatrix(db.Model):
 
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
+    def train_model(self, train_tweet_ids):
+        for tweet_id in train_tweet_ids:
+            tweet = Tweet.query.get(tweet_id)
+            category_id = tweet.category
+            category = TweetTagCategory.query.get(category_id)
+            train_data = self.updated_data(tweet, category) 
+        return train_data
+    
+    def make_matrix_data(self, test_tweets, cat_names):
+        matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
+        words = {t.id : '' for t in test_tweets}
+
+        for a_tweet in test_tweets: 
+            words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = self.get_predictions_and_words(set(a_tweet.words))
+            # if no data
+            if bool(matrix_data[a_tweet.id]['predictions']) == False:  
+                matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
+            # if prob == 0
+            elif matrix_data[a_tweet.id]['predictions'][cat_names[0]] == 0.0 and matrix_data[a_tweet.id]['predictions'][cat_names[1]] == 0.0:
+                matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
+            # else select the bigger prob
+            else: 
+                matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
+                # certainty = difference in predictions
+                matrix_data[a_tweet.id]['certainty'] = abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])
+            # add real category
+            matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
+
+        good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= self.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+        # tweets not exceeding the threshold
+        bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < self.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+
+        # add matrix classes
+        for t in good_tweets:
+            if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
+                t[1]['class'] = 'TP'
+            elif t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
+                t[1]['class'] = 'TN'
+            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
+                t[1]['class'] = 'FP' # predicted 'yes', although was 'no'
+            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
+                t[1]['class'] = 'FN' # predicted 'no', although was 'yes'
+        
+        return (matrix_data, good_tweets, bad_tweets)
+
+
+    
+
     
 

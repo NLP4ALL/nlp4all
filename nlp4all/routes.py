@@ -579,57 +579,20 @@ def matrix(matrix_id):
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
     # train on the training set:
-    for tweet_id in train_tweet_ids:
-        tweet = Tweet.query.get(tweet_id)
-        category_id = tweet.category
-        category = TweetTagCategory.query.get(category_id)
-        matrix.train_data = matrix.updated_data(tweet, category) 
+
+    matrix.train_data = matrix.train_model(train_tweet_ids)
+
     flag_modified(matrix, "train_data")
     db.session.add(matrix)
     db.session.merge(matrix)
     db.session.flush()
     db.session.commit()
 
-    # predictions for the test set
-    matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
-    words = {t.id : '' for t in test_tweets}
-
-    for a_tweet in test_tweets: 
-        words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = matrix.get_predictions_and_words(set(a_tweet.words))
-        # if no data
-        if bool(matrix_data[a_tweet.id]['predictions']) == False:  
-            matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
-        # if prob == 0
-        elif matrix_data[a_tweet.id]['predictions'][cat_names[0]] == 0.0 and matrix_data[a_tweet.id]['predictions'][cat_names[1]] == 0.0:
-            matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
-        # else select the bigger prob
-        else: 
-            matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
-            # certainty = difference in predictions
-            matrix_data[a_tweet.id]['certainty'] = abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])
-        # add real category
-        matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
-
-    # filter threshold tweets
-    good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-    # tweets not exceeding the threshold
-    bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-
-    # add matrix classes
-    for t in good_tweets:
-        if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
-            t[1]['class'] = 'TP'
-        elif t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
-            t[1]['class'] = 'TN'
-        # predicted 'yes', although was 'no'
-        elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
-            t[1]['class'] = 'FP'
-        # predicted 'no', although was 'yes'
-        elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
-            t[1]['class'] = 'FN'
-
+    # make matrix data
+    matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
     matrix.matrix_data['good_tweets'] = {i[0]: i[1] for i in good_tweets}
     matrix.matrix_data['bad_tweets'] = {i[0]: i[1] for i in bad_tweets}
+    #matrix.matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
     flag_modified(matrix, "matrix_data")
     db.session.add(matrix)
     db.session.merge(matrix)
@@ -643,13 +606,14 @@ def matrix(matrix_id):
         matrix_classes[i] = class_list.count(i)
     #len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
     accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+
     matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(matrix.matrix_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}
     flag_modified(matrix, "data")
     db.session.add(matrix)
     db.session.merge(matrix)
     db.session.flush()
     db.session.commit()
-    return render_template('confmatrix.html', matrix_classes=matrix_classes, cat_names = cat_names, form=form, matrix=matrix)
+    return render_template('confmatrix.html', cat_names = cat_names, form=form, matrix=matrix)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
