@@ -1,4 +1,3 @@
-.gitignore
 tweet_data/
 data/
 venv/
@@ -24,6 +23,5 @@ nlp4all/.DS_Store
 *.db
 *.ipynb
 *.xlsx
-*.txt
 *.db
 *.csv
