@@ -707,4 +707,18 @@ def matrix_overview():
     return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info)
 
 
+@app.route('/test_jquery', methods=['POST','GET'])
+def test_jquery():
+    matrix_id = request.args.get('matrix_id')
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    
+    return render_template('test_jquery.html', matrix=matrix)
 
+@app.route('/say_hi', methods=['GET'])
+def say_hi():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+    cat_1 = matrix.categories[0].name
+    mylist = [m_id, cat_1]
+    return jsonify(mylist)
