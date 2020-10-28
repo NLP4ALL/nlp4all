@@ -534,9 +534,11 @@ def create_matrix():
     return render_template('create_matrix.html', form=form)
 
 @app.route("/matrix/<matrix_id>", methods=['GET', 'POST'])
+@login_required
 def matrix(matrix_id):
     
     matrix = ConfusionMatrix.query.get(matrix_id)
+    # TODO: load it only the first time, otherwise just show the information
     categories = matrix.categories
     cat_names = [c.name for c in categories]
     form = ThresholdForm()
@@ -651,6 +653,7 @@ def matrix(matrix_id):
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
+@login_required
 def matrix_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     cm = request.args.get('cm', type=str) ### check this !?
@@ -665,6 +668,7 @@ def matrix_tweets(matrix_id):
 
 
 @app.route("/my_matrices", methods=['GET', 'POST'])
+@login_required
 def my_matrices():
     userid = current_user.id
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
@@ -686,6 +690,7 @@ def my_matrices():
     return render_template('my_matrices.html', matrices=matrices, form=form) 
 
 @app.route("/included_tweets/<matrix_id>", methods=['GET', 'POST'])
+@login_required
 def included_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = "Included tweets"
@@ -707,6 +712,7 @@ def included_tweets(matrix_id):
     return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
 
 @app.route("/excluded_tweets/<matrix_id>", methods=['GET', 'POST'])
+@login_required
 def excluded_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = 'Excluded tweets'
@@ -726,6 +732,7 @@ def excluded_tweets(matrix_id):
 
 
 @app.route("/matrix_overview", methods=['GET', 'POST'])
+@login_required
 def matrix_overview():
     userid = current_user.id
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
