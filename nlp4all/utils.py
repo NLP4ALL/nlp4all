@@ -289,3 +289,49 @@ def create_bar_chart_data(predictions, title=""):
 def hsl_color_to_string(hsltup):
         return(f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)")
          
+## for matrix looping
+
+def updated_data(train_data, tweet, category):
+    train_data['counts'] = train_data['counts'] + 1
+
+    if category.name not in train_data.keys():
+        train_data[category.name] = {'counts' : 0, 'words' : {}}
+    train_data[category.name]['counts'] = (train_data[category.name].get('counts', 0)) + 1
+    for w in set(tweet.words):
+        val = train_data[category.name]['words'].get(w, 0)
+        train_data[category.name]['words'][w] = val + 1
+    return train_data
+    
+def train_model(train_data, train_tweet_ids):
+    for tweet_id in train_tweet_ids:
+        tweet = Tweet.query.get(tweet_id)
+        category_id = tweet.category
+        category = TweetTagCategory.query.get(category_id)
+        train_data = updated_data(train_data, tweet, category)  # use the function above
+    return train_data
+
+def get_predictions_and_words(train_data, words, category_names):
+        
+    #categories = self.categories
+    #category_names = [c.name for c in categories]
+    preds = {}
+    predictions = {}
+    if train_data['counts'] == 0:
+        predictions = {c : {w : 0} for w in words for c in category_names}
+        # predictions = {word : {category : 0 for category in category_names} for word in words}
+    else:
+        for w in words: # only categorize each word once
+            preds[w] = {c : 0 for c in category_names}
+            for cat in category_names:
+                predictions[cat] = predictions.get(cat, {})
+                prob_ba = train_data[cat]['words'].get(w, 0) / train_data[cat]['counts']
+                prob_a = train_data[cat]['counts'] / train_data['counts'] 
+                prob_b = sum([train_data[c]['words'].get(w, 0) for c in category_names]) / train_data['counts']
+                if  prob_b == 0:
+                    preds[w][cat] = 0
+                    predictions[cat][w] = 0
+                else:
+                    preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
+                    predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
+
+    return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
