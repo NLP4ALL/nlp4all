@@ -1,0 +1,68 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ <h1 id='heading'>hej hej</h1>
+ 
+ <h2 id='body'>bye</h2>
+
+
+ <head>
+    <link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+  </head>
+    <body>
+        
+        <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+        <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+       
+ 
+
+  <table class="table table-bordered" id="matrix" >
+    <thead><tr><th class="site_name">Confusion Matrix </th><th>Predicted 1</th><th>Predicted 2</th></tr></thead>
+    <tbody>
+    </tbody>
+</table>
+
+</body>
+
+
+ <script>
+    var text = document.getElementById('heading');
+    var body = document.getElementById('body');
+
+    var tbl = document.getElementById('matrix')
+
+    $.get('/get_aggregated_data', {'matrix_id': {{ matrix.id }} }).done(
+        function(returnedData) {
+            //console.log(returnedData);
+            $("#matrix").dataTable({
+        // set data
+            "aaData":[
+                [returnedData[1],2,3],
+                [4,5,6],
+            ],
+
+            // sortable
+            "aoColumnDefs":[{
+                    "sTitle":"Site name"
+                , "aTargets": [ "Confusion Matrix" ] 
+            }]
+            });
+            //console.log("test");
+            //body.innerText = returnedData[1];
+    });
+
+</script>
+
+ <script>
+    var text = document.getElementById('heading');
+    var body = document.getElementById('body');
+
+
+    $.get('/get_aggregated_data', {'matrix_id': {{ matrix.id }} }).done(
+        function(returnedData) {
+            console.log("test");
+            body.innerText = returnedData[0];
+    });
+
+ 
+  
+
+</script>
