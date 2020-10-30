@@ -561,6 +561,11 @@ def matrix(matrix_id):
             db.session.commit()
         if form.ratio.data:
             matrix.ratio = round(form.ratio.data * 0.01,3)
+            flag_modified(matrix, "ratio")
+            db.session.add(matrix)
+            db.session.merge(matrix)
+            db.session.flush()
+            db.session.commit()
             matrix.training_and_test_sets = matrix.update_tnt_set()
             flag_modified(matrix, "training_and_test_sets")
             db.session.add(matrix)
@@ -592,6 +597,7 @@ def matrix(matrix_id):
     matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
     matrix.matrix_data['good_tweets'] = {i[0]: i[1] for i in good_tweets}
     matrix.matrix_data['bad_tweets'] = {i[0]: i[1] for i in bad_tweets}
+    matrix.matrix_data['tnt_set'] = tnt_nr # save the number for future
     #matrix.matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
     flag_modified(matrix, "matrix_data")
     db.session.add(matrix)
@@ -707,4 +713,136 @@ def matrix_overview():
     return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info)
 
 
+@app.route('/test_jquery', methods=['POST','GET'])
+def test_jquery():
+    matrix_id = request.args.get('matrix_id')
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    
+    return render_template('test_jquery.html', matrix=matrix)
+
+@app.route('/say_hi', methods=['GET'])
+def say_hi():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+    cat_1 = matrix.categories[0].name
+    mylist = [m_id, cat_1]
+    return jsonify(mylist)
+
+@app.route('/matrix_aggregate', methods=['POST','GET'])
+def matrix_aggregate():
+    matrix_id = request.args.get('matrix_id')
+    matrix = ConfusionMatrix.query.get(matrix_id)
+    cat_names = [n.name for n in matrix.categories]
+    return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names)
+
+@app.route('/get_aggregated_data', methods=['GET', 'POST'])
+def aggregate_matrix():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+
+    # log used tnt sets
+    used_tnt_sets = [matrix.matrix_data['tnt_set']]
+    n=3
+    agg_data = {m:{'matrix_data':{}} for m in range(n)}
+
+    # take threshold and ratio from original
+    # create a new matrix with them
+
+    userid = matrix.user
+    cats = [n.id for n in matrix.categories]
+    cat_names = [n.name for n in matrix.categories]
+    tweets = matrix.tweets
+    ratio = matrix.ratio
+    threshold = matrix.threshold
+    tnt_sets = matrix.training_and_test_sets
+    
+    # loop
+    for m in range(n):
+        # TODO to debug!! so that you don't need to create new matrices that disturb..
+        
+        # a new tnt set
+        #tnt_list = list(range(0, len(tnt_sets))) #[x for x in l1 if x not in l2]
+        # TODO check this
+        tnt_list = [x for x in list(range(0, len(matrix.training_and_test_sets))) if x not in used_tnt_sets]
+
+        #while sample(tnt_list, 1)[0] != matrix.matrix_data['tnt_set']: tnt_nr = sample(tnt_list, 1)[0]
+        tnt_nr = sample(tnt_list, 1)[0]
+        used_tnt_sets.append(tnt_nr) # save this somewhere!!
+        a_tnt_set = tnt_sets[tnt_nr]
+        train_tweet_ids = a_tnt_set[0].keys()
+        train_set_size = len(a_tnt_set[0].keys())
+        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+
+        # train on the training set:
+        train_data = {"counts" : 0, "words" : {}} 
+        train_data = nlp4all.utils.train_model(train_data, train_tweet_ids)
+        
+
+        #matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
+        #matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
+        matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
+        words = {t.id : '' for t in test_tweets}
+
+        for a_tweet in test_tweets: 
+            words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = nlp4all.utils.get_predictions_and_words(train_data, set(a_tweet.words), cat_names)
+            # if no data
+            if bool(matrix_data[a_tweet.id]['predictions']) == False:  
+                matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
+            # if prob == 0
+            elif matrix_data[a_tweet.id]['predictions'][cat_names[0]] == 0.0 and matrix_data[a_tweet.id]['predictions'][cat_names[1]] == 0.0:
+                matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
+            # else select the bigger prob
+            else: 
+                matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
+                # certainty = difference in predictions
+                matrix_data[a_tweet.id]['certainty'] = round((abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])),3)
+            # add real category
+            matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
+
+        good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= threshold], key=lambda x:x[1]["certainty"], reverse=True)
+        # tweets not exceeding the threshold
+        bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < threshold], key=lambda x:x[1]["certainty"], reverse=True)
+
+        # add matrix classes
+        for t in good_tweets:
+            if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
+                t[1]['class'] = 'TP'
+            elif t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
+                t[1]['class'] = 'TN'
+            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
+                t[1]['class'] = 'FP' # predicted 'yes', although was 'no'
+            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
+                    t[1]['class'] = 'FN' # predicted 'no', although was 'yes'
+        test_data = {'good_tweets' : {i[0]: i[1] for i in good_tweets}, 'bad_tweets':{i[0]: i[1] for i in bad_tweets}, 'tnt_nr': tnt_nr}
+       
+        # info
+        class_list = [t[1]['class'] for t in good_tweets]
+        matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0} 
+        for i in set(class_list):
+            matrix_classes[i] = class_list.count(i)
+        #len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
+        accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+
+        data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(test_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}                    
+        agg_data[m]['matrix_data'] = test_data
+        agg_data[m]['data'] = data
+        
+    # show average results
+    accuracy_list = [agg_data[m]["data"]['accuracy'] for m in agg_data]
+    average = round(sum(accuracy_list)/len(accuracy_list),3)
+    avg_quadrants = {}
+    quadrants = [agg_data[m]["data"]['matrix_classes'] for m in agg_data]
+    for dictionary in quadrants:
+        for key, value in dictionary.items():
+            if key in avg_quadrants.keys():
+                avg_quadrants[key] = value + avg_quadrants[key]
+            else:
+                avg_quadrants[key] = value
+    avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
+    avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
+    mylist= ['hello',average, avg_quadrants[0]]
+    #trial = [1,2,3]
+    return jsonify(avg_quadrants)
 
