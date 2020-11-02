@@ -1,0 +1,29 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
+
+
+
+
+ <script>
+    var text = document.getElementById('heading');
+    var body = document.getElementById('body');
+    var tp = document.getElementById('TP')
+    var tn = document.getElementById('TN')
+    var fp = document.getElementById('FP')
+    var fn = document.getElementById('FN')
+
+
+    $.get('/get_aggregated_data', {'matrix_id': {{ matrix.id }} }).done(
+        function(returnedData) {
+            console.log("test");
+           // body.innerText = returnedData[0];
+            tp.innerText = returnedData[0];
+            tn.innerText = returnedData[1];
+            fp.innerText = returnedData[2];
+            fn.innerText = returnedData[3];
+    });
+
+ 
+  
+
+</script>

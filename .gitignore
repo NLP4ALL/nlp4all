@@ -41,3 +41,4 @@ line_chart5*
 nlp4all/site.db
 nlp4all/templates/confmatrix_2.html
 hide.html
+nlp4all/templates/matrix_aggregate2.html
