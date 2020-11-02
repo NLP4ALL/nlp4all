@@ -4,12 +4,21 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1> Confusion Matrix </h1>
+    <h1> Confusion Matrix with Iterations </h1>
+    <i>Here you can aggregate information by iterating through several train-test sets. Does increasing the number of iterations make the numbers in the matrix stabilize? </i>
+
     <br>
-    <p><a href="{{ url_for('matrix_overview') }}">See overview over all matrices</a></p>
-
-    Does increasing the number of iterations make the numbers in the matrix stabilize?
-
+    <br>
+    
+    <h3>Matrix {{ matrix.id }}</h3>
+    <ul>
+    <p>Categories: {{ matrix.categories[0].name }} and {{ matrix.categories[1].name }} </p>
+    <p>Threshold: {{ matrix.threshold }} </p>
+    <p>Train/test ratio: {{ matrix.ratio }} </p>
+    </ul>
+    
+    <div class="content-section">
+    
     <table class="table table-bordered" id="mx" >
         <thead><tr><th>Confusion Matrix </th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
         <tbody><tr><th>True {{ cat_names[0] }}</th><td id='TP'>TP</td><td id='FN' >FN</td></tbody></tr>
@@ -17,23 +26,23 @@
     </table>
 
         <ul>
-        <p>Looping over <span id='n_id'> X </span> tnt sets</p>
+        <p>Looping over <span id='n_id'> X </span> training and testing sets.</p>
 
         <p>Average accuracy: <span id='average'></span></p>
-        <p>Included tweets: <span id='included'> </span></p>
+        <p>Included tweets on average: <span id='included'> </span></p>
         <p>Excluded on average: <span id='excluded'></span></p>
         </ul>
 
-    <fieldset>
-    <div>
-        <h3>Update matrix</h3>
-    </div>
-
-    <div>
+    
+        <h4>Update matrix</h4>
+    
     {% include "matrix_aggregate3.html" %}
 
     </div>
-</fieldset>
+    <p><a href="{{ url_for('matrix_overview') }}">Go back to all matrices</a></p>
+
+    
+
 
 {% endblock content %}  
 
