@@ -734,23 +734,34 @@ def matrix_aggregate():
     matrix_id = request.args.get('matrix_id')
     matrix = ConfusionMatrix.query.get(matrix_id)
     cat_names = [n.name for n in matrix.categories]
-    return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names)
+    form = LoopMatrixForm()
+    if form.validate_on_submit():
+        n = form.loops.data
+        return(redirect(url_for('matrix_aggregate', matrix_id=matrix_id, n=n)))
+    
+    return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names, form=form)
 
 @app.route('/get_aggregated_data', methods=['GET', 'POST'])
 def aggregate_matrix():
     args = request.args.to_dict()
     m_id = args['matrix_id']
     matrix = ConfusionMatrix.query.get(int(m_id))
+    
+    if "n" in request.args.to_dict().keys():
+        n = request.args.get('n', type=int)
+    else:
+        n=3
 
     # log used tnt sets
     used_tnt_sets = [matrix.matrix_data['tnt_set']]
-    n=3
-    agg_data = {m:{'matrix_data':{}} for m in range(n)}
 
+    agg_data = {m:{'data':{}} for m in range(n)}
+    accuracy_list = []
+    list_excluded = []
+    list_included = []
     # take threshold and ratio from original
     # create a new matrix with them
 
-    userid = matrix.user
     cats = [n.id for n in matrix.categories]
     cat_names = [n.name for n in matrix.categories]
     tweets = matrix.tweets
@@ -760,14 +771,11 @@ def aggregate_matrix():
     
     # loop
     for m in range(n):
-        # a new tnt set
-        #tnt_list = list(range(0, len(tnt_sets))) #[x for x in l1 if x not in l2]
-        # TODO check this
+        
         tnt_list = [x for x in list(range(0, len(matrix.training_and_test_sets))) if x not in used_tnt_sets]
 
-        #while sample(tnt_list, 1)[0] != matrix.matrix_data['tnt_set']: tnt_nr = sample(tnt_list, 1)[0]
         tnt_nr = sample(tnt_list, 1)[0]
-        used_tnt_sets.append(tnt_nr) # save this somewhere!!
+        used_tnt_sets.append(tnt_nr) 
         a_tnt_set = tnt_sets[tnt_nr]
         train_tweet_ids = a_tnt_set[0].keys()
         train_set_size = len(a_tnt_set[0].keys())
@@ -777,9 +785,6 @@ def aggregate_matrix():
         train_data = {"counts" : 0, "words" : {}} 
         train_data = nlp4all.utils.train_model(train_data, train_tweet_ids)
         
-
-        #matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
-        #matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
         matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
         words = {t.id : '' for t in test_tweets}
 
@@ -814,22 +819,25 @@ def aggregate_matrix():
             elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
                     t[1]['class'] = 'FN' # predicted 'no', although was 'yes'
         test_data = {'good_tweets' : {i[0]: i[1] for i in good_tweets}, 'bad_tweets':{i[0]: i[1] for i in bad_tweets}, 'tnt_nr': tnt_nr}
-       
+        list_excluded.append(len(bad_tweets))
+        list_included.append(len(good_tweets))
+        
         # info
         class_list = [t[1]['class'] for t in good_tweets]
         matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
-        #len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
+        
         accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
-
+        accuracy_list.append(accuracy)
         data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(test_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}                    
-        agg_data[m]['matrix_data'] = test_data
         agg_data[m]['data'] = data
         
-    # show average results
-    accuracy_list = [agg_data[m]["data"]['accuracy'] for m in agg_data]
-    average = round(sum(accuracy_list)/len(accuracy_list),3)
+
+    # accuracy, excluded, included
+    averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_excluded)/len(list_excluded),2), round(sum(list_included)/len(list_included),2)]
+    
+    # quadrants
     avg_quadrants = {}
     quadrants = [agg_data[m]["data"]['matrix_classes'] for m in agg_data]
     for dictionary in quadrants:
@@ -840,7 +848,6 @@ def aggregate_matrix():
                 avg_quadrants[key] = value
     avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
     avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
-    mylist= ['hello',average, avg_quadrants[0]]
-    #trial = [1,2,3]
-    return jsonify(avg_quadrants)
+    
+    return jsonify(avg_quadrants, averages, n)
 
