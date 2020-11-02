@@ -1,5 +1,6 @@
 
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
 {% extends "layout.html" %}
 
 {% block content %}
@@ -7,14 +8,18 @@
 <br>
 <p><a href="{{ url_for('matrix_overview') }}">See overview over all matrices</a></p>
 
-<table class="table table-bordered" >
-    <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
-    <tbody><tr><th>True {{ cat_names[0] }}</th><td>{{ matrix.data['matrix_classes']['TP'] }}</td></td><td>{{ matrix.data['matrix_classes']['FN'] }}</td></tbody></tr>
-    <tbody><tr><th>True {{ cat_names[1] }}</th></td><td>{{ matrix.data['matrix_classes']['FP'] }}</td><td>{{ matrix.data['matrix_classes']['TN'] }}</td></tbody></tr>
+<p>Loopwoopwoop</p>
+
+<table class="table table-bordered" id="mx" >
+    <thead><tr><th>Confusion Matrix </th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
+    <tbody><tr><th>True {{ cat_names[0] }}</th><td id='TP'>TP</td><td id='FN' >FN</td></tbody></tr>
+    <tbody><tr><th>True {{ cat_names[1] }}</th><td id ='FP'>FP</td><td id='TN'>TN</td></tbody></tr>
     
 </table>
+
 <div>
-{% include "matrix_aggregate.html" %}
+{% include "matrix_aggregate3.html" %}
 
 </div>
 {% endblock content %}  
+

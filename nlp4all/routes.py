@@ -760,8 +760,6 @@ def aggregate_matrix():
     
     # loop
     for m in range(n):
-        # TODO to debug!! so that you don't need to create new matrices that disturb..
-        
         # a new tnt set
         #tnt_list = list(range(0, len(tnt_sets))) #[x for x in l1 if x not in l2]
         # TODO check this
