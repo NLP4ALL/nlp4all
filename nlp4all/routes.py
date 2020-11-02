@@ -729,17 +729,13 @@ def say_hi():
     mylist = [m_id, cat_1]
     return jsonify(mylist)
 
-@app.route('/matrix_aggregate', methods=['POST','GET'])
-def matrix_aggregate():
+@app.route('/matrix_loop', methods=['POST','GET'])
+def matrix_loop():
     matrix_id = request.args.get('matrix_id')
     matrix = ConfusionMatrix.query.get(matrix_id)
     cat_names = [n.name for n in matrix.categories]
-    form = LoopMatrixForm()
-    if form.validate_on_submit():
-        n = form.loops.data
-        return(redirect(url_for('matrix_aggregate', matrix_id=matrix_id, n=n)))
     
-    return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names, form=form)
+    return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names)
 
 @app.route('/get_aggregated_data', methods=['GET', 'POST'])
 def aggregate_matrix():

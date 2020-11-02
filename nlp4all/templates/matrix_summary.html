@@ -18,6 +18,7 @@
     <tr><td><b>Certainty threshold: </b> </td><td>{{ m.threshold }} </td></tr>
     <tr><td><b>Train/test ratio: </b> </td><td>{{ m.ratio }}</td></tr>
     <tr><td><b>Accuracy: </b></td><td>{{ m.data.accuracy }}</td></tr>
+    <tr><td><a href="{{ url_for('matrix_loop') }}?matrix_id={{ m.id }}">Aggregate data</a></td><td></td></tr>
 
 </table>
 </div>
