@@ -446,7 +446,7 @@ class ConfusionMatrix(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
     categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
-    tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix') # add these later?
+    tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix')
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN
     train_data = db.Column(JSON)
     tf_idf = db.Column(JSON)
