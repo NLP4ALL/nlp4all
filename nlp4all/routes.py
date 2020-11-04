@@ -710,7 +710,8 @@ def matrix_overview():
     matrix_info = {m.id : {"accuracy": m.data['accuracy'],"threshold" : m.threshold, "ratio" : m.ratio, "category 1" : m.categories[0].name, "category 2" : m.categories[1].name, "excluded tweets (%)" : round(m.data["nr_excluded"]/m.data["nr_test_tweets"]*100,3) } for m in matrices}
     matrix_info = sorted([t for t in matrix_info.items()], key=lambda x:x[1]["accuracy"], reverse=True)
     matrix_info = [m[1] for m in matrix_info]
-    return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info)
+    form = ThresholdForm()
+    return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form)
 
 
 @app.route('/test_jquery', methods=['POST','GET'])

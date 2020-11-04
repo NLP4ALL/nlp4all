@@ -1,0 +1,77 @@
+
+
+    <h2> Compare Matrices </h2>
+    <br>
+    
+    <h6>Select matrices to compare</h6>
+    <p>*insert a form here*</p>
+
+    
+
+    <table class="table table-bordered" >
+        <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ matrix.categories[0].name }}</th><th>Predicted {{ matrix.categories[1].name }}</th></tr></thead>
+        <tbody><tr><th>True {{ matrix.categories[0].name }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix.data['matrix_classes']['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix.data['matrix_classes']['FN'] }}</a></td></tbody></tr>
+        <tbody><tr><th>True {{ matrix.categories[1].name }}</th></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FP">{{ matrix.data['matrix_classes']['FP'] }}</a></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TN">{{ matrix.data['matrix_classes']['TN'] }}</a></td></tbody></tr>
+        
+    </table>
+
+    <table class="table table-bordered" >
+        <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ matrix2.categories[0].name }}</th><th>Predicted {{ matrix2.categories[1].name }}</th></tr></thead>
+        <tbody><tr><th>True {{ matrix2.categories[0].name }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix2.data['matrix_classes']['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix2.data['matrix_classes']['FN'] }}</a></td></tbody></tr>
+        <tbody><tr><th>True {{ matrix2.categories[1].name }}</th></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FP">{{ matrix2.data['matrix_classes']['FP'] }}</a></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TN">{{ matrix2.data['matrix_classes']['TN'] }}</a></td></tbody></tr>
+        
+    </table>
+    
+    <b>Info:</b>
+
+    <ul>
+        <p>Current certainty threshold: {{ matrix.threshold }}</p>
+        <p>Training ratio: {{ matrix.ratio }} </p>
+    </ul>
+
+    <table class="table table-striped" >
+        <thead><tr><th>Matrix</th><th>Accuracy</th><th>Tweets in matrix</th><th>Excluded tweets</th></tr></thead>
+        <tbody><tr><th>{{ matrix.id }}</th><td>{{ matrix.data.accuracy }}</td><td>{{ matrix.data.nr_included }}</td><td>{{ matrix.data.nr_excluded }}</td></tbody></tr>
+        <tbody><tr><th>{{ matrix2.id }}</th><td>{{ matrix2.data.accuracy }}</td><td>{{ matrix2.data.nr_included }}</td><td>{{ matrix2.data.nr_excluded }}</td></tbody></tr>
+    </table>
+
+        
+
+    <div class="content-section">
+    <h3> Modify parameters </h3>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <div class="form-group">
+                {{ form.threshold.label(class="form-control-label")}}<br>
+                {{ form.threshold(class="form-control form-control-lg")}}
+                {% for error in form.threshold.errors %}
+                    <span style="color :red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.ratio.label(class="form-control-label")}}<br>
+                {% if form.ratio.errors %}
+                {{ form.ratio(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.ratio.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                    {{ form.ratio(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-check">
+                {{ form.shuffle(class="form-check-input") }}
+                {{ form.shuffle.label(class="form-check-label") }}
+            </div>
+        </fieldset>
+        <div class="form-group">
+            {{ form.submit(class="btn btn-outline-info") }}
+        </div>
+    </form>
+</div>
+        
+
+
