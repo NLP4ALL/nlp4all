@@ -711,7 +711,7 @@ def matrix_overview():
     matrix_info = sorted([t for t in matrix_info.items()], key=lambda x:x[1]["accuracy"], reverse=True)
     matrix_info = [m[1] for m in matrix_info]
     form = ThresholdForm()
-    return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form)
+    return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form, userid=userid)
 
 
 @app.route('/test_jquery', methods=['POST','GET'])
@@ -848,3 +848,13 @@ def aggregate_matrix():
     
     return jsonify(avg_quadrants, averages, n)
 
+
+@app.route('/get_compare_matrix_data', methods=['GET', 'POST'])
+def get_compare_matrix_data():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    m_id2 = args['matrix2_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+    matrix2 = ConfusionMatrix.query.get(int(m_id2))
+    myvar = 'hello'
+    return jsonify(matrix.id, matrix2.id, myvar)
