@@ -27,7 +27,7 @@
     </table>
 
     <table class="table table-bordered" >
-        <thead><tr><th style="width:30%"><a>Matrix {{ matrix2.id }} </a></th><th style="width:35%">Predicted {{ matrix2.categories[0].name }}</th><th style="width:35%">Predicted {{ matrix2.categories[1].name }}</th></tr></thead>
+        <thead><tr><th style="width:30%" id="m_id"></th><th style="width:35%">Predicted {{ matrix2.categories[0].name }}</th><th style="width:35%">Predicted {{ matrix2.categories[1].name }}</th></tr></thead>
         <tbody><tr><th>True {{ matrix2.categories[0].name }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix2.data['matrix_classes']['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix2.data['matrix_classes']['FN'] }}</a></td></tbody></tr>
         <tbody><tr><th>True {{ matrix2.categories[1].name }}</th></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FP">{{ matrix2.data['matrix_classes']['FP'] }}</a></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TN">{{ matrix2.data['matrix_classes']['TN'] }}</a></td></tbody></tr>
         
