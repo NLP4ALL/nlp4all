@@ -538,7 +538,7 @@ def create_matrix():
 def matrix(matrix_id):
     
     matrix = ConfusionMatrix.query.get(matrix_id)
-    # TODO: load it only the first time, otherwise just show the information
+    # TODO: load it only the first time, otherwise just show the information (?)
     categories = matrix.categories
     cat_names = [c.name for c in categories]
     form = ThresholdForm()
@@ -555,17 +555,9 @@ def matrix(matrix_id):
         if form.threshold.data:
             matrix.threshold = form.threshold.data
             flag_modified(matrix, "threshold")
-            db.session.add(matrix)
-            db.session.merge(matrix)
-            db.session.flush()
-            db.session.commit()
         if form.ratio.data:
             matrix.ratio = round(form.ratio.data * 0.01,3)
             flag_modified(matrix, "ratio")
-            db.session.add(matrix)
-            db.session.merge(matrix)
-            db.session.flush()
-            db.session.commit()
             matrix.training_and_test_sets = matrix.update_tnt_set()
             flag_modified(matrix, "training_and_test_sets")
             db.session.add(matrix)
@@ -588,11 +580,7 @@ def matrix(matrix_id):
     matrix.train_data = matrix.train_model(train_tweet_ids)
 
     flag_modified(matrix, "train_data")
-    db.session.add(matrix)
-    db.session.merge(matrix)
-    db.session.flush()
-    db.session.commit()
-
+   
     # make matrix data
     matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
     matrix.matrix_data['good_tweets'] = {i[0]: i[1] for i in good_tweets}
@@ -600,11 +588,7 @@ def matrix(matrix_id):
     matrix.matrix_data['tnt_set'] = tnt_nr # save the number for future
     #matrix.matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
     flag_modified(matrix, "matrix_data")
-    db.session.add(matrix)
-    db.session.merge(matrix)
-    db.session.flush()
-    db.session.commit()
-
+    
     # count different occurences
     class_list = [t[1]['class'] for t in good_tweets]
     matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
@@ -711,6 +695,7 @@ def matrix_overview():
     matrix_info = sorted([t for t in matrix_info.items()], key=lambda x:x[1]["accuracy"], reverse=True)
     matrix_info = [m[1] for m in matrix_info]
     form = ThresholdForm()
+    #tweet_info = 
     return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form, userid=userid)
 
 
@@ -856,5 +841,83 @@ def get_compare_matrix_data():
     m_id2 = args['matrix2_id']
     matrix = ConfusionMatrix.query.get(int(m_id))
     matrix2 = ConfusionMatrix.query.get(int(m_id2))
-    myvar = 'hello'
-    return jsonify(matrix.id, matrix2.id, myvar)
+    matrix_data = matrix.data
+    matrix2_data = matrix2.data
+    matrix_data['id'] = matrix.id
+    matrix2_data['id'] = matrix2.id
+    return jsonify(matrix2_data)
+
+@app.route("/compare_matrices", methods=['GET', 'POST'])
+@login_required
+def compare_matrices():
+    userid = current_user.id
+    matrices =ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
+    # TODO: load it only the first time, otherwise just show the information (?)
+    matrix = matrices[0]
+    
+    matrix2 = matrices[1]
+    categories = matrix.categories
+    cat_names = [c.name for c in categories]
+    form = ThresholdForm()
+    tnt_sets = matrix.training_and_test_sets
+
+    if "tnt_nr" in request.args.to_dict().keys():
+            tnt_nr = request.args.get('tnt_nr', type=int)
+            a_tnt_set = tnt_sets[tnt_nr]
+    else:
+        a_tnt_set = tnt_sets[0]
+        tnt_nr = 0
+
+    if form.validate_on_submit():
+        if form.threshold.data:
+            matrix.threshold = form.threshold.data
+            flag_modified(matrix, "threshold")
+        if form.ratio.data:
+            matrix.ratio = round(form.ratio.data * 0.01,3)
+            flag_modified(matrix, "ratio")
+            matrix.training_and_test_sets = matrix.update_tnt_set()
+            flag_modified(matrix, "training_and_test_sets")
+            db.session.add(matrix)
+            db.session.merge(matrix)
+            db.session.flush()
+            db.session.commit()
+        if form.shuffle.data:
+            tnt_list = list(range(0, len(tnt_sets)))
+            tnt_nr = sample(tnt_list, 1)[0]
+            a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
+            return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
+        return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr))
+
+    train_tweet_ids = a_tnt_set[0].keys()
+    train_set_size = len(a_tnt_set[0].keys())
+    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+
+    # train on the training set:
+
+    matrix.train_data = matrix.train_model(train_tweet_ids)
+
+    flag_modified(matrix, "train_data")
+   
+    # make matrix data
+    matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
+    matrix.matrix_data['good_tweets'] = {i[0]: i[1] for i in good_tweets}
+    matrix.matrix_data['bad_tweets'] = {i[0]: i[1] for i in bad_tweets}
+    matrix.matrix_data['tnt_set'] = tnt_nr # save the number for future
+    #matrix.matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+    flag_modified(matrix, "matrix_data")
+    
+    # count different occurences
+    class_list = [t[1]['class'] for t in good_tweets]
+    matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+    for i in set(class_list):
+        matrix_classes[i] = class_list.count(i)
+    #len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
+    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+
+    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(matrix.matrix_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}
+    flag_modified(matrix, "data")
+    db.session.add(matrix)
+    db.session.merge(matrix)
+    db.session.flush()
+    db.session.commit()
+    return render_template('matrix_compare.html', cat_names = cat_names, form=form, matrix=matrix, matrix2=matrix2)
