@@ -448,12 +448,26 @@ class ConfusionMatrix(db.Model):
     categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
     tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix')
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN
-    train_data = db.Column(JSON)
+    train_data = db.Column(JSON) # comment
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
     threshold = db.Column(db.Float())
     ratio = db.Column(db.Float())
     data = db.Column(JSON)
+    parent = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None)
+    child = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None)
+    
+
+    def clone(self):
+        new_matrix = ConfusionMatrix()
+        new_matrix.parent = self.id
+        new_matrix.categories = self.categories
+        new_matrix.tweets = self.tweets
+        new_matrix.tf_idf = self.tf_idf
+        new_matrix.training_and_test_sets = self.training_and_test_sets
+        new_matrix.ratio = self.ratio
+        new_matrix.train_data = {"counts" : 0, "words" : {}}
+        return(new_matrix)
 
     def updated_data(self, tweet, category):
         self.train_data['counts'] = self.train_data['counts'] + 1

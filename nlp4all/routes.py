@@ -723,8 +723,8 @@ def matrix_loop():
     
     return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names)
 
-@app.route('/get_aggregated_data', methods=['GET', 'POST'])
-def aggregate_matrix():
+@app.route('/get_aggregated_data_old', methods=['GET', 'POST'])
+def aggregate_matrix_old():
     args = request.args.to_dict()
     m_id = args['matrix_id']
     matrix = ConfusionMatrix.query.get(int(m_id))
@@ -735,7 +735,7 @@ def aggregate_matrix():
         n=3
 
     # log used tnt sets
-    used_tnt_sets = [matrix.matrix_data['tnt_set']]
+    used_tnt_sets = []
 
     agg_data = {m:{'data':{}} for m in range(n)}
     accuracy_list = []
@@ -744,12 +744,12 @@ def aggregate_matrix():
     # take threshold and ratio from original
     # create a new matrix with them
 
-    cats = [n.id for n in matrix.categories]
+    #cats = [n.id for n in matrix.categories]
     cat_names = [n.name for n in matrix.categories]
-    tweets = matrix.tweets
-    ratio = matrix.ratio
-    threshold = matrix.threshold
-    tnt_sets = matrix.training_and_test_sets
+    #tweets = matrix.tweets
+    #ratio = matrix.ratio
+    #threshold = matrix.threshold
+    #tnt_sets = matrix.training_and_test_sets
     
     # loop
     for m in range(n):
@@ -833,7 +833,110 @@ def aggregate_matrix():
     
     return jsonify(avg_quadrants, averages, n)
 
+@app.route('/get_aggregated_data', methods=['GET', 'POST'])
+def aggregate_matrix():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+    
+    if "n" in request.args.to_dict().keys():
+        n = request.args.get('n', type=int)
+    else:
+        n=3
 
+    # log used tnt sets
+    used_tnt_sets = []
+
+    agg_data = {m:{'data':{}} for m in range(n)}
+    accuracy_list = []
+    list_excluded = []
+    list_included = []
+
+    # take threshold and ratio from original
+    # create a new matrix with them
+
+    #cats = [n.id for n in matrix.categories]
+    cat_names = [n.name for n in matrix.categories]
+    #tweets = matrix.tweets
+    #ratio = matrix.ratio
+    #threshold = matrix.threshold
+    #tnt_sets = matrix.training_and_test_sets
+    
+    # loop
+    for m in range(n):
+        new_mx = matrix.clone()
+        db.session.add(new_mx)
+        db.session.flush()
+        db.session.commit()
+        tnt_sets = new_mx.training_and_test_sets
+        # select a new
+        tnt_list = [x for x in list(range(0, len(matrix.training_and_test_sets))) if x not in used_tnt_sets]
+
+        tnt_nr = sample(tnt_list, 1)[0]
+        #print(tnt_nr)
+        used_tnt_sets.append(tnt_nr) # log used sets
+        a_tnt_set = tnt_sets[tnt_nr]
+        train_tweet_ids = a_tnt_set[0].keys()
+        train_set_size = len(a_tnt_set[0].keys())
+        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+
+        # train on the training set:
+        new_mx.train_data = new_mx.train_model(train_tweet_ids)
+        flag_modified(new_mx, "train_data")
+        db.session.flush()
+        
+        # make matrix data
+        matrix_data = new_mx.make_matrix_data(test_tweets, cat_names)
+        new_mx.matrix_data = {i[0]: i[1] for i in matrix_data}
+    
+        flag_modified(matrix, "matrix_data")
+        db.session.flush()
+
+        # filter according to the threshold
+        incl_tweets = sorted([t for t in new_mx.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+        excl_tweets = sorted([t for t in new_mx.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+        
+        list_excluded.append(len(excl_tweets))
+        list_included.append(len(incl_tweets))
+        
+        # count different occurences 
+        ## with included tweets
+        class_list = [t[1]['class'] for t in incl_tweets]
+        matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+        for i in set(class_list):
+            matrix_classes[i] = class_list.count(i)
+        #print(matrix_classes)
+        accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+        accuracy_list.append(accuracy)
+
+        # summarise data
+        new_mx.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+        flag_modified(new_mx, "data")
+        db.session.add(new_mx)
+        db.session.merge(new_mx)
+        db.session.flush()
+        db.session.commit()
+        
+        agg_data[m]['data'] = new_mx.data
+        
+
+    # accuracy, excluded, included
+    averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_included)/len(list_included),2), round(sum(list_excluded)/n,2)]
+    
+    # quadrants
+    avg_quadrants = {}
+    quadrants = [agg_data[m]["data"]['matrix_classes'] for m in agg_data]
+    for dictionary in quadrants:
+        for key, value in dictionary.items():
+            if key in avg_quadrants.keys():
+                avg_quadrants[key] = value + avg_quadrants[key]
+            else:
+                avg_quadrants[key] = value
+    avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
+    avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
+    
+    return jsonify(avg_quadrants, averages, n)
+    
 @app.route('/get_compare_matrix_data', methods=['GET', 'POST'])
 def get_compare_matrix_data():
     args = request.args.to_dict()
