@@ -576,33 +576,34 @@ def matrix(matrix_id):
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
     # train on the training set:
-
     matrix.train_data = matrix.train_model(train_tweet_ids)
-
     flag_modified(matrix, "train_data")
    
     # make matrix data
-    matrix_data, good_tweets, bad_tweets = matrix.make_matrix_data(test_tweets, cat_names)
-    matrix.matrix_data['good_tweets'] = {i[0]: i[1] for i in good_tweets}
-    matrix.matrix_data['bad_tweets'] = {i[0]: i[1] for i in bad_tweets}
-    matrix.matrix_data['tnt_set'] = tnt_nr # save the number for future
-    #matrix.matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+    matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+    matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
+   # matrix.matrix_data['tnt_set'] = tnt_nr # save the number for future
     flag_modified(matrix, "matrix_data")
-    
+
+    # filter according to the threshold
+    incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+    excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+
     # count different occurences
-    class_list = [t[1]['class'] for t in good_tweets]
+    class_list = [t[1]['class'] for t in incl_tweets]
     matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
-    #len_data = [len(matrix.matrix_data['good_tweets']), len(matrix.matrix_data['bad_tweets']), len(test_tweets), sum(matrix_classes.values())]
     accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
 
-    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(matrix.matrix_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}
+    # summarise data
+    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
     flag_modified(matrix, "data")
     db.session.add(matrix)
     db.session.merge(matrix)
     db.session.flush()
     db.session.commit()
+
     return render_template('confmatrix.html', cat_names = cat_names, form=form, matrix=matrix)
   
 
@@ -612,7 +613,8 @@ def matrix_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     cm = request.args.get('cm', type=str) ### check this !?
     title = str("Tweets classified as " + cm)
-    id_c = [{int(k):{'certainty':v['certainty']} for k, v in matrix.matrix_data['good_tweets'].items() if v['class'] == cm}][0]
+    id_c = [{int(k):{'certainty':v['certainty']} for k, v in matrix.matrix_data.items() if v['class'] == cm and v['certainty'] >= matrix.threshold}][0]
+
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
 
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
@@ -648,11 +650,8 @@ def my_matrices():
 def included_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = "Included tweets"
-    #matrix_table = {'TP': {}, 'TN': {}, 'FP': {},'FN': {}}
-    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'][0],  'class' : v['class']} for k, v in matrix.matrix_data['good_tweets'].items()}][0]
+    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] >= matrix.threshold}][0]
     
-    #for c in matrix_table.keys():
-    #    matrix_table[c] = {id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'][0]} for k, v in matrix.matrix_data['good_tweets'].items()}][0]
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
 
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'class' : id_c[t.id]['class'] , 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
@@ -671,7 +670,8 @@ def excluded_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = 'Excluded tweets'
     cm = request.args.get('cm', type=str) ## check this !?
-    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'][0]} for k, v in matrix.matrix_data['bad_tweets'].items()}][0]
+    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] < matrix.threshold}][0]
+    
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
 
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
