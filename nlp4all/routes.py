@@ -669,7 +669,7 @@ def included_tweets(matrix_id):
 def excluded_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = 'Excluded tweets'
-    cm = request.args.get('cm', type=str) ## check this !?
+    #cm = request.args.get('cm', type=str) ## check this !?
     id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] < matrix.threshold}][0]
     
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
@@ -691,7 +691,7 @@ def matrix_overview():
     userid = current_user.id
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
 
-    matrix_info = {m.id : {"accuracy": m.data['accuracy'],"threshold" : m.threshold, "ratio" : m.ratio, "category 1" : m.categories[0].name, "category 2" : m.categories[1].name, "excluded tweets (%)" : round(m.data["nr_excluded"]/m.data["nr_test_tweets"]*100,3) } for m in matrices}
+    matrix_info = {m.id : {"accuracy": m.data['accuracy'],"threshold" : m.threshold, "ratio" : m.ratio, "category 1" : m.categories[0].name, "category 2" : m.categories[1].name, "excluded tweets (%)" : round(m.data["nr_excl_tweets"]/m.data["nr_test_tweets"]*100,3) } for m in matrices}
     matrix_info = sorted([t for t in matrix_info.items()], key=lambda x:x[1]["accuracy"], reverse=True)
     matrix_info = [m[1] for m in matrix_info]
     form = ThresholdForm()
