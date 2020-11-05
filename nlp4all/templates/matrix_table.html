@@ -33,11 +33,22 @@
         <p>Excluded on average: <span id='excluded'></span></p>
         </ul>
 
+        <div class="content-section">
+        <table id="loopTable" class="table table-sm" >
+            <thead>
+              <tr><th class="site_name">Iteration</th><th>Accuracy </th><th>Included tweets</th><th>Excluded tweets</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
     
-        <h4>Update matrix</h4>
+    <div class="content-section">
+    <h4>Update matrix</h4>
     
     {% include "matrix_aggregate3.html" %}
 
+    </div>
     </div>
     <p><a href="{{ url_for('matrix_overview') }}">Go back to all matrices</a></p>
 

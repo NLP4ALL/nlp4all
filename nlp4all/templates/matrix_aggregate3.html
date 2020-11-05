@@ -11,7 +11,11 @@
         <input type="text" name="first-name" id='n-value'>
         <button type="button" id="submitBtn">Run loop</button>
     </form>
+
+
 </body>
+
+
 
  <script>
    
@@ -20,25 +24,46 @@
     var tn = document.getElementById('TN')
     var fp = document.getElementById('FP')
     var fn = document.getElementById('FN')
+    var table = $('#loopTable');
+    var row, cell;
 
     $("#submitBtn").click(function(){
         $.get('/get_aggregated_data', {'matrix_id': {{ matrix.id }}, 'n' : n_value.val() }).done(
             function(returnedData) {
                 //console.log(n_value);
+                $("#loopTable > tbody").empty();
                
             // body.innerText = returnedData[0];
                 tp.innerText = returnedData[0][0];
                 tn.innerText = returnedData[0][1];
                 fp.innerText = returnedData[0][2];
                 fn.innerText = returnedData[0][3];
-                average.innerText = returnedData[1][0]
-                included.innerText = returnedData[1][1]
-                excluded.innerText = returnedData[1][2]
-                n_id.innerText = returnedData[2]
-        });
+                average.innerText = returnedData[1][0];
+                included.innerText = returnedData[1][1];
+                excluded.innerText = returnedData[1][2];
+                n_id.innerText = returnedData[2];
+
+            //table
+          
+            
+            
+            for(var i=0; i<returnedData[3].length; i++){
+                row = $( '<tr />' );
+                table.append( row );
+            for(var j=0; j<returnedData[3][i].length; j++){
+                cell = $('<td>'+returnedData[3][i][j]+'</td>')
+                row.append( cell );
+            }
+            }
+              
+        }); 
+        
+         
+        //reset submitfield        
         $("#myForm").trigger("reset");
     }); 
 
+   
 
 </script>
 
