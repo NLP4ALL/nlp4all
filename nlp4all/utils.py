@@ -173,7 +173,7 @@ def add_matrix(cat_ids, ratio, userid):
         tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
         training_and_test_sets = create_n_split_tnt_sets(30, ratio, tweet_id_and_cat)
         matrix_data = {'good_tweets': {}, 'bad_tweets' : {}}
-        matrix = ConfusionMatrix(categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets, train_data = {"counts" : 0, "words" : {}}, matrix_data = matrix_data, threshold = 0.2, ratio=ratio, user = userid)
+        matrix = ConfusionMatrix(categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets, train_data = {"counts" : 0, "words" : {}}, matrix_data = matrix_data, threshold = 0, ratio=ratio, user = userid)
         db.session.add(matrix)
         db.session.commit()
         return(matrix)
@@ -312,8 +312,6 @@ def train_model(train_data, train_tweet_ids):
 
 def get_predictions_and_words(train_data, words, category_names):
         
-    #categories = self.categories
-    #category_names = [c.name for c in categories]
     preds = {}
     predictions = {}
     if train_data['counts'] == 0:

@@ -519,28 +519,28 @@ class ConfusionMatrix(db.Model):
                 matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
             # else select the bigger prob
             else: 
-                matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
+                matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[0]) 
                 # certainty = difference in predictions
                 matrix_data[a_tweet.id]['certainty'] = round((abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])),3)
             # add real category
             matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
 
-        good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= self.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-        # tweets not exceeding the threshold
-        bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < self.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-
+        matrix_data = sorted([t for t in matrix_data.items()], key=lambda x:x[1]["certainty"], reverse=True)
         # add matrix classes
-        for t in good_tweets:
-            if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
+        for t in matrix_data:
+            if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
                 t[1]['class'] = 'TP'
-            elif t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
+            elif t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
                 t[1]['class'] = 'TN'
-            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
+            elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
                 t[1]['class'] = 'FP' # predicted 'yes', although was 'no'
-            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
+            elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] != cat_names[0]:
                 t[1]['class'] = 'FN' # predicted 'no', although was 'yes'
-        
-        return (matrix_data, good_tweets, bad_tweets)
+            else:
+                t[1]['class'] = 'not_classified'
+
+        #matrix_data = {i[0]: i[1] for i in matrix_data}
+        return (matrix_data)
 
 
     
