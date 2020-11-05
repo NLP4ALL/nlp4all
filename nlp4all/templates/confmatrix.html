@@ -4,8 +4,8 @@
 
     <h1> Confusion Matrix </h1>
     <br>
-    <p><a href="{{ url_for('matrix_overview') }}">See overview over all matrices</a></p>
-   
+    <p><a href="{{ url_for('matrix_overview') }}">See overview over all matrices.</a></p>
+    <p><a href="{{ url_for('matrix_loop') }}?matrix_id={{ matrix.id }}">Iterate training.</a></p>
     <table class="table table-bordered" >
         <thead><tr><th><a>Confusion Matrix</a></th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
         <tbody><tr><th>True {{ cat_names[0] }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix.data['matrix_classes']['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix.data['matrix_classes']['FN'] }}</a></td></tbody></tr>

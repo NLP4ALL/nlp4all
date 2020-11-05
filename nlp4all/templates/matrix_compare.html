@@ -1,128 +1,20 @@
 
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
+{% extends "layout.html" %}
+
+{% block content %}
+
     <h2> Compare Matrices </h2>
     <br>
+    <div>
+        {% set matrices = matrices %}
+        {% set all_cats = all_cats %}
+        {% include 'matrix_compare_.html' %}
     
-    <h6>Select matrices to compare</h6>
-   
-    <form action="" method="post" id="myForm">
-    <p>Matrix 1: <select id='matrix-select'>
-            {% for m in matrices %}
-            <option value={{ m.id }}>{{ m.categories[0].name }} VS {{ m.categories[1].name }}</option>
-            {% endfor %}
-    </select> </p>
-    <p>Matrix 2: <select id='matrix2-select'>
-        {% for m in matrices %}
-        <option value='{{ m.id }}'>{{ m.categories[0].name }} VS {{ m.categories[1].name }}</option>
-        {% endfor %}
-    </select> </p>
-    <p><button type="button" id="compareBtn">Compare</button></p>
-</form>
-
-    <table class="table table-bordered" >
-        <thead><tr><th style="width:30%"><a>Matrix {{ matrix.id }} </a></th><th style="width:35%">Predicted {{ matrix.categories[0].name }}</th><th style="width:35%">Predicted {{ matrix.categories[1].name }}</th></tr></thead>
-        <tbody><tr><th>True {{ matrix.categories[0].name }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix.data['matrix_classes']['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix.data['matrix_classes']['FN'] }}</a></td></tbody></tr>
-        <tbody><tr><th>True {{ matrix.categories[1].name }}</th></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FP">{{ matrix.data['matrix_classes']['FP'] }}</a></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TN">{{ matrix.data['matrix_classes']['TN'] }}</a></td></tbody></tr>
-        
-    </table>
-
-    <table class="table table-bordered" >
-        <thead><tr><th style="width:30%" id="m_id"></th><th style="width:35%">Predicted {{ matrix2.categories[0].name }}</th><th style="width:35%">Predicted {{ matrix2.categories[1].name }}</th></tr></thead>
-        <tbody><tr><th>True {{ matrix2.categories[0].name }}</th><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TP">{{ matrix2.data['matrix_classes']['TP'] }}</a></td></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FN">{{ matrix2.data['matrix_classes']['FN'] }}</a></td></tbody></tr>
-        <tbody><tr><th>True {{ matrix2.categories[1].name }}</th></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=FP">{{ matrix2.data['matrix_classes']['FP'] }}</a></td><td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm=TN">{{ matrix2.data['matrix_classes']['TN'] }}</a></td></tbody></tr>
-        
-    </table>
-    
-    <b>Info:</b>
-    <p id="insert"></p>
-
-    <ul>
-        <p>Current certainty threshold: {{ matrix.threshold }}</p>
-        <p>Training ratio: {{ matrix.ratio }} </p>
-    </ul>
-
-    <table class="table table-striped" >
-        <thead><tr><th>Matrix</th><th>Accuracy</th><th style="width:30%" >Tweets in matrix</th><th>Excluded tweets</th></tr></thead>
-        <tbody><tr><th>{{ matrix.id }}</th><td>{{ matrix.data.accuracy }}</td><td>{{ matrix.data.nr_included }}</td><td>{{ matrix.data.nr_excluded }}</td></tbody></tr>
-        <tbody><tr><th>{{ matrix2.id }}</th><td>{{ matrix2.data.accuracy }}</td><td>{{ matrix2.data.nr_included }}</td><td>{{ matrix2.data.nr_excluded }}</td></tbody></tr>
-    </table>
-
-        
-
-    <div class="content-section">
-    <h3> Modify parameters </h3>
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <div class="form-group">
-                {{ form.threshold.label(class="form-control-label")}}<br>
-                {{ form.threshold(class="form-control form-control-lg")}}
-                {% for error in form.threshold.errors %}
-                    <span style="color :red;">[{{ error }}]</span>
-                {% endfor %}
-            </div>
-            <div class="form-group">
-                {{ form.ratio.label(class="form-control-label")}}<br>
-                {% if form.ratio.errors %}
-                {{ form.ratio(class="form-control form-control-lg is-invalid") }}
-                <div class="invalid-feedback">
-                    {% for error in form.ratio.errors %}
-                        <span>{{ error }}</span>
-                    {% endfor %}
-                </div>
-                {% else %}
-                    {{ form.ratio(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-            <div class="form-check">
-                {{ form.shuffle(class="form-check-input") }}
-                {{ form.shuffle.label(class="form-check-label") }}
-            </div>
-        </fieldset>
-        <div class="form-group">
-            {{ form.submit(class="btn btn-outline-info") }}
         </div>
-    </form>
-</div>
+
         
 
-
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-
-<body>
-    <form action="" method="post" id="myForm">
-        <label>Set number of iterations:</label>
-        <input type="text" name="first-name" id='n-value'>
-        <button type="button" id="submitBtn">Compare</button>
-    </form>
-</body>
-
- <script>
-   
-    var n_value = $("#n-value");
-    var matrix_select = $("#matrix-select");
-    var matrix2_select = $("#matrix2-select");
-    var tp = document.getElementById('TP');
-    var tn = document.getElementById('TN');
-    var fp = document.getElementById('FP');
-    var fn = document.getElementById('FN');
-    var trial = document.getElementById("insert");
-    trial.innerHTML = "write me to the screen";
-    //document.getElementById("insert").innerHTML = x;
-    
-
-    $("#compareBtn").click(function(){
-        
-        $.get('/get_compare_matrix_data', {'matrix_id': matrix_select.val(), 'matrix2_id': matrix2_select.val() }).done(
-            function(returnedData) {
-                console.log(matrix_select.val());
-              
-            // body.innerText = returnedData[0];
-            trial.innerHTML = returnedData[2]
-        });
-        $("#myForm").trigger("reset");
-    }); 
-
-
-</script>
-
+{% endblock content %}  
