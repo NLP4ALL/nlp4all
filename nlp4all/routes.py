@@ -723,115 +723,6 @@ def matrix_loop():
     
     return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names)
 
-@app.route('/get_aggregated_data_old', methods=['GET', 'POST'])
-def aggregate_matrix_old():
-    args = request.args.to_dict()
-    m_id = args['matrix_id']
-    matrix = ConfusionMatrix.query.get(int(m_id))
-    
-    if "n" in request.args.to_dict().keys():
-        n = request.args.get('n', type=int)
-    else:
-        n=3
-
-    # log used tnt sets
-    used_tnt_sets = []
-
-    agg_data = {m:{'data':{}} for m in range(n)}
-    accuracy_list = []
-    list_excluded = []
-    list_included = []
-    # take threshold and ratio from original
-    # create a new matrix with them
-
-    #cats = [n.id for n in matrix.categories]
-    cat_names = [n.name for n in matrix.categories]
-    #tweets = matrix.tweets
-    #ratio = matrix.ratio
-    #threshold = matrix.threshold
-    #tnt_sets = matrix.training_and_test_sets
-    
-    # loop
-    for m in range(n):
-        
-        tnt_list = [x for x in list(range(0, len(matrix.training_and_test_sets))) if x not in used_tnt_sets]
-
-        tnt_nr = sample(tnt_list, 1)[0]
-        used_tnt_sets.append(tnt_nr) 
-        a_tnt_set = tnt_sets[tnt_nr]
-        train_tweet_ids = a_tnt_set[0].keys()
-        train_set_size = len(a_tnt_set[0].keys())
-        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
-
-        # train on the training set:
-        train_data = {"counts" : 0, "words" : {}} 
-        train_data = nlp4all.utils.train_model(train_data, train_tweet_ids)
-        
-        matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
-        words = {t.id : '' for t in test_tweets}
-
-        for a_tweet in test_tweets: 
-            words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = nlp4all.utils.get_predictions_and_words(train_data, set(a_tweet.words), cat_names)
-            # if no data
-            if bool(matrix_data[a_tweet.id]['predictions']) == False:  
-                matrix_data[a_tweet.id]['pred_cat'] = ('no data', 0)
-            # if prob == 0
-            elif matrix_data[a_tweet.id]['predictions'][cat_names[0]] == 0.0 and matrix_data[a_tweet.id]['predictions'][cat_names[1]] == 0.0:
-                matrix_data[a_tweet.id]['pred_cat'] = ('none', 0)
-            # else select the bigger prob
-            else: 
-                matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))) 
-                # certainty = difference in predictions
-                matrix_data[a_tweet.id]['certainty'] = round((abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])),3)
-            # add real category
-            matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
-
-        good_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] >= threshold], key=lambda x:x[1]["certainty"], reverse=True)
-        # tweets not exceeding the threshold
-        bad_tweets = sorted([t for t in matrix_data.items() if t[1]['certainty'] < threshold], key=lambda x:x[1]["certainty"], reverse=True)
-
-        # add matrix classes
-        for t in good_tweets:
-            if t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
-                t[1]['class'] = 'TP'
-            elif t[1]['pred_cat'][0] == t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
-                t[1]['class'] = 'TN'
-            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] == cat_names[0]:
-                t[1]['class'] = 'FP' # predicted 'yes', although was 'no'
-            elif t[1]['pred_cat'][0] != t[1]['real_cat'] and t[1]['pred_cat'][0] != cat_names[0]:
-                    t[1]['class'] = 'FN' # predicted 'no', although was 'yes'
-        test_data = {'good_tweets' : {i[0]: i[1] for i in good_tweets}, 'bad_tweets':{i[0]: i[1] for i in bad_tweets}, 'tnt_nr': tnt_nr}
-        list_excluded.append(len(bad_tweets))
-        list_included.append(len(good_tweets))
-        
-        # info
-        class_list = [t[1]['class'] for t in good_tweets]
-        matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0} 
-        for i in set(class_list):
-            matrix_classes[i] = class_list.count(i)
-        
-        accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
-        accuracy_list.append(accuracy)
-        data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_included' : sum(matrix_classes.values()), 'nr_excluded':len(test_data['bad_tweets']), 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size}                    
-        agg_data[m]['data'] = data
-        
-
-    # accuracy, excluded, included
-    averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_excluded)/len(list_excluded),2), round(sum(list_included)/len(list_included),2)]
-    
-    # quadrants
-    avg_quadrants = {}
-    quadrants = [agg_data[m]["data"]['matrix_classes'] for m in agg_data]
-    for dictionary in quadrants:
-        for key, value in dictionary.items():
-            if key in avg_quadrants.keys():
-                avg_quadrants[key] = value + avg_quadrants[key]
-            else:
-                avg_quadrants[key] = value
-    avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
-    avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
-    
-    return jsonify(avg_quadrants, averages, n)
 
 @app.route('/get_aggregated_data', methods=['GET', 'POST'])
 def aggregate_matrix():
@@ -933,9 +824,11 @@ def aggregate_matrix():
             else:
                 avg_quadrants[key] = value
     avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
-    avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
-    
-    return jsonify(avg_quadrants, averages, n)
+    #avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
+
+    loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i]] for i in range(n)]
+
+    return jsonify(avg_quadrants, averages, n, loop_table)
     
 @app.route('/get_compare_matrix_data', methods=['GET', 'POST'])
 def get_compare_matrix_data():
