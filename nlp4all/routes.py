@@ -536,8 +536,10 @@ def create_matrix():
 @app.route("/matrix/<matrix_id>", methods=['GET', 'POST'])
 @login_required
 def matrix(matrix_id):
-    
+    userid = current_user.id
     matrix = ConfusionMatrix.query.get(matrix_id)
+    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
+    all_cats = TweetTagCategory.query.all()
     categories = matrix.categories
     cat_names = [c.name for c in categories]
     form = ThresholdForm()
@@ -569,9 +571,40 @@ def matrix(matrix_id):
             a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
             return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
         return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr))
-    #
+        
+    train_tweet_ids = a_tnt_set[0].keys()
+    train_set_size = len(a_tnt_set[0].keys())
+    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
-    return render_template('confmatrix.html', cat_names = cat_names, form=form, matrix=matrix)
+    # train on the training set:
+    matrix.train_data = matrix.train_model(train_tweet_ids)
+    flag_modified(matrix, "train_data")
+
+    # make matrix data
+    matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+    matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
+    flag_modified(matrix, "matrix_data")
+
+    # filter according to the threshold
+    incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+    excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+
+    # count different occurences
+    class_list = [t[1]['class'] for t in incl_tweets]
+    matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+    for i in set(class_list):
+        matrix_classes[i] = class_list.count(i)
+    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+
+    # summarise data
+    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+    flag_modified(matrix, "data")
+    db.session.add(matrix)
+    db.session.merge(matrix)
+    db.session.flush()
+    db.session.commit()
+
+    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
