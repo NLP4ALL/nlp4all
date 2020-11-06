@@ -102,9 +102,11 @@
             cat_b.innerText = returnedData[2][1];
             cat_a_1.innerText = returnedData[2][0];
             cat_b_2.innerText = returnedData[2][1];
+
             ratio.innerText = returnedData[4]
             threshold.innerText = returnedData[3]
-            for(var i=0; i<returnedData[0].length; i++){
+            
+            for(var i=0; i<returnedData[5].length; i++){
                 row = $( '<tr />' );
                 table.append( row );
             for(var j=0; j<returnedData[5][i].length; j++){
