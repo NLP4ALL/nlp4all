@@ -538,13 +538,14 @@ def create_matrix():
 def matrix(matrix_id):
     userid = current_user.id
     matrix = ConfusionMatrix.query.get(matrix_id)
-    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
-    all_cats = TweetTagCategory.query.all()
+    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all() # all matrices for the other tabs
+    all_cats = TweetTagCategory.query.all() # all cats for the other tabs
+
     categories = matrix.categories
     cat_names = [c.name for c in categories]
     form = ThresholdForm()
+    # get a tnt_set
     tnt_sets = matrix.training_and_test_sets
-
     if "tnt_nr" in request.args.to_dict().keys():
             tnt_nr = request.args.get('tnt_nr', type=int)
             a_tnt_set = tnt_sets[tnt_nr]
@@ -611,7 +612,8 @@ def matrix(matrix_id):
 @login_required
 def matrix_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
-    cm = request.args.get('cm', type=str) ### check this !?
+    # request tweets from the correct quadrant
+    cm = request.args.get('cm', type=str) 
     title = str("Tweets classified as " + cm)
     id_c = [{int(k):{'certainty':v['certainty']} for k, v in matrix.matrix_data.items() if v['class'] == cm and v['certainty'] >= matrix.threshold}][0]
 
@@ -621,7 +623,6 @@ def matrix_tweets(matrix_id):
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title=title)
-
 
 @app.route("/my_matrices", methods=['GET', 'POST'])
 @login_required
@@ -685,10 +686,11 @@ def my_matrices():
 def included_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = "Included tweets"
+    # filter according to the threshold
     id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] >= matrix.threshold}][0]
     
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
-
+    # collect necessary data for the table
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'class' : id_c[t.id]['class'] , 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
     for t in cm_info:
         if cm_info[t]['predicted category'] == cm_info[t]['category']:
@@ -704,11 +706,11 @@ def included_tweets(matrix_id):
 def excluded_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = 'Excluded tweets'
-
+    # filter according to the threshold
     id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] < matrix.threshold}][0]
     
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
-
+    # collect necessary data for the table
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
     for t in cm_info:
         if cm_info[t]['predicted category'] == cm_info[t]['category']:
@@ -723,7 +725,7 @@ def excluded_tweets(matrix_id):
 @app.route("/matrix_overview", methods=['GET', 'POST'])
 @login_required
 def matrix_overview():
-    userid = current_user.id
+    userid = current_user.id # get matrices for the user
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
     all_cats = TweetTagCategory.query.all()
     
@@ -737,7 +739,7 @@ def matrix_overview():
 @app.route('/matrix_loop', methods=['POST','GET'])
 def matrix_loop():
     matrix_id = request.args.get('matrix_id')
-    matrix = ConfusionMatrix.query.get(matrix_id)
+    matrix = ConfusionMatrix.query.get(matrix_id) #so the id should be always specified in the url
     cat_names = [n.name for n in matrix.categories]
     
     return render_template('matrix_table_base.html', matrix=matrix, cat_names=cat_names)
@@ -831,8 +833,7 @@ def aggregate_matrix():
             else:
                 avg_quadrants[key] = value
     avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
-    #avg_matrix_classes = dict(zip(list(quadrants[0].keys()), avg_quadrants)) 
-
+    # get info from each iteration to show how it varies
     loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i]] for i in range(n)]
 
     return jsonify(avg_quadrants, averages, n, loop_table)
@@ -891,21 +892,18 @@ def get_compare_matrix_data():
     db.session.merge(matrix2)
     db.session.flush()
     db.session.commit()
-    
+    threshold = matrix.threshold
     all_cat_names = [matrix.categories[0].name , matrix.categories[1].name , matrix2.categories[1].name]
     table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['TP'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
-    #matrix1_data = matrix.data
-    return jsonify(matrix.data, matrix2.data, all_cat_names, matrix.threshold, matrix.ratio, table_data)
+    return jsonify(matrix.data, matrix2.data, all_cat_names, threshold, matrix2.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
 @login_required
 def compare_matrices():
+    # there you can try out the comparison templates
     userid = current_user.id
     all_cats = TweetTagCategory.query.all()
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
-
-    #matrix = matrices[0]
-    #categories = matrix.categories
     cat_names = [c.name for c in all_cats]
 
     return render_template('matrix_compare_base.html', cat_names = cat_names,matrices = matrices, all_cats=all_cats)
