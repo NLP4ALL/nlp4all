@@ -448,13 +448,13 @@ class ConfusionMatrix(db.Model):
     categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
     tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix')
     matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN
-    train_data = db.Column(JSON) # comment
+    train_data = db.Column(JSON) # word counts from the training set
     tf_idf = db.Column(JSON)
     training_and_test_sets = db.Column(JSON)
     threshold = db.Column(db.Float())
     ratio = db.Column(db.Float())
-    data = db.Column(JSON)
-    parent = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None)
+    data = db.Column(JSON) # accuracy etc resuts from the matrix
+    parent = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None) # for cloning purposes
     child = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None)
     
 
@@ -470,8 +470,8 @@ class ConfusionMatrix(db.Model):
         return(new_matrix)
 
     def updated_data(self, tweet, category):
+        # update the train_data when you change tnt set, this is mostly copied from a Bayesian analysis function above
         self.train_data['counts'] = self.train_data['counts'] + 1
-        
         if category.name not in self.train_data.keys():
             self.train_data[category.name] = {'counts' : 0, 'words' : {}}
         self.train_data[category.name]['counts'] = (self.train_data[category.name].get('counts', 0)) + 1
@@ -486,7 +486,7 @@ class ConfusionMatrix(db.Model):
         return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):
-        
+        # works the same way as for bayesian analysis
         categories = self.categories
         category_names = [c.name for c in categories]
         preds = {}
@@ -512,6 +512,7 @@ class ConfusionMatrix(db.Model):
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
     def train_model(self, train_tweet_ids):
+        # trains the model with the training data tweets
         for tweet_id in train_tweet_ids:
             tweet = Tweet.query.get(tweet_id)
             category_id = tweet.category
@@ -520,6 +521,7 @@ class ConfusionMatrix(db.Model):
         return train_data
     
     def make_matrix_data(self, test_tweets, cat_names):
+        # classifies the tweets according to the calculated prediction probabilities
         matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
         words = {t.id : '' for t in test_tweets}
 
@@ -536,11 +538,11 @@ class ConfusionMatrix(db.Model):
                 matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[0]) 
                 # certainty = difference in predictions
                 matrix_data[a_tweet.id]['certainty'] = round((abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])),3)
-            # add real category
+            # add the real category
             matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
 
         matrix_data = sorted([t for t in matrix_data.items()], key=lambda x:x[1]["certainty"], reverse=True)
-        # add matrix classes
+        # add matrix classes/quadrants
         for t in matrix_data:
             if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == cat_names[0]:
                 t[1]['class'] = 'TP'
@@ -552,8 +554,6 @@ class ConfusionMatrix(db.Model):
                 t[1]['class'] = 'FN' # predicted 'no', although was 'yes'
             else:
                 t[1]['class'] = 'not_classified'
-
-        #matrix_data = {i[0]: i[1] for i in matrix_data}
         return (matrix_data)
 
 
