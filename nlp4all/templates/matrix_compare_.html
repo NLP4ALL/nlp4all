@@ -82,7 +82,7 @@
         $.get('/get_compare_matrix_data', {'matrix_id': matrix_select.val(), 'alt_cat': alt_cat.val() }).done(
             function(returnedData) {
                 //console.log(matrix_select.val());
-              
+            $("#compareTable > tbody").empty();
             // body.innerText = returnedData[0];
             //trial.innerHTML = returnedData[1]['accuracy'];
             tp.innerText = returnedData[0]['matrix_classes']['TP'];
@@ -105,7 +105,7 @@
 
             ratio.innerText = returnedData[4]
             threshold.innerText = returnedData[3]
-            
+
             for(var i=0; i<returnedData[5].length; i++){
                 row = $( '<tr />' );
                 table.append( row );
