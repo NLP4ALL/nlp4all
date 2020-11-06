@@ -740,7 +740,7 @@ def matrix_loop():
     matrix = ConfusionMatrix.query.get(matrix_id)
     cat_names = [n.name for n in matrix.categories]
     
-    return render_template('matrix_table.html', matrix=matrix, cat_names=cat_names)
+    return render_template('matrix_table_base.html', matrix=matrix, cat_names=cat_names)
 
 
 @app.route('/get_aggregated_data', methods=['GET', 'POST'])
@@ -754,9 +754,7 @@ def aggregate_matrix():
     else:
         n=3
 
-    # log used tnt sets
-    used_tnt_sets = []
-
+    used_tnt_sets = [] # log used tnt sets
     agg_data = {m:{'data':{}} for m in range(n)}
     accuracy_list = []
     list_excluded = []
@@ -820,7 +818,6 @@ def aggregate_matrix():
         
         agg_data[m]['data'] = new_mx.data
         
-
     # accuracy, excluded, included
     averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_included)/len(list_included),2), round(sum(list_excluded)/n,2)]
     
@@ -896,9 +893,9 @@ def get_compare_matrix_data():
     db.session.commit()
     
     #all_cat_names = [c.name for c in matrix.categories].append(cat_names[0])
-    all_cat_names = [cat_names[0], cat_names[1] , matrix.categories[1].name]
+    all_cat_names = [cat_names[0] , matrix.categories[1].name , cat_names[1]]
     table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['TP'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
-    return jsonify(matrix2.data, matrix.data, all_cat_names, matrix.threshold, matrix.ratio, table_data)
+    return jsonify(matrix.data, matrix2.data, all_cat_names, matrix.threshold, matrix.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
 @login_required
@@ -907,8 +904,8 @@ def compare_matrices():
     all_cats = TweetTagCategory.query.all()
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
 
-    matrix = matrices[0]
-    categories = matrix.categories
-    cat_names = [c.name for c in categories]
+    #matrix = matrices[0]
+    #categories = matrix.categories
+    cat_names = [c.name for c in all_cats]
 
-    return render_template('matrix_compare.html', cat_names = cat_names,matrices = matrices, all_cats=all_cats, matrix=matrix)
+    return render_template('matrix_compare_base.html', cat_names = cat_names,matrices = matrices, all_cats=all_cats)
