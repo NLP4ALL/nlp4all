@@ -18,15 +18,15 @@
     </form>
 
     <ul>
-        <p>Certainty threshold: <span id="threshold"></span></p>
+        <p>Certainty threshold: <span id="threshold"></span> {{ matrix.threshold }}</p>
         <p>Training ratio: <span id="ratio"></span></p>
     </ul>
 
 
     <table class="table table-bordered" id="mx1" >
         <thead><tr><th style="width:30%">Confusion Matrix </th><th>Predicted <span id="cat-a-1"></span></th><th>Predicted <span id="cat-b-2"></span></th></tr></thead>
-        <tbody><tr><th>True <span id="cat-a"></span></th><td id='TP1'>TP</td><td id='FN1' >FN</td></tbody></tr>
-        <tbody><tr><th>True <span id="cat-b"></span></th><td id ='FP1'>FP</td><td id='TN1'>TN</td></tbody></tr>  
+        <tbody><tr><th>True <span id="cat-a"></span></th><td id='TP1'>TP1</td><td id='FN1' >FN1</td></tbody></tr>
+        <tbody><tr><th>True <span id="cat-b"></span></th><td id ='FP1'>FP1</td><td id='TN1'>TN1</td></tbody></tr>  
     </table>
 
     <table class="table table-bordered" id="mx2" >
@@ -83,27 +83,29 @@
         
         $.get('/get_compare_matrix_data', {'matrix_id': matrix_select.val(), 'alt_cat': alt_cat.val() }).done(
             function(returnedData) {
-                //console.log(matrix_select.val());
+                console.log(matrix_select.val());
+                console.log(returnedData[0]['matrix_classes']['FN']);
+                console.log(returnedData[1]['matrix_classes']['TP']);
             $("#compareTable > tbody").empty();
-            // body.innerText = returnedData[0];
-            //trial.innerHTML = returnedData[1]['accuracy'];
-            tp.innerText = returnedData[0]['matrix_classes']['TP'];
-            tn.innerText = returnedData[0]['matrix_classes']['TN'];
-            fp.innerText = returnedData[0]['matrix_classes']['FP'];
-            fn.innerText = returnedData[0]['matrix_classes']['FN'];
-            cat_1.innerText = returnedData[2][0];
-            cat_2.innerText = returnedData[2][2];
-            cat_1_1.innerText = returnedData[2][0];
-            cat_2_2.innerText = returnedData[2][2];
+            tp1.innerText = returnedData[0]['matrix_classes']['TP'];
+            tn1.innerText = returnedData[0]['matrix_classes']['TN'];
+            fp1.innerText = returnedData[0]['matrix_classes']['FP'];
+            fn1.innerText = returnedData[0]['matrix_classes']['FN'];
 
-            tp1.innerText = returnedData[1]['matrix_classes']['TP'];
-            tn1.innerText = returnedData[1]['matrix_classes']['TN'];
-            fp1.innerText = returnedData[1]['matrix_classes']['FP'];
-            fn1.innerText = returnedData[1]['matrix_classes']['FN'];
+            tp.innerText = returnedData[1]['matrix_classes']['TP'];
+            tn.innerText = returnedData[1]['matrix_classes']['TN'];
+            fp.innerText = returnedData[1]['matrix_classes']['FP'];
+            fn.innerText = returnedData[1]['matrix_classes']['FN'];
+
             cat_a.innerText = returnedData[2][0];
             cat_b.innerText = returnedData[2][1];
             cat_a_1.innerText = returnedData[2][0];
             cat_b_2.innerText = returnedData[2][1];
+
+            cat_1.innerText = returnedData[2][0];
+            cat_2.innerText = returnedData[2][2];
+            cat_1_1.innerText = returnedData[2][0];
+            cat_2_2.innerText = returnedData[2][2];
 
             ratio.innerText = returnedData[4];
             threshold.innerText = returnedData[3];

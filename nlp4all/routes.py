@@ -892,9 +892,9 @@ def get_compare_matrix_data():
     db.session.flush()
     db.session.commit()
     
-    #all_cat_names = [c.name for c in matrix.categories].append(cat_names[0])
-    all_cat_names = [cat_names[0] , matrix.categories[1].name , cat_names[1]]
+    all_cat_names = [matrix.categories[0].name , matrix.categories[1].name , matrix2.categories[1].name]
     table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['TP'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    #matrix1_data = matrix.data
     return jsonify(matrix.data, matrix2.data, all_cat_names, matrix.threshold, matrix.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
