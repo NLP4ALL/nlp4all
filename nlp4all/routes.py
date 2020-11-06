@@ -569,38 +569,7 @@ def matrix(matrix_id):
             a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
             return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
         return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr))
-
-    train_tweet_ids = a_tnt_set[0].keys()
-    train_set_size = len(a_tnt_set[0].keys())
-    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
-
-    # train on the training set:
-    matrix.train_data = matrix.train_model(train_tweet_ids)
-    flag_modified(matrix, "train_data")
-   
-    # make matrix data
-    matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
-    matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
-    flag_modified(matrix, "matrix_data")
-
-    # filter according to the threshold
-    incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-    excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-
-    # count different occurences
-    class_list = [t[1]['class'] for t in incl_tweets]
-    matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
-    for i in set(class_list):
-        matrix_classes[i] = class_list.count(i)
-    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
-
-    # summarise data
-    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
-    flag_modified(matrix, "data")
-    db.session.add(matrix)
-    db.session.merge(matrix)
-    db.session.flush()
-    db.session.commit()
+    #
 
     return render_template('confmatrix.html', cat_names = cat_names, form=form, matrix=matrix)
   
@@ -636,8 +605,43 @@ def my_matrices():
         tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
         ratio = form.ratio.data*0.01 # convert back to decimals
         matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio, userid = userid)
-    
         db.session.add(matrix)
+        db.session.merge(matrix)
+        db.session.flush()
+        db.session.commit() # not sure if this is necessary
+
+        cat_names = [c.name for c in matrix.categories]
+        a_tnt_set = matrix.training_and_test_sets[0] # as a default
+        train_tweet_ids = a_tnt_set[0].keys()
+        train_set_size = len(a_tnt_set[0].keys())
+        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+
+        # train on the training set:
+        matrix.train_data = matrix.train_model(train_tweet_ids)
+        flag_modified(matrix, "train_data")
+    
+        # make matrix data
+        matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+        matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
+        flag_modified(matrix, "matrix_data")
+
+        # filter according to the threshold
+        incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+        excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+
+        # count different occurences
+        class_list = [t[1]['class'] for t in incl_tweets]
+        matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+        for i in set(class_list):
+            matrix_classes[i] = class_list.count(i)
+        accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+
+        # summarise data
+        matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+        flag_modified(matrix, "data")
+        db.session.add(matrix)
+        db.session.merge(matrix)
+        db.session.flush()
         db.session.commit()
         return(redirect(url_for('my_matrices')))
 
@@ -688,12 +692,13 @@ def excluded_tweets(matrix_id):
 def matrix_overview():
     userid = current_user.id
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
-
+    all_cats = TweetTagCategory.query.all()
+    
     matrix_info = {m.id : {"accuracy": m.data['accuracy'],"threshold" : m.threshold, "ratio" : m.ratio, "category 1" : m.categories[0].name, "category 2" : m.categories[1].name, "excluded tweets (%)" : round(m.data["nr_excl_tweets"]/m.data["nr_test_tweets"]*100,3) } for m in matrices}
     matrix_info = sorted([t for t in matrix_info.items()], key=lambda x:x[1]["accuracy"], reverse=True)
     matrix_info = [m[1] for m in matrix_info]
     form = ThresholdForm()
-    return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form, userid=userid)
+    return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form, userid=userid, all_cats=all_cats)
 
 
 @app.route('/matrix_loop', methods=['POST','GET'])
@@ -857,9 +862,10 @@ def get_compare_matrix_data():
     db.session.flush()
     db.session.commit()
     
-    all_cat_names = [c.name for c in matrix.categories].append(cat_names[0])
-
-    return jsonify(matrix2.data, matrix.data, cat_names, matrix.threshold, matrix.ratio)
+    #all_cat_names = [c.name for c in matrix.categories].append(cat_names[0])
+    all_cat_names = cat_names.append(matrix.categories[1].name)
+    table_data = [[m.id, m.data['accuracy'], m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    return jsonify(matrix2.data, matrix.data, cat_names, matrix.threshold, matrix.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
 @login_required
