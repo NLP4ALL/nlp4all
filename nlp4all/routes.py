@@ -863,9 +863,9 @@ def get_compare_matrix_data():
     db.session.commit()
     
     #all_cat_names = [c.name for c in matrix.categories].append(cat_names[0])
-    all_cat_names = cat_names.append(matrix.categories[1].name)
-    table_data = [[m.id, m.data['accuracy'], m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
-    return jsonify(matrix2.data, matrix.data, cat_names, matrix.threshold, matrix.ratio, table_data)
+    all_cat_names = [cat_names[0], cat_names[1] , matrix.categories[1].name]
+    table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['TP'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    return jsonify(matrix2.data, matrix.data, all_cat_names, matrix.threshold, matrix.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
 @login_required
