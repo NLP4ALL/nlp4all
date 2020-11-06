@@ -24,7 +24,7 @@
     var tn = document.getElementById('TN')
     var fp = document.getElementById('FP')
     var fn = document.getElementById('FN')
-    var table = $('#loopTable');
+    
     var row, cell;
 
     $("#submitBtn").click(function(){
@@ -44,6 +44,7 @@
                 n_id.innerText = returnedData[2];
 
             //table
+            var table = $('#loopTable');
             for(var i=0; i<returnedData[3].length; i++){
                 row = $( '<tr />' );
                 table.append( row );
