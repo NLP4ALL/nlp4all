@@ -601,10 +601,10 @@ def matrix(matrix_id):
     matrix_classes = dict.fromkeys(key_list, 0)
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
-    #accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+   
     True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
     False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
-    # accuracy = sum(correct predictions)/sum(all matrix points)
+        # accuracy = sum(correct predictions)/sum(all matrix points)
     accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
     
     # summarise data
@@ -615,7 +615,26 @@ def matrix(matrix_id):
     db.session.flush()
     db.session.commit()
 
-    return render_template('matrix_template_copy.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, matrix_classes = matrix_classes)
+    # prepare data for matrix table
+    currentDataClass = [matrix.matrix_data[i].get('real_cat') for i in matrix.matrix_data.keys()]
+    predictedClass = [matrix.matrix_data[i].get('pred_cat') for i in matrix.matrix_data.keys()]
+    number_list= list(range(len(cat_names)))
+    for i in number_list:
+        for o in range(len(currentDataClass)):
+            if currentDataClass[o] == cat_names[i]:
+                currentDataClass[o] = i+1       
+    for i in number_list:
+        for p in range(len(predictedClass)):
+            if predictedClass[p] == cat_names[i]:
+                predictedClass[p] = i+1
+    classes = int(max(currentDataClass) - min(currentDataClass)) + 1 #find number of classes
+    counts = [[sum([(currentDataClass[i] == true_class) and (predictedClass[i] == pred_class) 
+                    for i in range(len(currentDataClass))])
+            for pred_class in range(1, classes + 1)] 
+            for true_class in range(1, classes + 1)]
+    [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+
+    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, counts = counts)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])

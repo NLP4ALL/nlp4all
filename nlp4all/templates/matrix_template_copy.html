@@ -3,22 +3,23 @@
 {% block content %}
   
 
-<table id="hello" >
+<table id="myMatrix" class="table table-bordered">
     <thead>
         <tr>
-            {% for k in matrix_classes %}
-            <th>{{ k }}</th>
+            <th>#</th>
+            {% for k in matrix.categories %}
+            <th>{{ k.name }}</th>
             {% endfor %}
         </tr>
     </thead>
     <tbody>
-       
+        {% for row in counts %}
         <tr>
-            {% for data_point in matrix_classes.values() %}
-            <td>{{ data_point }}</td>
+            {% for i in row %}
+            <td>{{ i }}</td>
             {% endfor %}
         </tr>
-       
+        {% endfor %}
     </tbody>
     
     
