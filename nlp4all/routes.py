@@ -587,16 +587,26 @@ def matrix(matrix_id):
     flag_modified(matrix, "matrix_data")
 
     # filter according to the threshold
-    incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-    excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
+    incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+    excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
 
     # count different occurences
     class_list = [t[1]['class'] for t in incl_tweets]
-    matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+
+    key_list =[]
+    for i in matrix.categories:
+        key_list.append('True ' +str(i.name) )
+        key_list.append('False ' +str(i.name) )
+        
+    matrix_classes = dict.fromkeys(key_list, 0)
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
-    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
-
+    #accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+    True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
+    False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+    # accuracy = sum(correct predictions)/sum(all matrix points)
+    accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+    
     # summarise data
     matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
     flag_modified(matrix, "data")
@@ -605,7 +615,7 @@ def matrix(matrix_id):
     db.session.flush()
     db.session.commit()
 
-    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices)
+    return render_template('matrix_template_copy.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, matrix_classes = matrix_classes)
   
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
@@ -697,7 +707,7 @@ def included_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = "Included tweets"
     # filter according to the threshold
-    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] >= matrix.threshold}][0]
+    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] >= matrix.threshold and v['class'] != 'undefined'}][0]
     
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
     # collect necessary data for the table
@@ -716,8 +726,8 @@ def included_tweets(matrix_id):
 def excluded_tweets(matrix_id):
     matrix = ConfusionMatrix.query.get(matrix_id)
     title = 'Excluded tweets'
-    # filter according to the threshold
-    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] < matrix.threshold}][0]
+    # filter according to the threshold (or if prediction is undefined)
+    id_c = [{int(k):{'certainty':v['certainty'], 'pred_cat':v['pred_cat'],  'class' : v['class']} for k, v in matrix.matrix_data.items() if v['certainty'] < matrix.threshold or v['class'] == 'undefined'}][0]
     
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
     # collect necessary data for the table
