@@ -527,7 +527,7 @@ class ConfusionMatrix(db.Model):
         words = {t.id : '' for t in test_tweets}
 
         for a_tweet in test_tweets: 
-            words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = matrix.get_predictions_and_words(set(a_tweet.words))
+            words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = self.get_predictions_and_words(set(a_tweet.words))
             # if no data
             if bool(matrix_data[a_tweet.id]['predictions']) == False:  
                 matrix_data[a_tweet.id]['pred_cat'] = 'none'
@@ -544,7 +544,7 @@ class ConfusionMatrix(db.Model):
 
         matrix_data = sorted([t for t in matrix_data.items()], key=lambda x:x[1]["certainty"], reverse=True)# add matrix classes/quadrants
         for t in matrix_data:
-            for c in matrix.categories:
+            for c in self.categories:
                 #if correct prediction
                 if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == c.name:
                     t[1]['class'] = 'True '+str(c.name)
