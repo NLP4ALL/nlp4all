@@ -622,7 +622,7 @@ def matrix_tweets(matrix_id):
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
-    return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title=title)
+    return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title=title)
 
 @app.route("/my_matrices", methods=['GET', 'POST'])
 @login_required
@@ -699,7 +699,7 @@ def included_tweets(matrix_id):
             cm_info[t]['correct'] = 0
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
-    return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
+    return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
 
 @app.route("/excluded_tweets/<matrix_id>", methods=['GET', 'POST'])
 @login_required
@@ -719,7 +719,7 @@ def excluded_tweets(matrix_id):
             cm_info[t]['correct'] = 0
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
-    return render_template('cm_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
+    return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
 
 
 @app.route("/matrix_overview", methods=['GET', 'POST'])
