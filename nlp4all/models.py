@@ -512,6 +512,7 @@ class ConfusionMatrix(db.Model):
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
     def train_model(self, train_tweet_ids):
+        self.train_data = {"counts" : 0, "words" : {}} # reinitialize the training data
         # trains the model with the training data tweets
         for tweet_id in train_tweet_ids:
             tweet = Tweet.query.get(tweet_id)
