@@ -753,11 +753,7 @@ def included_tweets(matrix_id):
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
     # collect necessary data for the table
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'class' : id_c[t.id]['class'] , 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
-    for t in cm_info:
-        if cm_info[t]['predicted category'] == cm_info[t]['category']:
-            cm_info[t]['correct'] = 1
-        else:
-            cm_info[t]['correct'] = 0
+    
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
@@ -773,11 +769,7 @@ def excluded_tweets(matrix_id):
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
     # collect necessary data for the table
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle, 'predicted category': id_c[t.id]['pred_cat'], 'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
-    for t in cm_info:
-        if cm_info[t]['predicted category'] == cm_info[t]['category']:
-            cm_info[t]['correct'] = 1
-        else:
-            cm_info[t]['correct'] = 0
+    
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title = title)
@@ -1010,16 +1002,14 @@ def get_compare_matrix_data():
     db.session.merge(matrix2)
     db.session.flush()
     db.session.commit()
-    threshold = matrix.threshold
 
     # prepare data for matrix table
     old_names =[c.name for c in matrix.categories]
     counts1 = matrix.make_table_data(old_names)
     counts2 = matrix2.make_table_data(cat_names)
     
-    all_cat_names = [matrix.categories[0].name , matrix.categories[1].name , matrix2.categories[1].name]
-    table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['True '+m.categories[0].name],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
-    return jsonify(counts1, counts2, all_cat_names, threshold, matrix2.ratio, table_data)
+    table_data = [[m.id, m.data['accuracy'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    return jsonify(counts1, counts2, matrix.threshold, matrix.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
 @login_required

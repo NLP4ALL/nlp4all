@@ -49,7 +49,7 @@
 
    
     <table class="table table-striped" id="compareTable">
-        <thead><tr><th>Matrix</th><th>Accuracy</th><th style="width:30%" >Correct <span id='cat1'></span></th><th>Included tweets</th><th>Excluded tweets</th></tr></thead>
+        <thead><tr><th>Matrix</th><th>Accuracy</th><th>Included tweets</th><th>Excluded tweets</th></tr></thead>
         <tbody></tbody>
     </table>
 
@@ -76,13 +76,11 @@
        
             var ddlValidation = $("#alt-cat");
             for(var i=0; i<returnedData[0].length; i++){
-                //row = $( '<tr />' );
                 ddlValidation.append("<option value="+returnedData[0][i]+">" + returnedData[1][i] + "</option>");
                 };
 
             var newCat = $("#new-cat");
             for(var i=0; i<returnedData[2].length; i++){
-                //row = $( '<tr />' );
                 newCat.append("<option value="+returnedData[2][i][0]+">" + returnedData[2][i][1] + "</option>");
                 };
             
@@ -137,15 +135,15 @@
 
             $("#compareTable > tbody").empty();
            
-            ratio.innerText = returnedData[4];
-            threshold.innerText = returnedData[3];
+            ratio.innerText = returnedData[3];
+            threshold.innerText = returnedData[2];
             var table = $('#compareTable');
 
-            for(var i=0; i<returnedData[5].length; i++){
+            for(var i=0; i<returnedData[4].length; i++){
                 row = $( '<tr />' );
                 table.append( row );
-            for(var j=0; j<returnedData[5][i].length; j++){
-                cell = $('<td>'+returnedData[5][i][j]+'</td>')
+            for(var j=0; j<returnedData[4][i].length; j++){
+                cell = $('<td>'+returnedData[4][i][j]+'</td>')
                 row.append( cell );
             }
             }
