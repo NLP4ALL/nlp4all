@@ -593,14 +593,12 @@ def matrix(matrix_id):
             key_list =[]
             for i in matrix.categories:
                 key_list.append('True ' +str(i.name) )
-                key_list.append('False ' +str(i.name) )
-                
             matrix_classes = dict.fromkeys(key_list, 0)
             for i in set(class_list):
                 matrix_classes[i] = class_list.count(i)
         
             True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
-            False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+            False_dict = dict(filter(lambda item: "Pred" in item[0], matrix_classes.items()))
                 # accuracy = sum(correct predictions)/sum(all matrix points)
             accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
             
@@ -632,14 +630,13 @@ def matrix(matrix_id):
         key_list =[]
         for i in matrix.categories:
             key_list.append('True ' +str(i.name) )
-            key_list.append('False ' +str(i.name) )
             
         matrix_classes = dict.fromkeys(key_list, 0)
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
     
         True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
-        False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+        False_dict = dict(filter(lambda item: "Pred" in item[0], matrix_classes.items()))
             # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         
@@ -654,9 +651,22 @@ def matrix(matrix_id):
         
     # prepare data for matrix table
     counts = matrix.make_table_data(cat_names)
-
-    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, counts = counts)
+    dicts =[{k:v for k,v in matrix.data['matrix_classes'].items() if k.endswith(c.name)} for c in matrix.categories]
+    index_lists = [list(i.keys()) for i in dicts]
+    [index_lists[i].insert(0, cat_names[i]) for i in range(len(index_lists))]
+    
+    link_list =[[(counts[j][i], index_lists[j][i]) for i in range(0, len(counts[j]))] for j in range(len(counts))]
+    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, counts = counts, link_list=link_list)
   
+@app.route('/get_matrix_tweets', methods=['GET'])
+def get_matrix_tweets():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+    dicts =[{k:v for k,v in matrix.data['matrix_classes'].items() if k.endswith(c.name)} for c in matrix.categories]
+    index_lists = [list(i.keys()) for i in dicts]
+    [index_lists[i].insert(0, cat_names[i]) for i in range(len(index_lists))]
+    return jsonify(index_lists)
 
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
 @login_required
@@ -668,7 +678,6 @@ def matrix_tweets(matrix_id):
     id_c = [{int(k):{'certainty':v['certainty']} for k, v in matrix.matrix_data.items() if v['class'] == cm and v['certainty'] >= matrix.threshold}][0]
 
     tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
-
     cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'certainty' : round(id_c[t.id]['certainty'],3) } for t in tweets}
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["certainty"], reverse=True)
     cm_info = [t[1] for t in cm_info]
@@ -719,14 +728,13 @@ def my_matrices():
         key_list =[]
         for i in matrix.categories:
             key_list.append('True ' +str(i.name) )
-            key_list.append('False ' +str(i.name) )
             
         matrix_classes = dict.fromkeys(key_list, 0)
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
         True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
-        False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+        False_dict = dict(filter(lambda item: "Pred" in item[0], matrix_classes.items()))
         
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
@@ -867,7 +875,7 @@ def aggregate_matrix():
             matrix_classes[i] = class_list.count(i)
     
         True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
-        False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+        False_dict = dict(filter(lambda item: "Pred" in item[0], matrix_classes.items()))
             # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         accuracy_list.append(accuracy)
@@ -985,14 +993,13 @@ def get_compare_matrix_data():
     key_list =[]
     for i in matrix2.categories:
         key_list.append('True ' +str(i.name) )
-        key_list.append('False ' +str(i.name) )
         
     matrix_classes = dict.fromkeys(key_list, 0)
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
 
     True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
-    False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+    False_dict = dict(filter(lambda item: "Pred" in item[0], matrix_classes.items()))
     
     accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
     # summarise data

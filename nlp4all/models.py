@@ -552,7 +552,7 @@ class ConfusionMatrix(db.Model):
                     t[1]['class'] = 'True '+str(c.name)
                 #if uncorrect prediction
                 elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == c.name:
-                    t[1]['class'] = 'False '+str(c.name) # predicted 'no', although was 'yes'
+                    t[1]['class'] = 'Pred_'+str(c.name)+"_Real_"+t[1]['real_cat'] # predicted 'no', although was 'yes'
                 #if no prediction
                 elif t[1]['pred_cat'] == 'none':   
                     t[1]['class'] = 'undefined'
