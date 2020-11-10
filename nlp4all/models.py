@@ -556,6 +556,27 @@ class ConfusionMatrix(db.Model):
                     t[1]['class'] = 'undefined'
         return (matrix_data)
 
+    def make_table_data(self, cat_names):
+        currentDataClass = [self.matrix_data[i].get('real_cat') for i in self.matrix_data.keys()]
+        predictedClass = [self.matrix_data[i].get('pred_cat') for i in self.matrix_data.keys()]
+        number_list= list(range(len(cat_names)))
+        for i in number_list:
+            for o in range(len(currentDataClass)):
+                if currentDataClass[o] == cat_names[i]:
+                    currentDataClass[o] = i+1       
+        for i in number_list:
+            for p in range(len(predictedClass)):
+                if predictedClass[p] == cat_names[i]:
+                    predictedClass[p] = i+1
+        classes = int(max(currentDataClass) - min(currentDataClass)) + 1 #find number of classes
+        counts = [[sum([(currentDataClass[i] == true_class) and (predictedClass[i] == pred_class) 
+                        for i in range(len(currentDataClass))])
+                for pred_class in range(1, classes + 1)] 
+                for true_class in range(1, classes + 1)]
+        [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+        return counts
+
+
 
     
 
