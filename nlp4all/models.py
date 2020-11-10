@@ -538,7 +538,9 @@ class ConfusionMatrix(db.Model):
             else: 
                 matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[0]) 
                 # certainty = difference in predictions
-                matrix_data[a_tweet.id]['certainty'] = round((abs(matrix_data[a_tweet.id]['predictions'][cat_names[0]] - matrix_data[a_tweet.id]['predictions'][cat_names[1]])),3)
+                max_certainty =  (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[1])    
+                #max_certainty 
+                matrix_data[a_tweet.id]['certainty'] = round(max_certainty / sum(matrix_data[a_tweet.id]['predictions'].values()),3)
             # add the real category
             matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
 

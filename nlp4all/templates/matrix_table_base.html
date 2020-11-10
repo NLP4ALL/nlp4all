@@ -19,12 +19,18 @@
     
     <div class="content-section">
     
-    <table class="table table-bordered" id="mx" >
-        <thead><tr><th>Confusion Matrix </th><th>Predicted {{ cat_names[0] }}</th><th>Predicted {{ cat_names[1] }}</th></tr></thead>
-        <tbody><tr><th>True {{ cat_names[0] }}</th><td id='TP'>TP</td><td id='FN' >FN</td></tbody></tr>
-        <tbody><tr><th>True {{ cat_names[1] }}</th><td id ='FP'>FP</td><td id='TN'>TN</td></tbody></tr>  
-    </table>
-
+      <table class="table table-bordered" id="confmx">
+        <thead>
+            <tr>
+                <th>#</th>
+                {% for k in matrix.categories %}
+                <th>{{ k.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+  
         <ul>
         <p>Looping over <span id='n_id'> X </span> training and testing sets.</p>
 
