@@ -933,7 +933,7 @@ def get_compare_matrix_data():
     alt_cat = TweetTagCategory.query.get(int(alt_cat))
     new_cat = TweetTagCategory.query.get(int(new_cat))
     old_cats = [c.id for c in matrix.categories]
-    cat_ids = [matrix.categories[0].id, alt_cat.id] #[4 if x==1 else x for x in a]
+    cat_ids = [new_cat.id if x==alt_cat.id else x for x in old_cats]
     matrix2 = nlp4all.utils.add_matrix(cat_ids, ratio= matrix.ratio, userid='')
     matrix2.threshold = matrix.threshold
     flag_modified(matrix2, "threshold") 
@@ -979,7 +979,6 @@ def get_compare_matrix_data():
     True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
     False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
     
-    # accuracy = sum(correct predictions)/sum(all matrix points)
     accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
     # summarise data
     matrix2.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
@@ -990,7 +989,7 @@ def get_compare_matrix_data():
     db.session.commit()
     threshold = matrix.threshold
     all_cat_names = [matrix.categories[0].name , matrix.categories[1].name , matrix2.categories[1].name]
-    table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['True '+matrix.categories[0].name],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['True '+m.categories[0].name],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
     return jsonify(matrix.data, matrix2.data, all_cat_names, threshold, matrix2.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
