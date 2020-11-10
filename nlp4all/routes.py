@@ -800,6 +800,7 @@ def aggregate_matrix():
     accuracy_list = []
     list_excluded = []
     list_included = []
+    counts_list = []
     cat_names = [n.name for n in matrix.categories]
     
     # loop
@@ -833,20 +834,28 @@ def aggregate_matrix():
         db.session.flush()
 
         # filter according to the threshold
-        incl_tweets = sorted([t for t in new_mx.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-        excl_tweets = sorted([t for t in new_mx.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-        
+        incl_tweets = sorted([t for t in new_mx.matrix_data.items() if t[1]['certainty'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+        excl_tweets = sorted([t for t in new_mx.matrix_data.items() if t[1]['certainty'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+
         list_excluded.append(len(excl_tweets))
         list_included.append(len(incl_tweets))
         
-        # count different occurences 
-        ## with included tweets
+       # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+
+        key_list =[]
+        for i in new_mx.categories:
+            key_list.append('True ' +str(i.name) )
+            key_list.append('False ' +str(i.name) )
+            
+        matrix_classes = dict.fromkeys(key_list, 0)
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
-        #print(matrix_classes)
-        accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
+    
+        True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
+        False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+            # accuracy = sum(correct predictions)/sum(all matrix points)
+        accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         accuracy_list.append(accuracy)
 
         # summarise data
@@ -858,6 +867,26 @@ def aggregate_matrix():
         db.session.commit()
         
         agg_data[m]['data'] = new_mx.data
+        # build matrix data
+        currentDataClass = [new_mx.matrix_data[i].get('real_cat') for i in new_mx.matrix_data.keys()]
+        predictedClass = [new_mx.matrix_data[i].get('pred_cat') for i in new_mx.matrix_data.keys()]
+        number_list= list(range(len(cat_names)))
+
+        for i in number_list:
+            for o in range(len(currentDataClass)):
+                if currentDataClass[o] == cat_names[i]:
+                    currentDataClass[o] = i+1
+        for i in number_list:
+            for p in range(len(predictedClass)):
+                if predictedClass[p] == cat_names[i]:
+                    predictedClass[p] = i+1
+        classes = int(max(currentDataClass) - min(currentDataClass)) + 1 #find number of classes
+        counts = [[sum([(currentDataClass[i] == true_class) and (predictedClass[i] == pred_class) 
+                        for i in range(len(currentDataClass))])
+                for pred_class in range(1, classes + 1)] 
+                for true_class in range(1, classes + 1)]
+        #[counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+        counts_list.append(counts)
         
     # accuracy, excluded, included
     averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_included)/len(list_included),2), round(sum(list_excluded)/n,2)]
@@ -874,17 +903,37 @@ def aggregate_matrix():
     avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
     # get info from each iteration to show how it varies
     loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i]] for i in range(n)]
+    count_sum = [[[counts_list[j][l][i] + counts_list[j][l][i] for i in range(len(counts_list[0]))] 
+        for l in range(len(counts_list[0]))]
+        for j in range(len(counts_list))][0]
+    matrix_values = [[round(count_sum[i][j]/len(counts_list),2) for j in range(len(count_sum[i]))] for i in range(len(count_sum))]
+    [matrix_values[i].insert(0, cat_names[i]) for i in range(len(matrix_values))]
+    return jsonify(avg_quadrants, averages, n, loop_table, matrix_values)
 
-    return jsonify(avg_quadrants, averages, n, loop_table)
+@app.route('/get_matrix_categories', methods=['GET', 'POST'])
+def get_matrix_categories():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
     
+    cat_ids = [c.id for c in matrix.categories]
+    cat_names = [c.name for c in matrix.categories]
+    all_cats = TweetTagCategory.query.all()
+    new_cats = [[i.id, i.name] for i in all_cats if i.id not in cat_ids]
+    return jsonify(cat_ids, cat_names, new_cats)
+
+
 @app.route('/get_compare_matrix_data', methods=['GET', 'POST'])
 def get_compare_matrix_data():
     args = request.args.to_dict()
     m_id = args['matrix_id']
     alt_cat = args['alt_cat']
+    new_cat = args['new_cat']
     matrix = ConfusionMatrix.query.get(int(m_id))
     alt_cat = TweetTagCategory.query.get(int(alt_cat))
-    cat_ids = [matrix.categories[0].id, alt_cat.id]
+    new_cat = TweetTagCategory.query.get(int(new_cat))
+    old_cats = [c.id for c in matrix.categories]
+    cat_ids = [matrix.categories[0].id, alt_cat.id] #[4 if x==1 else x for x in a]
     matrix2 = nlp4all.utils.add_matrix(cat_ids, ratio= matrix.ratio, userid='')
     matrix2.threshold = matrix.threshold
     flag_modified(matrix2, "threshold") 
@@ -914,16 +963,24 @@ def get_compare_matrix_data():
     flag_modified(matrix2, "matrix_data")
 
     # filter according to the threshold
-    incl_tweets = sorted([t for t in matrix2.matrix_data.items() if t[1]['certainty'] >= matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-    excl_tweets = sorted([t for t in matrix2.matrix_data.items() if t[1]['certainty'] < matrix.threshold], key=lambda x:x[1]["certainty"], reverse=True)
-
-    # count different occurences
+    incl_tweets = sorted([t for t in matrix2.matrix_data.items() if t[1]['certainty'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+    excl_tweets = sorted([t for t in matrix2.matrix_data.items() if t[1]['certainty'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
     class_list = [t[1]['class'] for t in incl_tweets]
-    matrix_classes = {'TP': 0, 'TN': 0, 'FP': 0,'FN': 0}
+    # count different occurences
+    key_list =[]
+    for i in matrix2.categories:
+        key_list.append('True ' +str(i.name) )
+        key_list.append('False ' +str(i.name) )
+        
+    matrix_classes = dict.fromkeys(key_list, 0)
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
-    accuracy = round((matrix_classes['TP'] + matrix_classes['TN'] )/ sum(matrix_classes.values()), 3)
 
+    True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
+    False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+    
+    # accuracy = sum(correct predictions)/sum(all matrix points)
+    accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
     # summarise data
     matrix2.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
     flag_modified(matrix2, "data")
@@ -933,7 +990,7 @@ def get_compare_matrix_data():
     db.session.commit()
     threshold = matrix.threshold
     all_cat_names = [matrix.categories[0].name , matrix.categories[1].name , matrix2.categories[1].name]
-    table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['TP'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['True '+matrix.categories[0].name],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
     return jsonify(matrix.data, matrix2.data, all_cat_names, threshold, matrix2.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
