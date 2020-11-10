@@ -29,19 +29,14 @@
     </ul>
 
    
-
-    <table class="table table-bordered" id="mx1" >
-        <thead><tr><th style="width:30%">Confusion Matrix </th><th>Predicted <span id="cat-a-1"></span></th><th>Predicted <span id="cat-b-2"></span></th></tr></thead>
-        <tbody><tr><th>True <span id="cat-a"></span></th><td id='TP1'>TP1</td><td id='FN1' >FN1</td></tbody></tr>
-        <tbody><tr><th>True <span id="cat-b"></span></th><td id ='FP1'>FP1</td><td id='TN1'>TN1</td></tbody></tr>  
-    </table>
-
-    <table class="table table-bordered" id="mx2" >
-        <thead><tr><th style="width:30%">Confusion Matrix </th><th>Predicted <span id="cat-1-1"></span></th><th>Predicted <span id="cat-2-2"></span></th></tr></thead>
-        <tbody><tr><th>True <span id="cat-1"></span></th><td id='TP'>TP</td><td id='FN' >FN</td></tbody></tr>
-        <tbody><tr><th>True <span id="cat-2"></span></th><td id ='FP'>FP</td><td id='TN'>TN</td></tbody></tr>  
-    </table>
-
+    <table class="table table-bordered" id="confmx1">
+        <thead id="head"><tr>
+            <th>#</th> <th>#</th><th>#</th><th>#</th>
+            
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
    
     <table class="table table-striped" id="compareTable">
@@ -62,26 +57,6 @@
     var ratio = document.getElementById('ratio');
     var threshold = document.getElementById('threshold');
 
-    var cat_1 = document.getElementById('cat-1');
-    var cat_2 = document.getElementById('cat-2');
-    var cat_1_1 = document.getElementById('cat-1-1');
-    var cat_2_2 = document.getElementById('cat-2-2');
-
-    var cat_a = document.getElementById('cat-a');
-    var cat_b = document.getElementById('cat-b');
-    var cat_a_1 = document.getElementById('cat-a-1');
-    var cat_b_2 = document.getElementById('cat-b-2');
-
-    var tp = document.getElementById('TP');
-    var tn = document.getElementById('TN');
-    var fp = document.getElementById('FP');
-    var fn = document.getElementById('FN');
-
-    var tp1 = document.getElementById('TP1');
-    var tn1 = document.getElementById('TN1');
-    var fp1 = document.getElementById('FP1');
-    var fn1 = document.getElementById('FN1');
-    
     var row, cell;
     //document.getElementById("insert").innerHTML = x;
 
@@ -108,35 +83,30 @@
     //var compareMx = matrix_select.val();
     var alt_cat = $("#alt-cat");
     var new_cat = $("#new-cat");
+    //var mxtable = document.getElementById('confmx1');
+
     $("#compareBtn").click(function(){
         
         $.get('/get_compare_matrix_data', {'matrix_id': matrix_select.val(), 'alt_cat': alt_cat.val(), 'new_cat': new_cat.val() }).done(
             function(returnedData) {
                 console.log(matrix_select.val());
                 console.log(alt_cat.val());
-                console.log(returnedData[0]['matrix_classes']['FN']);
-                console.log(returnedData[1]['matrix_classes']['TP']);
+                
+            $("#confmx1 > tbody").empty();
+            var mxtable = $('#confmx1');
+            var row1, cell1;
+            for(var i=0; i<returnedData[0].length; i++){
+                row1 = $( '<tr />' );
+                mxtable.append( row1 );
+            for(var j=0; j<returnedData[0][i].length; j++){
+                cell1 = $('<td>'+returnedData[0][i][j]+'</td>')
+                //console.log(returnedData[0][i][j])
+                row1.append( cell1 );
+            }
+            };
+
             $("#compareTable > tbody").empty();
-            tp1.innerText = returnedData[0]['matrix_classes']['TP'];
-            tn1.innerText = returnedData[0]['matrix_classes']['TN'];
-            fp1.innerText = returnedData[0]['matrix_classes']['FP'];
-            fn1.innerText = returnedData[0]['matrix_classes']['FN'];
-
-            tp.innerText = returnedData[1]['matrix_classes']['TP'];
-            tn.innerText = returnedData[1]['matrix_classes']['TN'];
-            fp.innerText = returnedData[1]['matrix_classes']['FP'];
-            fn.innerText = returnedData[1]['matrix_classes']['FN'];
-
-            cat_a.innerText = returnedData[2][0];
-            cat_b.innerText = returnedData[2][1];
-            cat_a_1.innerText = returnedData[2][0];
-            cat_b_2.innerText = returnedData[2][1];
-
-            cat_1.innerText = returnedData[2][0];
-            cat_2.innerText = returnedData[2][2];
-            cat_1_1.innerText = returnedData[2][0];
-            cat_2_2.innerText = returnedData[2][2];
-
+           
             ratio.innerText = returnedData[4];
             threshold.innerText = returnedData[3];
             var table = $('#compareTable');
