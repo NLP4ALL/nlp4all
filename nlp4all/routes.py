@@ -553,6 +553,10 @@ def matrix(matrix_id):
         a_tnt_set = tnt_sets[0]
         tnt_nr = 0
 
+    train_tweet_ids = a_tnt_set[0].keys()
+    train_set_size = len(a_tnt_set[0].keys())
+    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+
     if form.validate_on_submit():
         if form.threshold.data:
             matrix.threshold = form.threshold.data
@@ -570,69 +574,86 @@ def matrix(matrix_id):
             tnt_list = list(range(0, len(tnt_sets)))
             tnt_nr = sample(tnt_list, 1)[0]
             a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
+            # train on the training set:
+            matrix.train_data = matrix.train_model(train_tweet_ids)
+            flag_modified(matrix, "train_data")
+
+            # make matrix data
+            matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+            matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
+            flag_modified(matrix, "matrix_data")
+
+            # filter according to the threshold
+            incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+            excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+
+            # count different occurences
+            class_list = [t[1]['class'] for t in incl_tweets]
+
+            key_list =[]
+            for i in matrix.categories:
+                key_list.append('True ' +str(i.name) )
+                key_list.append('False ' +str(i.name) )
+                
+            matrix_classes = dict.fromkeys(key_list, 0)
+            for i in set(class_list):
+                matrix_classes[i] = class_list.count(i)
+        
+            True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
+            False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+                # accuracy = sum(correct predictions)/sum(all matrix points)
+            accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+            
+            # summarise data
+            matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+            flag_modified(matrix, "data")
+            db.session.add(matrix)
+            db.session.merge(matrix)
+            db.session.flush()
+            db.session.commit()
             return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr)) 
+    
+        # train on the training set:
+        matrix.train_data = matrix.train_model(train_tweet_ids)
+        flag_modified(matrix, "train_data")
+
+        # make matrix data
+        matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
+        matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
+        flag_modified(matrix, "matrix_data")
+
+        # filter according to the threshold
+        incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+        excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
+
+        # count different occurences
+        class_list = [t[1]['class'] for t in incl_tweets]
+
+        key_list =[]
+        for i in matrix.categories:
+            key_list.append('True ' +str(i.name) )
+            key_list.append('False ' +str(i.name) )
+            
+        matrix_classes = dict.fromkeys(key_list, 0)
+        for i in set(class_list):
+            matrix_classes[i] = class_list.count(i)
+    
+        True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
+        False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+            # accuracy = sum(correct predictions)/sum(all matrix points)
+        accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+        
+        # summarise data
+        matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+        flag_modified(matrix, "data")
+        db.session.add(matrix)
+        db.session.merge(matrix)
+        db.session.flush()
+        db.session.commit()
         return redirect(url_for('matrix', matrix_id=matrix.id, tnt_nr= tnt_nr))
         
-    train_tweet_ids = a_tnt_set[0].keys()
-    train_set_size = len(a_tnt_set[0].keys())
-    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
-
-    # train on the training set:
-    matrix.train_data = matrix.train_model(train_tweet_ids)
-    flag_modified(matrix, "train_data")
-
-    # make matrix data
-    matrix_data = matrix.make_matrix_data(test_tweets, cat_names)
-    matrix.matrix_data = {i[0]: i[1] for i in matrix_data}
-    flag_modified(matrix, "matrix_data")
-
-    # filter according to the threshold
-    incl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
-    excl_tweets = sorted([t for t in matrix.matrix_data.items() if t[1]['certainty'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["certainty"], reverse=True)
-
-    # count different occurences
-    class_list = [t[1]['class'] for t in incl_tweets]
-
-    key_list =[]
-    for i in matrix.categories:
-        key_list.append('True ' +str(i.name) )
-        key_list.append('False ' +str(i.name) )
-        
-    matrix_classes = dict.fromkeys(key_list, 0)
-    for i in set(class_list):
-        matrix_classes[i] = class_list.count(i)
-   
-    True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
-    False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
-        # accuracy = sum(correct predictions)/sum(all matrix points)
-    accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-    
-    # summarise data
-    matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
-    flag_modified(matrix, "data")
-    db.session.add(matrix)
-    db.session.merge(matrix)
-    db.session.flush()
-    db.session.commit()
-
     # prepare data for matrix table
-    currentDataClass = [matrix.matrix_data[i].get('real_cat') for i in matrix.matrix_data.keys()]
-    predictedClass = [matrix.matrix_data[i].get('pred_cat') for i in matrix.matrix_data.keys()]
-    number_list= list(range(len(cat_names)))
-    for i in number_list:
-        for o in range(len(currentDataClass)):
-            if currentDataClass[o] == cat_names[i]:
-                currentDataClass[o] = i+1       
-    for i in number_list:
-        for p in range(len(predictedClass)):
-            if predictedClass[p] == cat_names[i]:
-                predictedClass[p] = i+1
-    classes = int(max(currentDataClass) - min(currentDataClass)) + 1 #find number of classes
-    counts = [[sum([(currentDataClass[i] == true_class) and (predictedClass[i] == pred_class) 
-                    for i in range(len(currentDataClass))])
-            for pred_class in range(1, classes + 1)] 
-            for true_class in range(1, classes + 1)]
-    [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+    counts = matrix.make_table_data(cat_names)
 
     return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, counts = counts)
   
@@ -706,6 +727,7 @@ def my_matrices():
 
         True_dict = dict(filter(lambda item: "True" in item[0], matrix_classes.items()))
         False_dict = dict(filter(lambda item: "False" in item[0], matrix_classes.items()))
+        
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         
@@ -768,7 +790,7 @@ def matrix_overview():
     matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user== userid).all()
     all_cats = TweetTagCategory.query.all()
     
-    matrix_info = {m.id : {"accuracy": m.data['accuracy'],"threshold" : m.threshold, "ratio" : m.ratio, "category 1" : m.categories[0].name, "category 2" : m.categories[1].name, "excluded tweets (%)" : round(m.data["nr_excl_tweets"]/m.data["nr_test_tweets"]*100,3) } for m in matrices}
+    matrix_info = {m.id : {"accuracy": m.data['accuracy'],"threshold" : m.threshold, "ratio" : m.ratio, "categories" : [', '.join([c.name for c in m.categories][0 : ])][0], "excluded tweets (%)" : round(m.data["nr_excl_tweets"]/m.data["nr_test_tweets"]*100,3) } for m in matrices}
     matrix_info = sorted([t for t in matrix_info.items()], key=lambda x:x[1]["accuracy"], reverse=True)
     matrix_info = [m[1] for m in matrix_info]
     form = ThresholdForm()
@@ -885,7 +907,6 @@ def aggregate_matrix():
                         for i in range(len(currentDataClass))])
                 for pred_class in range(1, classes + 1)] 
                 for true_class in range(1, classes + 1)]
-        #[counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
         counts_list.append(counts)
         
     # accuracy, excluded, included
@@ -934,6 +955,8 @@ def get_compare_matrix_data():
     new_cat = TweetTagCategory.query.get(int(new_cat))
     old_cats = [c.id for c in matrix.categories]
     cat_ids = [new_cat.id if x==alt_cat.id else x for x in old_cats]
+
+    # create a new matrix
     matrix2 = nlp4all.utils.add_matrix(cat_ids, ratio= matrix.ratio, userid='')
     matrix2.threshold = matrix.threshold
     flag_modified(matrix2, "threshold") 
