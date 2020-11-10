@@ -557,10 +557,12 @@ class ConfusionMatrix(db.Model):
         return (matrix_data)
 
     def make_table_data(self, cat_names):
+        # this function is a manual way to create confusion matrix data rows
         currentDataClass = [self.matrix_data[i].get('real_cat') for i in self.matrix_data.keys()]
         predictedClass = [self.matrix_data[i].get('pred_cat') for i in self.matrix_data.keys()]
         number_list= list(range(len(cat_names)))
-        for i in number_list:
+        # change cat names to numbers 1,2,...
+        for i in number_list: 
             for o in range(len(currentDataClass)):
                 if currentDataClass[o] == cat_names[i]:
                     currentDataClass[o] = i+1       
