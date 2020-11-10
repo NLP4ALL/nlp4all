@@ -993,8 +993,6 @@ def get_compare_matrix_data():
     old_names =[c.name for c in matrix.categories]
     counts1 = matrix.make_table_data(old_names)
     counts2 = matrix2.make_table_data(cat_names)
-    [counts1[i].insert(0, old_names[i]) for i in range(len(counts1))]
-    [counts2[i].insert(0, cat_names[i]) for i in range(len(counts2))]
     
     all_cat_names = [matrix.categories[0].name , matrix.categories[1].name , matrix2.categories[1].name]
     table_data = [[m.id, m.data['accuracy'], m.data['matrix_classes']['True '+m.categories[0].name],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]

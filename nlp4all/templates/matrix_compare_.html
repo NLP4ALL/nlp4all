@@ -30,8 +30,8 @@
 
    
     <table class="table table-bordered" id="confmx1">
-        <thead id="head"><tr>
-            <th>#</th> <th>#</th><th>#</th><th>#</th>
+        <thead id="head1"><tr>
+            <th>#</th> 
             
         </tr>
         </thead>
@@ -94,10 +94,13 @@
                 
             $("#confmx1 > tbody").empty();
             var mxtable = $('#confmx1');
+            var head1 = $('#head1');
+            head1.append($('<th>'+"matrix 1"+'</th>'));
             var row1, cell1;
             for(var i=0; i<returnedData[0].length; i++){
                 row1 = $( '<tr />' );
                 mxtable.append( row1 );
+                head1.append($('<th>'+returnedData[0][i][0]+'</th>'));
             for(var j=0; j<returnedData[0][i].length; j++){
                 cell1 = $('<td>'+returnedData[0][i][j]+'</td>')
                 //console.log(returnedData[0][i][j])
