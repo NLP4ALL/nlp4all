@@ -107,7 +107,7 @@
 
     //var compareMx = matrix_select.val();
     var alt_cat = $("#alt-cat");
-
+    var new_cat = $("#new-cat");
     $("#compareBtn").click(function(){
         
         $.get('/get_compare_matrix_data', {'matrix_id': matrix_select.val(), 'alt_cat': alt_cat.val(), 'new_cat': new_cat.val() }).done(
