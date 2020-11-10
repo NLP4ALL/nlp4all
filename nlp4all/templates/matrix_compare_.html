@@ -31,12 +31,21 @@
    
     <table class="table table-bordered" id="confmx1">
         <thead id="head1"><tr>
-            <th>#</th> 
+
             
         </tr>
         </thead>
         <tbody></tbody>
       </table>
+
+    <table class="table table-bordered" id="confmx2">
+        <thead id="head2"><tr>
+
+            
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
    
     <table class="table table-striped" id="compareTable">
@@ -93,6 +102,7 @@
                 console.log(alt_cat.val());
                 
             $("#confmx1 > tbody").empty();
+            $("#head1").empty();
             var mxtable = $('#confmx1');
             var head1 = $('#head1');
             head1.append($('<th>'+"matrix 1"+'</th>'));
@@ -106,7 +116,24 @@
                 //console.log(returnedData[0][i][j])
                 row1.append( cell1 );
             }
-            };
+
+        };
+            $("#confmx2 > tbody").empty();
+            $("#head2").empty();
+            var mxtable2 = $('#confmx2');
+            var head2 = $('#head2');
+            head2.append($('<th>'+"matrix 2"+'</th>'));
+            var row2, cell2;
+            for(var i=0; i<returnedData[1].length; i++){
+                row2 = $( '<tr />' );
+                mxtable2.append( row2 );
+                head2.append($('<th>'+returnedData[1][i][0]+'</th>'));
+            for(var j=0; j<returnedData[1][i].length; j++){
+                cell2 = $('<td>'+returnedData[1][i][j]+'</td>')
+                //console.log(returnedData[0][i][j])
+                row2.append( cell2 );
+            }
+        };
 
             $("#compareTable > tbody").empty();
            
