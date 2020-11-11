@@ -663,13 +663,13 @@ def matrix_tweets(matrix_id):
     cm = request.args.get('cm', type=str) 
     title = str("Tweets classified as " + cm)
     if cm in [c.name for c in matrix.categories]:
-        id_c = [{int(k):{'probability':v['probability']} for k, v in matrix.matrix_data.items() if v['real_cat'] == cm and v['probability'] >= matrix.threshold}][0]
+        id_c = [{int(k):{'probability':v['probability'], 'relative probability':v['relative probability']} for k, v in matrix.matrix_data.items() if v['real_cat'] == cm and v['probability'] >= matrix.threshold}][0]
         tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
     else:
-        id_c = [{int(k):{'probability':v['probability']} for k, v in matrix.matrix_data.items() if v['class'] == cm and v['probability'] >= matrix.threshold}][0]
+        id_c = [{int(k):{'probability':v['probability'], 'relative probability':v['relative probability']} for k, v in matrix.matrix_data.items() if v['class'] == cm and v['probability'] >= matrix.threshold}][0]
         tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()
     
-    cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'probability' : round(id_c[t.id]['probability'], 3)} for t in tweets}
+    cm_info = { t.id : {'text' : t.full_text, 'category': t.handle,'probability' : round(id_c[t.id]['probability'], 3),'relative probability' : round(id_c[t.id]['relative probability'], 3)} for t in tweets}
     cm_info = sorted([t for t in cm_info.items()], key=lambda x:x[1]["probability"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title=title)
@@ -715,7 +715,7 @@ def my_matrices():
 
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        matrix_classes = {} #dict.fromkeys(key_list, 0)
+        matrix_classes = {}
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
