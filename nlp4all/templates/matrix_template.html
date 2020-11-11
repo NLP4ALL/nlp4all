@@ -11,7 +11,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for l in link_list %}
+        {% for l in index_list %}
         <tr>
             {% for i in l %}
             <td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm={{ i[1] }}">{{ i[0] }}</a></td>
@@ -68,17 +68,3 @@
         
 
 
-<script>
-    $.get('/get_compare_matrix_data', {'matrix_id': {{ matrix.id }} }).done(
-            function(returnedData) {
-        var table = $('#myMatrix');
-        var row, cell;
-        for(var i=0; i<returnedData.length; i++){
-            row = $( '<tr />' );
-            table.append( row );
-        for(var j=0; j<returnedData[4][i].length; j++){
-            cell = $('<td>'+returnedData[4][i][j]+'</td>')
-            row.append( cell );
-        }
-        } //<td><a href="#">Test</a></td>
-</script>

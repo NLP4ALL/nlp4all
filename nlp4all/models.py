@@ -523,7 +523,7 @@ class ConfusionMatrix(db.Model):
     
     def make_matrix_data(self, test_tweets, cat_names):
         # classifies the tweets according to the calculated prediction probabilities
-        matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "certainty" : 0} for t in test_tweets}
+        matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "probability" : 0, 'relative probability': 0} for t in test_tweets}
         words = {t.id : '' for t in test_tweets}
 
         for a_tweet in test_tweets: 
@@ -537,19 +537,20 @@ class ConfusionMatrix(db.Model):
             # else select the biggest prob
             else: 
                 matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[0]) 
-                # certainty = difference in predictions
-                max_certainty =  (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[1])    
-                #max_certainty 
-                matrix_data[a_tweet.id]['certainty'] = round(max_certainty / sum(matrix_data[a_tweet.id]['predictions'].values()),3)
+                # bayesian p
+                matrix_data[a_tweet.id]['probability']  =  (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[1])    
+                # relative p compared to other cats 
+                max_prob = max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[1]
+                matrix_data[a_tweet.id]['relative probability'] = round(max_prob / sum(matrix_data[a_tweet.id]['predictions'].values()),3)
             # add the real category
             matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
 
-        matrix_data = sorted([t for t in matrix_data.items()], key=lambda x:x[1]["certainty"], reverse=True)# add matrix classes/quadrants
-        for t in matrix_data:
+        matrix_data = sorted([t for t in matrix_data.items()], key=lambda x:x[1]["probability"], reverse=True)# add matrix classes/quadrants
+        for t in matrix_data: # this is just for indexing tweets
             for c in self.categories:
                 #if correct prediction
                 if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == c.name:
-                    t[1]['class'] = 'True '+str(c.name)
+                    t[1]['class'] = 'Pred_'+str(c.name)+"_Real_"+t[1]['real_cat']
                 #if uncorrect prediction
                 elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == c.name:
                     t[1]['class'] = 'Pred_'+str(c.name)+"_Real_"+t[1]['real_cat'] # predicted 'no', although was 'yes'
@@ -577,7 +578,7 @@ class ConfusionMatrix(db.Model):
                         for i in range(len(currentDataClass))])
                 for pred_class in range(1, classes + 1)] 
                 for true_class in range(1, classes + 1)]
-        [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+        
         return counts
 
 
