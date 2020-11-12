@@ -4,17 +4,34 @@
     <h1>
         Annotate Tweets
     </h1>
+    
 
-
-
-    <p> {{ tweet.text }} </p>
-
+    
+    <form action="" method="post">
+        <select id="sel-cat"> 
+            <option value='0'>Select a category</option>
+            {% for c in categories %}
+            <option value={{ c.id }} >
+                        <span>{{ c.name }}</span>  
+            </option> 
+            {% endfor %}
+        </select>
+    </form>
+    <form action="" method="post"> <button id="cat-btn" type="submit" name="select-category" value="1">Select category</button></form>
+    
 
     <div class="content-section">
-                
+        {% set table_data = tweet_table %}
+        {% set table_name = "Tweets" %}
+        {% include "data_table.html" %}
+    </div>
     
-    {% include "annotation.html" %}
+
+    <div class="content-section">             
+        {% include "annotation_form.html" %}
     </div>
 
 
 {% endblock content %}
+
+

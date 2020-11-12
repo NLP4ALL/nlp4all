@@ -5,7 +5,7 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm, AnnotationForms
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, TweetAnnotation#, TweetAnnotationCategory
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
@@ -520,27 +520,58 @@ def reset_token(token):
 
 @app.route("/tweet_annotation", methods=['GET', 'POST'])
 def tweet_annotation():
-    form = AnnotationForm()
+    
     tweets = Tweet.query.all()
     a_tweet = sample(tweets,1)[0]
+    categories = TweetTagCategory.query.all()
+    tweet_table = {}
+    # if category in request_dict_keys
+    # else select category
+    if "cat" in request.args.to_dict().keys():
+        cat_id = request.args.get('cat', type=int)
+        tweets = Tweet.query.filter(Tweet.category==cat_id)
+        tweet_table = { t.id : {'tweet': t.full_text, 'category': t.handle, "id": t.id} for t in tweets}
+        tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
+        tweet_table = [t[1] for t in tweet_table]
+        
+    if request.method == "POST" and 'select-category' in request.form.to_dict():
+        myargs = request.form.to_dict()
+        cat_id = myargs['select-category']
+        tweets = Tweet.query.filter(Tweet.category==cat_id)
+        tweet_table = { t.id : {'tweet': t.full_text, 'category': t.handle, "id": t.id} for t in tweets}
+        tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
+        tweet_table = [t[1] for t in tweet_table]
+        return redirect(url_for('tweet_annotation', cat = cat_id))
 
+    form = AnnotationForm()
+    if form.validate_on_submit():
+        coordinates = [form.start.data, form.end.data]
+        text = form.text.data
+        category= a_tweet.category
+        tweet= request.form.get('tweetid')
+        flash(tweet)
+        annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=tweet, coordinates=coordinates)
+        db.session.add(annotation)
+        db.session.commit()
+        
+    
+    return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, form=form)
+
+@app.route('/get_cat_tweets', methods=['GET', 'POST'])
+def get_cat_tweets():
+    args = request.args.to_dict()
+    c_id = args['matrix_id']
+    category = TweetTagCategory.query.get(int(c_id))
+   # cat_tweets = 
+    form = AnnotationForm()
     if form.validate_on_submit():
         coordinates = [form.start.data, form.end.data]
         text = form.text.data
         category= a_tweet.category
         tweet= int(request.form.get('tweetid'))
-        #flash()
         annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=tweet, coordinates=coordinates)
         db.session.add(annotation)
         db.session.commit()
-        #flash('Annotation')
         return redirect(url_for('tweet_annotation'))
-    
-    #annotation = request.args.get('analysis', 0, type=int)
-    # to start with
-    ## view tweets
-    ## select one
-    ## annotate
-    ## save annotations
-    return render_template('tweet_annotate.html', tweet= a_tweet, form = form)
-
+   
+    return jsonify(tweets)

@@ -12,7 +12,7 @@
     </thead>
     <tbody>
         {% for datum in table_data %}
-        <tr>
+        <tr id={{ datum[2] }}>
             {% for data_point in datum.values() %}
             <td>{{ data_point }}</td>
             {% endfor %}
