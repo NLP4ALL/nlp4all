@@ -44,3 +44,4 @@ db_init_telma.py
 fig.html
 init_dbt.py
 telmatweets.json
+*.ipynb
