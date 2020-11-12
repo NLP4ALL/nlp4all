@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField, TextAreaField, SelectMultipleField, SelectField, RadioField, FormField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField, TextAreaField, SelectMultipleField, SelectField, RadioField, FormField, HiddenField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from nlp4all.models import User, Project 
 from wtforms.fields.core import Label
@@ -138,3 +138,10 @@ class ResetPasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
+
+class AnnotationForm(FlaskForm):
+    text = TextAreaField('selectedtext', validators=[DataRequired()])
+    start = IntegerField('start')
+    end = IntegerField('end')
+    hidden = HiddenField()
+    submit = SubmitField('save text')

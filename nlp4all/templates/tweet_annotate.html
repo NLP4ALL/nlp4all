@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+
+    <h1>
+        Annotate Tweets
+    </h1>
+
+
+
+    <p> {{ tweet.text }} </p>
+
+
+    <div class="content-section">
+                
+    
+    {% include "annotation.html" %}
+    </div>
+
+
+{% endblock content %}
