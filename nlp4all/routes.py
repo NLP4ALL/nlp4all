@@ -5,8 +5,8 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, TweetAnnotation#, TweetAnnotationCategory
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
@@ -516,3 +516,31 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+
+@app.route("/tweet_annotation", methods=['GET', 'POST'])
+def tweet_annotation():
+    form = AnnotationForm()
+    tweets = Tweet.query.all()
+    a_tweet = sample(tweets,1)[0]
+
+    if form.validate_on_submit():
+        coordinates = [form.start.data, form.end.data]
+        text = form.text.data
+        category= a_tweet.category
+        tweet= int(request.form.get('tweetid'))
+        #flash()
+        annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=tweet, coordinates=coordinates)
+        db.session.add(annotation)
+        db.session.commit()
+        #flash('Annotation')
+        return redirect(url_for('tweet_annotation'))
+    
+    #annotation = request.args.get('analysis', 0, type=int)
+    # to start with
+    ## view tweets
+    ## select one
+    ## annotate
+    ## save annotations
+    return render_template('tweet_annotate.html', tweet= a_tweet, form = form)
+
