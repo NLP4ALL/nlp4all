@@ -1,0 +1,147 @@
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<input type="button" value="Get selection" onmousedown="getSelText()"> 
+
+<div class="content-section">
+    <h2>Save Text</h1>
+        <form method="POST" action="" name= aform >
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                
+                <div name="selectedtext">
+                    {{ form.text.label(class="form-control-label") }}
+                    {% if form.text.errors %}
+                        {{ form.text(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.text.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.text(class="form-control form-control-lg") }}
+                    {% endif %}
+                    
+                </div>
+                <div class="form-group">
+                    {{ form.start.label(class="form-control-label") }}
+                    {% if form.start.errors %}
+                        {{ form.start(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.start.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.start(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.end.label(class="form-control-label") }}
+                    {% if form.end.errors %}
+                        {{ form.end(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.end.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.end(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                
+
+                <input type="hidden" name="tweetid" value="" id="t_id"/>
+                    
+            </fieldset>
+            <div class="form-group" >
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+
+    </div>
+
+
+<script>
+    $("#cat-btn").click(function() {
+        var cat_id = $("#sel-cat");
+        var cat_btn = $("#cat-btn");
+        var catid = cat_id.val()
+        console.log(catid);
+        
+        cat_btn.attr('value',catid);
+       
+    });
+    
+    function getSelText()
+      {
+          var txt = '';
+           if (window.getSelection)
+          {
+              txt = window.getSelection();
+              start = txt.anchorOffset;
+              end = txt.focusOffset;
+                   }
+          else if (document.getSelection)
+          {
+              txt = document.getSelection();
+              start = txt.anchorOffset;
+              end = txt.focusOffset;
+                  }
+          else if (document.selection)
+          {
+              txt = document.selection.createRange().text;
+              start = txt.anchorOffset;
+              end = txt.focusOffset;
+                  }
+          else return;
+        var t_id = $("#t_id");
+      document.aform.text.value =  txt;
+      document.aform.start.value =  start;
+      document.aform.end.value =  end;
+      }
+    
+      
+      //$('#Tweets').click(function(){
+      //  var td = $(this).cellIndex;
+       // console.log(td)
+       // });
+
+    //var hightlightedText = $('table#Tweets td.cellHighlight').text();
+    //console.log(hightlightedText);
+
+    highlight_row();
+    function highlight_row() {
+    var table = document.getElementById('Tweets');
+    var cells = table.getElementsByTagName('td');
+    for (var i = 0; i < cells.length; i++) {
+        // Take each cell
+        var cell = cells[i];
+        // do something on onclick event for cell
+        cell.onclick = function () {
+            // Get the row id where the cell exists
+            var rowId = this.parentNode.rowIndex;
+
+            var rowsNotSelected = table.getElementsByTagName('tr');
+            for (var row = 0; row < rowsNotSelected.length; row++) {
+                rowsNotSelected[row].style.backgroundColor = "";
+                rowsNotSelected[row].classList.remove('selected');
+            }
+            var rowSelected = table.getElementsByTagName('tr')[rowId];
+            var idCell = rowSelected.cells[2].innerHTML;
+            console.log(idCell)
+            //rowSelected.style.backgroundColor = "yellow";
+            //rowSelected.className += " selected";
+            //document.getElementById("myTable").rows[0].cells
+            //msg = 'The ID of the company is: ' + rowSelected.cells[0].innerHTML;
+            //msg = 'The cell value is: ' + this.innerHTML + String(idCell)
+            //alert(msg);
+        }
+    }
+
+}
+
+</script>
+
+
