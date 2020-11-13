@@ -23,6 +23,10 @@
 {% for tup in word_tuples %}
 <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%">{{ tup.0 }}</span>
 {% endfor %}
+<div class="tab-content">
+    {% include "annotation.html" %}
+    <input type="button" value="Get selection" onmousedown="getSelText()" id="btn" method="post" action =""> 
+</div>
 
 <style type="text/css">
 {% for tup in word_tuples %}
@@ -31,12 +35,15 @@
 }   
 {% endfor %}
 </style>
+
 </div>
 <style type="text/css">
 #chart {
     margin-left:auto;margin-right:auto;width:50%;height:45%;
 }
 </style>
+
+
 <div class="tab-content" id="searchTerms">
     <div class="content-section">
         <table class="table">
@@ -69,4 +76,9 @@
     </div> -->
 </div>
 
+
 {% endblock content %}
+
+
+
+

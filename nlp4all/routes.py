@@ -571,21 +571,25 @@ def annotation_summary():
     return render_template('annotation_summary.html', ann_table=ann_table)
 
 
-@app.route('/get_cat_tweets', methods=['GET', 'POST'])
-def get_cat_tweets():
+@app.route('/save_annotation', methods=['GET', 'POST'])
+def save_annotation():
     args = request.args.to_dict()
-    c_id = args['matrix_id']
-    category = TweetTagCategory.query.get(int(c_id))
-   # cat_tweets = 
-    form = AnnotationForm()
-    if form.validate_on_submit():
-        coordinates = [form.start.data, form.end.data]
-        text = form.text.data
-        category= a_tweet.category
-        tweet= int(request.form.get('tweetid'))
-        annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=tweet, coordinates=coordinates)
-        db.session.add(annotation)
-        db.session.commit()
-        return redirect(url_for('tweet_annotation'))
+    #keylist= list(args.keys())
+    #arg=args[0].values()
+    t_id = int(args['tweet_id'])
+    tweet = Tweet.query.get(t_id)
+    text = str(args['text'])
+    
+    #txt in tweet.full_text
+    start= tweet.full_text.find(text)
+    if start < 0:
+        start=0
+    end = start + len(text)
+    coordinates = [start, end]
+    category= tweet.category
+    words = text.split()
+    annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=t_id, coordinates=coordinates, words=words)
+    db.session.add(annotation)
+    db.session.commit()
    
-    return jsonify(tweets)
+    return jsonify(words, t_id)
