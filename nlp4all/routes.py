@@ -519,6 +519,7 @@ def reset_token(token):
 
 
 @app.route("/tweet_annotation", methods=['GET', 'POST'])
+@login_required
 def tweet_annotation():
     
     tweets = Tweet.query.all()
@@ -559,6 +560,16 @@ def tweet_annotation():
         db.session.commit()
         
     return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, form=form)
+
+@app.route("/annotation_summary", methods=['GET', 'POST'])
+@login_required
+def annotation_summary():
+    anns = TweetAnnotation.query.all()
+    ann_table =  {t.id : {'annotation': t.text, 'category': Tweet.query.get(t.tweet).handle, "tweet_id": t.tweet}for t in anns} 
+    ann_table = sorted([t for t in ann_table.items()], key=lambda x:x[1]["tweet_id"], reverse=True)
+    ann_table = [t[1] for t in ann_table]
+    return render_template('annotation_summary.html', ann_table=ann_table)
+
 
 @app.route('/get_cat_tweets', methods=['GET', 'POST'])
 def get_cat_tweets():
