@@ -545,16 +545,19 @@ def tweet_annotation():
 
     form = AnnotationForm()
     if form.validate_on_submit():
-        coordinates = [form.start.data, form.end.data]
+        if form.start.data > form.end.data:
+            coordinates = [form.end.data, form.start.data]
+        else:
+            coordinates = [form.start.data, form.end.data]
         text = form.text.data
         category= a_tweet.category
         tweet= request.form.get('tweetid')
-        flash(tweet)
-        annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=tweet, coordinates=coordinates)
+        words = text.split()
+        #flash(tweet)
+        annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=tweet, coordinates=coordinates, words=words)
         db.session.add(annotation)
         db.session.commit()
         
-    
     return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, form=form)
 
 @app.route('/get_cat_tweets', methods=['GET', 'POST'])

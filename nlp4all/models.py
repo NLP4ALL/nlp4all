@@ -383,8 +383,7 @@ class Tweet(db.Model):
     url = db.Column(db.String(200), unique=True)
     text = db.Column(db.String(300))
     annotations = db.relationship('TweetAnnotation') 
-    #annotation_category = db.Column(db.Integer, db.ForeignKey('tweet_annotation_category.id'))
-    
+        
 class TweetTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -444,24 +443,12 @@ class BayesianAnalysis(db.Model):
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
 
-#class TweetAnnotationCategory(db.Model):
-#    id = db.Column(db.Integer, primary_key=True)
-#    name = db.Column(db.String(50))
-#    tweets = db.relationship('Tweet')
-#    #category = db.Column(db.Integer, db.ForeignKey('tweet_annotation_category.id'))
-#    annotations = db.relationship('TweetAnnotation')
-#    #projects = db.relationship('Project', secondary='project_categories')
-
 class TweetAnnotation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
-    #category = db.relationship('TweetTagCategory', secondary='annotation_category')
     category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
-    #analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE"))
     tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
     words = db.Column(JSON)
     text = db.Column(db.String(50))
     coordinates = db.Column(JSON)
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-#categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
-#    tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix')
