@@ -568,19 +568,24 @@ def annotation_summary():
     ann_table =  {t.id : {'annotation': t.text, 'category': Tweet.query.get(t.tweet).handle, "tweet_id": t.tweet}for t in anns} 
     ann_table = sorted([t for t in ann_table.items()], key=lambda x:x[1]["tweet_id"], reverse=True)
     ann_table = [t[1] for t in ann_table]
+
+    if request.method == "POST" and 'delete' in request.form.to_dict():
+        ann_text = request.form.to_dict()['delete']
+        ann = TweetAnnotation.query.filter(TweetAnnotation.text==ann_text).first()
+        flash("Annotation deleted", "success")
+        db.session.delete(ann)
+        db.session.commit()
+        return redirect(url_for('annotation_summary'))
     return render_template('annotation_summary.html', ann_table=ann_table)
 
 
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():
     args = request.args.to_dict()
-    #keylist= list(args.keys())
-    #arg=args[0].values()
     t_id = int(args['tweet_id'])
     tweet = Tweet.query.get(t_id)
     text = str(args['text'])
     
-    #txt in tweet.full_text
     start= tweet.full_text.find(text)
     if start < 0:
         start=0
