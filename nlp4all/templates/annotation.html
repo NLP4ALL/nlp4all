@@ -17,31 +17,39 @@
     //location.href = map[document.getElementById("sel-cat").value])
    
     function getSelText()
+    
       {
           var txt = '';
            if (window.getSelection)
           {
-              txt = window.getSelection();
-              start = txt.anchorOffset;
-              end = txt.focusOffset;
+              txt = window.getSelection().toString();
+              
                    }
           else if (document.getSelection)
           {
-              txt = document.getSelection();
-              start = txt.anchorOffset;
-              end = txt.focusOffset;
+              txt = window.getSelection().toString();
+              
                   }
           else if (document.selection)
           {
-              txt = document.selection.createRange().text;
-              start = txt.anchorOffset;
-              end = txt.focusOffset;
+              txt = window.getSelection().toString();
+             
                   }
           else return;
-      document.aform.text.value =  txt;
-      document.aform.start.value =  start;
-      document.aform.end.value =  end;
-      }
+        console.log(txt);
+        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': txt} ).done(
+            function(returnedData) {
+                console.log(returnedData)
+            });
+      
+      };
+
+    //$("#btn").click(function(){
+    //    $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': txt}).done(
+    //        function(returnedData) {
+    //            console.log(returnedData)
+    //        })
+    //        });
 
 </script>
 
