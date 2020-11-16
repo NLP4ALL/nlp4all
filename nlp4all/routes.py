@@ -544,6 +544,15 @@ def tweet_annotation():
         tweet_table = [t[1] for t in tweet_table]
         return redirect(url_for('tweet_annotation', cat = cat_id))
 
+    #if request.method == "POST" and 'add-ann' in request.form.to_dict():
+    #    myargs = request.form.to_dict()
+    #    cat_id = myargs['select-category']
+    #    tweets = Tweet.query.filter(Tweet.category==cat_id)
+    #    tweet_table = { t.id : {'tweet': t.full_text, 'category': t.handle, "id": t.id} for t in tweets}
+    #    tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
+    #    tweet_table = [t[1] for t in tweet_table]
+    #    return redirect(url_for('tweet_annotation', cat = cat_id))
+
     form = AnnotationForm()
     if form.validate_on_submit():
         if form.start.data > form.end.data:
@@ -596,5 +605,6 @@ def save_annotation():
     annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=t_id, coordinates=coordinates, words=words)
     db.session.add(annotation)
     db.session.commit()
+    #flash('Your annotation has been saved', 'success')
    
-    return jsonify(words, t_id)
+    return jsonify(words)

@@ -1,7 +1,7 @@
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
-<input type="button" value="Get selection" onmousedown="getSelText()"> 
+
 
 <div class="content-section">
     <h2>Save Text</h1>
@@ -84,6 +84,7 @@
     //console.log(hightlightedText);
 
     highlight_row();
+    var tweettxt = $("#tweettxt");
     function highlight_row() {
     var table = document.getElementById('Tweets');
     var cells = table.getElementsByTagName('td');
@@ -104,9 +105,10 @@
             }
             var rowSelected = table.getElementsByTagName('tr')[rowId];
             var idCell = rowSelected.cells[2].innerHTML;
-            console.log(idCell)
+            console.log(idCell);
             cat_btn.attr('value',idCell);
             t_id.attr('value',idCell);
+            //tweet_id = idCell
             //rowSelected.style.backgroundColor = "yellow";
             //rowSelected.className += " selected";
             //document.getElementById("myTable").rows[0].cells
@@ -132,26 +134,40 @@
               txt = window.getSelection();
               start = txt.anchorOffset;
               end = txt.focusOffset;
+              tweettxt.attr('value',txt);
+              
                    }
           else if (document.getSelection)
           {
               txt = document.getSelection();
               start = txt.anchorOffset;
               end = txt.focusOffset;
+              tweettxt.attr('value',txt);
+              
                   }
           else if (document.selection)
           {
               txt = document.selection.createRange().text;
               start = txt.anchorOffset;
               end = txt.focusOffset;
+              tweettxt.attr('value',txt);
+             
                   }
           else return;
         var t_id = $("#t_id");
-      document.aform.text.value =  txt;
-      document.aform.start.value =  start;
-      document.aform.end.value =  end;
+        //= $("#tweettxt").val();
+        var tweet_id = t_id.val()
+        console.log(start, end, tweet_id, tweettxt.val())
+      //document.aform.text.value =  txt;
+      //document.aform.start.value =  start;
+      //document.aform.end.value =  end;
       //document.aform.hidden.value = idCell;
+     
       }
+      $.get('/save_annotation', {'tweet_id': tweet_id, 'text': tweettxt.val(), 'start':start, 'end':end} ).done(
+            function(returnedData) {
+                console.log(returnedData)
+            });
       }
 
 </script>

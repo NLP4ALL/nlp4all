@@ -17,22 +17,21 @@
             </option> 
             {% endfor %}
         </select>
-    </form>
-    <form action="" method="post"> <button id="cat-btn" type="submit" name="select-category" value="1">Select category</button></form>
-    
+     <button id="cat-btn" type="submit" name="select-category" value="1">Select category</button></form>
+    <input id="tweettxt" type="hidden" value="">
 
     <div class="content-section">
         {% set table_data = tweet_table %}
         {% set table_name = "Tweets" %}
-        {% include "data_table.html" %}
+        {% include "data_table_add.html" %}
     </div>
     
-
+   
     <div class="content-section">             
         {% include "annotation_form.html" %}
     </div>
 
-
+   
 {% endblock content %}
 
 
