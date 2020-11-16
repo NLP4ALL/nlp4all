@@ -13,6 +13,7 @@ import datetime
 import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
+import re
 
 
 @app.route("/")
@@ -595,13 +596,17 @@ def save_annotation():
     tweet = Tweet.query.get(t_id)
     text = str(args['text'])
     
-    start= tweet.full_text.find(text)
-    if start < 0:
-        start=0
-    end = start + len(text)
-    coordinates = [start, end]
+    if 'start' in args:
+        txtstart = min(int(args['start']), int(args['end']))
+        txtend = max(int(args['start']), int(args['end']))
+    else:
+        txtstart= tweet.full_text.find(text)
+        if txtstart < 0:
+            txtstart=0
+        txtend = txtstart + len(text)
+    coordinates = [txtstart, txtend]
     category= tweet.category
-    words = text.split()
+    words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
     annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=t_id, coordinates=coordinates, words=words)
     db.session.add(annotation)
     db.session.commit()
