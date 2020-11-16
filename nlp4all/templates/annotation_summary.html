@@ -2,6 +2,9 @@
 {% block content %}
 <h1>Annotation overview</h1>
 
+<p> <a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}">Add more annotations</a></p>
+
+
 <div class="content-section">
     <h3>Your annotations</h3>
     {% set table_data = ann_table %}

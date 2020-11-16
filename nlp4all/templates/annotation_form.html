@@ -2,65 +2,7 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
 
-
-<div class="content-section">
-    <h2>Save Text</h1>
-        <form method="POST" action="" name= aform >
-            {{ form.hidden_tag() }}
-            <fieldset class="form-group">
-                
-                <div name="selectedtext">
-                    {{ form.text.label(class="form-control-label") }}
-                    {% if form.text.errors %}
-                        {{ form.text(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.text.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.text(class="form-control form-control-lg") }}
-                    {% endif %}
-                    
-                </div>
-                <div class="form-group">
-                    {{ form.start.label(class="form-control-label") }}
-                    {% if form.start.errors %}
-                        {{ form.start(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.start.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.start(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    {{ form.end.label(class="form-control-label") }}
-                    {% if form.end.errors %}
-                        {{ form.end(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.end.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.end(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                
-
-                <input type="hidden" name="tweetid" value="" id="t_id"/>
-                    
-            </fieldset>
-            <div class="form-group" >
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
-        </form>
-
-    </div>
+<input type="hidden" name="tweetid" value="" id="t_id"/>
 
 
 <script>
@@ -157,7 +99,7 @@
         var t_id = $("#t_id");
         //= $("#tweettxt").val();
         var tweet_id = t_id.val()
-        console.log(start, end, tweet_id, tweettxt.val())
+        //console.log(start, end, tweet_id, tweettxt.val())
       //document.aform.text.value =  txt;
       //document.aform.start.value =  start;
       //document.aform.end.value =  end;
