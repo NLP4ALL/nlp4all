@@ -4,9 +4,10 @@
     <h1>
         Annotate Tweets
     </h1>
+    <p> <a class="nav-item nav-link" href="{{ url_for('annotation_summary') }}">See your annotations</a></p>
+
     <p>Here you can highlight parts of tweets that you regard characteristic for the chosen political party.</p>
     
-
     
     <form action="" method="post">
         <select id="sel-cat"> 
@@ -27,9 +28,9 @@
     </div>
     
    
-    <div class="content-section">             
+             
         {% include "annotation_form.html" %}
-    </div>
+  
 
    
 {% endblock content %}
