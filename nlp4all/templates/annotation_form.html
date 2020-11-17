@@ -16,18 +16,10 @@
        
     });
     
-      
-      //$('#Tweets').click(function(){
-      //  var td = $(this).cellIndex;
-       // console.log(td)
-       // });
 
-    //var hightlightedText = $('table#Tweets td.cellHighlight').text();
-    //console.log(hightlightedText);
-
-    highlight_row();
+    annotate_tweets();
     var tweettxt = $("#tweettxt");
-    function highlight_row() {
+    function annotate_tweets() {
     var table = document.getElementById('Tweets');
     var cells = table.getElementsByTagName('td');
     var cat_btn = $("#cat-btn");
@@ -50,13 +42,7 @@
             console.log(idCell);
             cat_btn.attr('value',idCell);
             t_id.attr('value',idCell);
-            //tweet_id = idCell
-            //rowSelected.style.backgroundColor = "yellow";
-            //rowSelected.className += " selected";
-            //document.getElementById("myTable").rows[0].cells
-            //msg = 'The ID of the company is: ' + rowSelected.cells[0].innerHTML;
-            //msg = 'The cell value is: ' + this.innerHTML + String(idCell)
-            //alert(msg);
+            
             }
         }
 
@@ -97,13 +83,8 @@
                   }
           else return;
         var t_id = $("#t_id");
-        //= $("#tweettxt").val();
         var tweet_id = t_id.val()
         //console.log(start, end, tweet_id, tweettxt.val())
-      //document.aform.text.value =  txt;
-      //document.aform.start.value =  start;
-      //document.aform.end.value =  end;
-      //document.aform.hidden.value = idCell;
      
       }
       $.get('/save_annotation', {'tweet_id': tweet_id, 'text': tweettxt.val(), 'start':start, 'end':end} ).done(

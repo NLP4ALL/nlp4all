@@ -2,6 +2,26 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
 
+
+<form name="annform" id="annform">
+    <input type="button" value="Get selected words" onmousedown="getSelText()" id="btn" method="post" action ="">
+    <br> 
+    <textarea id="anntext" name="anntext" rows="1" cols="40"></textarea>
+    <br>
+    <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
+    this.form.color[1].style.display=(val=='others')?'block':'none'"> 
+        <option>Tag your annotation</option>  
+        {% for c in categories %}
+        <option value={{ c.id }}>{{ c.name }}</option>
+        {% endfor %}
+        {% for t in analysis.annotation_tags %}
+        <option value={{ t }}>{{ t }}</option>
+        {% endfor %}
+        <option value="others">other</option>
+    </select> 
+    <input type="button" id="submitbtn" value="Save annotation">
+</form>
+
 <script>
     $("#cat-btn").click(function() {
         var cat_id = $("#sel-cat");
@@ -12,10 +32,10 @@
         cat_btn.attr('value',catid);
        
     });
-    
-    //document.getElementById('SubmitBtn').addEventListener('click', () =>
-    //location.href = map[document.getElementById("sel-cat").value])
-   
+    // this requires that the tweet is required in the top template
+    var annotation = $("#anntext");
+    var submitbtn = $("#submitbtn");
+    var atag;
     function getSelText()
     
       {
@@ -37,12 +57,45 @@
                   }
           else return;
         console.log(txt);
-        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': txt} ).done(
-            function(returnedData) {
-                console.log(returnedData)
-            });
-      
+        document.annform.anntext.value =  txt;
+        console.log(document.annform.anntext.value);
+        
+        
       };
+      
+    var sel = document.getElementById('atag');
+    sel.onchange=function() {
+        
+            var val = this.options[this.selectedIndex].value;
+            if (val == 'others') {
+                var newOption = prompt('Your own tag','');
+            if (newOption) {
+                this.options[this.options.length-1].text = newOption;
+                this.options[this.options.length-1].value = newOption;
+                this.options[this.options.length] = new Option('other','other');
+                }
+                }
+            atag = sel.options[sel.selectedIndex].value
+            };
+    
+    submitbtn.click(function()  {
+        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag } ).done(
+            function(returnedData) {
+                console.log(returnedData);
+                
+                //
+            });
+
+            //$("#anntext").removeAttr('value');
+            //document.annform.anntext.value =  '';
+            $("#annform").trigger("reset");
+            //document.annform.ifother.value =  '';
+            //console.log($("#anntext").val())
+            //txt.empty();
+            //$('textarea').empty();
+
+    });
+
 
 
 </script>
