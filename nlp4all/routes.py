@@ -14,7 +14,7 @@ import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
 import re
-
+#from flask_paginate import Pagination, get_page_args, paginate
 
 @app.route("/")
 @app.route("/home")
@@ -518,11 +518,10 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
-
+# this is not used rn
 @app.route("/tweet_annotation", methods=['GET', 'POST'])
 @login_required
 def tweet_annotation():
-    
     tweets = Tweet.query.all()
     a_tweet = sample(tweets,1)[0]
     categories = TweetTagCategory.query.all()
@@ -544,8 +543,6 @@ def tweet_annotation():
         tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
         tweet_table = [t[1] for t in tweet_table]
         return redirect(url_for('tweet_annotation', cat = cat_id))
-
-    
         
     return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories)
 
@@ -566,6 +563,55 @@ def annotation_summary():
         return redirect(url_for('annotation_summary'))
     return render_template('annotation_summary.html', ann_table=ann_table)
 
+@app.route("/annotations", methods=['GET', 'POST'])
+@login_required
+def annotations():
+    page = request.args.get('page', 1, type=int)
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project)
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()#.paginate(
+        #page, 3, False)
+    a_list = set([a.tweet for a in anns])
+    tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
+
+    a_dict = {t.id: {} for t in tweets}
+
+    # get all tags per tweet
+    for i in a_list:
+        tweet = Tweet.query.filter(Tweet.id==i).first()
+        annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==i).all()
+        a_dict[i]['tweet'] = tweet.full_text
+        a_dict[i]['annotations'] = [a.text for a in annotations]
+        a_dict[i]['tags'] = [a.annotation_tag for a in annotations]
+    ann_table = sorted([t for t in a_dict.items()], key=lambda x:x[1]["tweet"], reverse=True)
+    ann_table = [t[1] for t in ann_table]
+    #a_dict = a_dict.paginate(page, 3, False)
+
+    if request.method == "POST" and 'delete' in request.form.to_dict():
+        ann_text = request.form.to_dict()['delete']
+        ann = TweetAnnotation.query.filter(TweetAnnotation.text==ann_text).first()
+        flash("Annotation deleted", "success")
+        db.session.delete(ann)
+        db.session.commit()
+        return redirect(url_for('annotations'))
+    #try:
+    ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(TweetAnnotation.id.desc()).paginate(page, per_page=1)
+    next_url = url_for('annotations', page=ann_list.next_num) \
+        if ann_list.has_next else None
+    prev_url = url_for('annotations', page=ann_list.prev_num) \
+        if ann_list.has_prev else None
+    #except OperationalError:
+    #    flash("No annotations in the database.")
+    #    ann_list = ['fail']
+    if "tweet_id" in request.args.to_dict():
+        tweet_id = request.args.get('tweet_id', type=int)
+        this_tweet= Tweet.query.get(tweet_id)
+        these_annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet_id).all()
+    else:
+        this_tweet = tweets[0]
+        these_annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweets[0].id).all()
+    return render_template('annotations.html',  tweet=this_tweet, ann=these_annotations, anns=ann_list.items, next_url=next_url, prev_url=prev_url)
 
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():
