@@ -553,7 +553,7 @@ def tweet_annotation():
 @login_required
 def annotation_summary():
     anns = TweetAnnotation.query.all()
-    ann_table =  {t.id : {'annotation': t.text, 'category': Tweet.query.get(t.tweet).handle, "tweet_id": t.tweet}for t in anns} 
+    ann_table =  {t.id : {'annotation': t.text, 'category': Tweet.query.get(t.tweet).handle, "tweet_id": t.tweet, "tag":t.annotation_tag}for t in anns} 
     ann_table = sorted([t for t in ann_table.items()], key=lambda x:x[1]["tweet_id"], reverse=True)
     ann_table = [t[1] for t in ann_table]
 
