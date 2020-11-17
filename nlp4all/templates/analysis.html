@@ -41,8 +41,10 @@
 </style>
 
 <div class="tab-content">
+    <div class="content-section">
+    {% set categories = categories %}
     {% include "annotation.html" %}
-    <input type="button" value="Save highlighted words" onmousedown="getSelText()" id="btn" method="post" action =""> 
+    </div>
 </div>
 
 <div class="tab-content" id="searchTerms">

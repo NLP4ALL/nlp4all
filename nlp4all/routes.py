@@ -74,7 +74,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets )
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={} )
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -309,7 +309,7 @@ def analysis():
         db.session.commit()
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
-    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
+    return render_template('analysis.html', analysis=analysis, categories=categories, tweet = the_tweet, form = form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -573,21 +573,30 @@ def save_annotation():
     t_id = int(args['tweet_id'])
     tweet = Tweet.query.get(t_id)
     text = str(args['text'])
+    atag = str(args['atag'])
+    
+    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    analysis.updated_a_tags(atag, tweet)
+    flag_modified(analysis, "annotation_tags") 
+    db.session.add(analysis)
+    db.session.merge(analysis)
+    db.session.flush()
+    db.session.commit()
     
     if 'start' in args:
         txtstart = min(int(args['start']), int(args['end']))
         txtend = max(int(args['start']), int(args['end']))
     else:
-        txtstart= tweet.full_text.find(text)
+        txtstart= tweet.full_text.find(text) # make sure this is the full text in the final version!
         if txtstart < 0:
             txtstart=0
         txtend = txtstart + len(text)
     coordinates = [txtstart, txtend]
-    category= tweet.category
+    
     words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
-    annotation = TweetAnnotation(user = current_user.id, text=text, category=category, tweet=t_id, coordinates=coordinates, words=words)
+    annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag)
     db.session.add(annotation)
     db.session.commit()
-    #flash('Your annotation has been saved', 'success')
    
     return jsonify(words)
