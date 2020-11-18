@@ -570,8 +570,7 @@ def annotations():
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()#.paginate(
-        #page, 3, False)
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
 
@@ -586,7 +585,13 @@ def annotations():
         a_dict[i]['tags'] = [a.annotation_tag for a in annotations]
     ann_table = sorted([t for t in a_dict.items()], key=lambda x:x[1]["tweet"], reverse=True)
     ann_table = [t[1] for t in ann_table]
-    #a_dict = a_dict.paginate(page, 3, False)
+    
+    word_tuples=[]
+    ann_tags = list(analysis.annotation_tags.keys())
+    for a_tweet in tweets:
+        mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
+        my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags)
+        word_tuples.append(my_tuples)
 
     if request.method == "POST" and 'delete' in request.form.to_dict():
         ann_text = request.form.to_dict()['delete']
@@ -594,26 +599,17 @@ def annotations():
         flash("Annotation deleted", "success")
         db.session.delete(ann)
         db.session.commit()
-        return redirect(url_for('annotations'))
+        return redirect(url_for('annotations/<analysis_id>', analysis_id=analysis_id))
     
-    ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(TweetAnnotation.id.desc()).paginate(page, per_page=1)
-    data = {}
-    #for t in ann_list:
-    #    data[t]['word_tuples'] = nlp4all.utils.create_css_info([word-list], the_tweet.full_text, categories)
-
-    next_url = url_for('annotations', page=ann_list.next_num) \
+    ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
+    
+    next_url = url_for('annotations', analysis_id=analysis_id, page=ann_list.next_num) \
         if ann_list.has_next else None
-    prev_url = url_for('annotations', page=ann_list.prev_num) \
+    prev_url = url_for('annotations', analysis_id=analysis_id,page=ann_list.prev_num) \
         if ann_list.has_prev else None
     
-    if "tweet_id" in request.args.to_dict():
-        tweet_id = request.args.get('tweet_id', type=int)
-        this_tweet= Tweet.query.get(tweet_id)
-        these_annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet_id).all()
-    else:
-        this_tweet = tweets[0]
-        these_annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweets[0].id).all()
-    return render_template('annotations.html',  tweet=this_tweet, ann=these_annotations, anns=ann_list.items, next_url=next_url, prev_url=prev_url)
+    
+    return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page)
 
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():
@@ -622,8 +618,7 @@ def save_annotation():
     tweet = Tweet.query.get(t_id)
     text = str(args['text'])
     atag = str(args['atag'])
-    
-    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis_id = int(args['analysis'])
     analysis = BayesianAnalysis.query.get(analysis_id)
     analysis.updated_a_tags(atag, tweet)
     flag_modified(analysis, "annotation_tags") 
