@@ -10,21 +10,25 @@
       
     {% for ann in anns %}
         Tweet:<br>
+        <p id="tweettxt">
         {{ ann.full_text }}
+        </p>
         <div class="content-section">
         Annotations:
             <div class="content-section">
-            <table>
+            <table id="ann-list">
                 <tr>{% for a in ann.annotations %} <td>{{ a.text }}</td> {% endfor %}</tr>
             </table>
+            
             </div>
         Tags:
             <div class="content-section">
-            <table>
+            <table id="tag-list">
                 <tr>{% for a in ann.annotations %} <td>{{ a.annotation_tag }}</td> {% endfor %}</tr>
             </table>
             </div>
     {% endfor %}
+    {% include "annotations_colors.html" %}
 </div>
 
     <div class="content-section">

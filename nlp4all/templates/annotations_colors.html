@@ -1,0 +1,70 @@
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+
+<input type="hidden" name="tweetid" value="" id="t_id"/>
+<style>
+    input[type=text]{
+  width:200px;
+  padding:8px 10px;
+    }
+
+    span em {
+    background:#ff6;
+    font-weight:bold;
+    font-style:normal;
+    }
+    .highlight {
+  background-color: yellow;
+}
+</style>
+
+<script>
+    $("#cat-btn").click(function() {
+        var cat_id = $("#sel-cat");
+        var cat_btn = $("#cat-btn");
+        var catid = cat_id.val()
+        console.log(catid);
+        
+        cat_btn.attr('value',catid);
+       
+    });
+   // for (let row of mytab1.rows) 
+//{
+  //  for(let cell of row.cells) 
+   // {
+     //  let val = cell.innerText;
+    function highlight(celltxt) {
+            var inputText = document.getElementById("tweettxt")//$("#tweettxt"); // text you want to find
+            console.log(inputText)
+            var innerHTML = inputText.innerHTML;
+            console.log(innerHTML.indexOf(celltxt))
+            var index = innerHTML.indexOf(celltxt);
+            console.log(index)
+            if (index >= 0) { 
+            innerHTML = innerHTML.substring(0,index) + "<span class='highlight'>" + innerHTML.substring(index,index+celltxt.length) + "</span>" + innerHTML.substring(index + celltxt.length);
+            console.log(innerHTML)
+            inputText.innerHTML = innerHTML;
+            }
+        };
+
+    $(document).ready(function () {
+        var table = document.getElementById("ann-list");
+        
+        for (let row of table.rows) 
+        {
+        for(let cell of row.cells) 
+        { 
+        //for (var i = 0, cell; cell = table.cells[i]; i++) {
+        var celltxt = cell
+        console.log('celltxt:'+ celltxt.innerHTML);
+        var text = celltxt.innerHTML
+        console.log(text)
+        highlight(text)
+        }
+    }
+    });
+
+</script>
+
+
