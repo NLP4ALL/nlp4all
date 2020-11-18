@@ -2,7 +2,8 @@
 {% block content %}
 <h1>Annotation overview</h1>
 
-<p> <a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}">Add more annotations</a></p>
+<p> <span><a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}">Add more annotations</a></span>
+    <span><a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis_id={{ analysis.id }}">Back to analysis</a></span></p>
 
 
 <div class="content-section">
@@ -13,6 +14,7 @@
         <p id="tweettxt">
         {{ ann.full_text }}
         </p>
+        {% include "annotations_colors.html" %}
         <div class="content-section">
         Annotations:
             <div class="content-section">
@@ -28,7 +30,7 @@
             </table>
             </div>
     {% endfor %}
-    {% include "annotations_colors.html" %}
+   
 </div>
 
     <div class="content-section">

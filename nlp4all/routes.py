@@ -567,7 +567,7 @@ def annotation_summary():
 @login_required
 def annotations():
     page = request.args.get('page', 1, type=int)
-    analysis_id = request.args.get('analysis', 1, type=int)
+    analysis_id = request.args.to_dict()['analysis_id']#, 0, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
     anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
@@ -609,7 +609,7 @@ def annotations():
         if ann_list.has_prev else None
     
     
-    return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page)
+    return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page, analysis=analysis)
 
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():
