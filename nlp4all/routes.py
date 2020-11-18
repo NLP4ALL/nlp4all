@@ -595,15 +595,17 @@ def annotations():
         db.session.delete(ann)
         db.session.commit()
         return redirect(url_for('annotations'))
-    #try:
+    
     ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(TweetAnnotation.id.desc()).paginate(page, per_page=1)
+    data = {}
+    #for t in ann_list:
+    #    data[t]['word_tuples'] = nlp4all.utils.create_css_info([word-list], the_tweet.full_text, categories)
+
     next_url = url_for('annotations', page=ann_list.next_num) \
         if ann_list.has_next else None
     prev_url = url_for('annotations', page=ann_list.prev_num) \
         if ann_list.has_prev else None
-    #except OperationalError:
-    #    flash("No annotations in the database.")
-    #    ann_list = ['fail']
+    
     if "tweet_id" in request.args.to_dict():
         tweet_id = request.args.get('tweet_id', type=int)
         this_tweet= Tweet.query.get(tweet_id)
