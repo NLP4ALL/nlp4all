@@ -274,14 +274,15 @@ def ann_create_css_info(classifications, text, list_of_categories):
     category_color_dict = ann_assign_colors(list_of_categories)
     tups = []
     for word in text.split():
-        clean_word = re.sub(r'[^\w\s]','',word.lower())
+        if not word.startswith(("#","http","@")):
+                clean_word = re.sub(r'[^\w\s]','',word.lower())
         if clean_word in classifications and sum(classifications[clean_word].values())>0:
-            # @todo: special case 50/50 
-            max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-            the_tup = (word, max_key, round( 100 * classifications[clean_word][max_key]), category_color_dict[max_key]) #TODO: show all tags
-            tups.append(the_tup)
+                # @todo: special case 50/50 
+                max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
+                the_tup = (word, max_key, classifications[clean_word][max_key], category_color_dict[max_key]) #TODO: show all tags
+                tups.append(the_tup)
         else:
-            tups.append((word, "none", 0))
+                tups.append((word, "none", 0))
     return(tups)
 
 def get_tags(analysis, words, a_tweet): #set of tweet words

@@ -2,14 +2,14 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
 {% for tup in word_tuples[page-1] %}
-<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%">{{ tup.0 }}</span>
+<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}} tags">{{ tup.0 }}</span>
 {% endfor %}
 
 
 <style type="text/css">
 {% for tup in word_tuples[page-1] %}
 .{{tup.1}}-{{tup.2}} {
-    background : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 70%);
+    background : hsl({{tup.3}}, {{(tup.2 - 0.50) * 200 }}% , 70%);
 }   
 {% endfor %}
 </style>
