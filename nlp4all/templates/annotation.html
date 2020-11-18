@@ -79,7 +79,7 @@
             };
     
     submitbtn.click(function()  {
-        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag } ).done(
+        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'analysis': {{ analysis.id }}} ).done(
             function(returnedData) {
                 console.log(returnedData);
                 
