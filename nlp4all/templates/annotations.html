@@ -2,56 +2,12 @@
 {% block content %}
 <h1>Annotation overview</h1>
 
-<p> <span><a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}">Add more annotations</a></span>
+<p> <span><a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}?analysis={{ analysis.id }}">Add more annotations</a></span>
     <span><a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis_id={{ analysis.id }}">Back to analysis</a></span></p>
 
 
-<div class="content-section">
-    <h3>Your annotations</h3>
-      
-    {% for ann in anns %}
-        Tweet:<br>
-        <p id="tweettxt">
-        {{ ann.full_text }}
-        </p>
-        {% include "annotations_colors.html" %}
-        <div class="content-section">
-        Annotations:
-            <div class="content-section">
-            <table id="ann-list">
-                <tr>{% for a in ann.annotations %} <td>{{ a.text }}</td> {% endfor %}</tr>
-            </table>
-            
-            </div>
-        Tags:
-            <div class="content-section">
-            <table id="tag-list">
-                <tr>{% for a in ann.annotations %} <td>{{ a.annotation_tag }}</td> {% endfor %}</tr>
-            </table>
-            </div>
-    {% endfor %}
-   
-</div>
+    {% include "annotations_colors.html" %}
 
-    <div class="content-section">
-        <table>
-            <tr><td>
-            {% if prev_url %}
-            <a class="nav-item nav-link" href="{{ prev_url }}">Previous tweet</a>
-            {% endif %}
-        </td>
-        <td>
-            {% if next_url %}
-            <a class="nav-item nav-link"  href="{{ next_url }}">Next tweet</a>
-            {% endif %}
-        </td>
-            </tr>
-        </table>
-   
-    </div>
-   
     
-</div>
-
 
 {% endblock content %}
