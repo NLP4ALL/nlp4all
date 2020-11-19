@@ -519,15 +519,18 @@ def reset_token(token):
     return render_template('reset_token.html', title='Reset Password', form=form)
 
 # this is not used rn
-@app.route("/tweet_annotation", methods=['GET', 'POST'])
+@app.route("/tweet_annotation", methods=['GET', 'POST']) #here you need the analysis in request args!
 @login_required
 def tweet_annotation():
-    tweets = Tweet.query.all()
+    analysis_id = request.args.get('analysis', 0, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project)
+    tweets = project.tweets #Tweet.query.all()
     a_tweet = sample(tweets,1)[0]
-    categories = TweetTagCategory.query.all()
+    categories = project.categories#TweetTagCategory.query.all()
     tweet_table = {}
     # if category in request_dict_keys
-    # else select category
+    
     if "cat" in request.args.to_dict().keys():
         cat_id = request.args.get('cat', type=int)
         tweets = Tweet.query.filter(Tweet.category==cat_id)
@@ -542,14 +545,17 @@ def tweet_annotation():
         tweet_table = { t.id : {'tweet': t.full_text, 'category': t.handle, "id": t.id} for t in tweets}
         tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
         tweet_table = [t[1] for t in tweet_table]
-        return redirect(url_for('tweet_annotation', cat = cat_id))
+        return redirect(url_for('tweet_annotation', analysis=analysis.id,cat = cat_id))
         
-    return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories)
+    return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, analysis=analysis)
 
 @app.route("/annotation_summary", methods=['GET', 'POST'])
 @login_required
 def annotation_summary():
-    anns = TweetAnnotation.query.all()
+    analysis_id = request.args.get('analysis', 0, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
+    #anns = TweetAnnotation.query.all()
     ann_table =  {t.id : {'annotation': t.text, 'category': Tweet.query.get(t.tweet).handle, "tweet_id": t.tweet, "tag":t.annotation_tag}for t in anns} 
     ann_table = sorted([t for t in ann_table.items()], key=lambda x:x[1]["tweet_id"], reverse=True)
     ann_table = [t[1] for t in ann_table]
@@ -560,8 +566,8 @@ def annotation_summary():
         flash("Annotation deleted", "success")
         db.session.delete(ann)
         db.session.commit()
-        return redirect(url_for('annotation_summary'))
-    return render_template('annotation_summary.html', ann_table=ann_table)
+        return redirect(url_for('annotation_summary', analysis=analysis.id))
+    return render_template('annotation_summary.html', ann_table=ann_table, analysis=analysis)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
@@ -573,33 +579,28 @@ def annotations():
     anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
-
-    a_dict = {t.id: {} for t in tweets}
-
-    # get all tags per tweet
-    for i in a_list:
-        tweet = Tweet.query.filter(Tweet.id==i).first()
-        annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==i).all()
-        a_dict[i]['tweet'] = tweet.full_text
-        a_dict[i]['annotations'] = [a.text for a in annotations]
-        a_dict[i]['tags'] = [a.annotation_tag for a in annotations]
-    ann_table = sorted([t for t in a_dict.items()], key=lambda x:x[1]["tweet"], reverse=True)
-    ann_table = [t[1] for t in ann_table]
     
+    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
+    ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+    annotated_tweets = list(set([a.tweet for a in anns]))
+    a_list=[]
+    for tweet in annotated_tweets:
+        a_list.append(sorted([t for t in ann_table.items() if t[1]["tweet_id"]==tweet], key=lambda x:x[1]["tweet_id"], reverse=True))
+    new_list=[]
+    for l in a_list:
+        li=[t[1] for t in l]
+        new_list.append(li)   
+    keys=[i[0].get('tweet_id') for i in new_list]
+    values=[[{'tag':j.get('tag'), 'annotation':j.get('annotation'), 'counts':1} for j in i] for i in new_list]
+
+    ann_dict = {key:value for key, value in zip(keys, values)}
+
     word_tuples=[]
     ann_tags = list(analysis.annotation_tags.keys())
     for a_tweet in tweets:
         mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
         my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags)
         word_tuples.append(my_tuples)
-
-    if request.method == "POST" and 'delete' in request.form.to_dict():
-        ann_text = request.form.to_dict()['delete']
-        ann = TweetAnnotation.query.filter(TweetAnnotation.text==ann_text).first()
-        flash("Annotation deleted", "success")
-        db.session.delete(ann)
-        db.session.commit()
-        return redirect(url_for('annotations/<analysis_id>', analysis_id=analysis_id))
     
     ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
     
@@ -608,8 +609,7 @@ def annotations():
     prev_url = url_for('annotations', analysis_id=analysis_id,page=ann_list.prev_num) \
         if ann_list.has_prev else None
     
-    
-    return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page, analysis=analysis)
+    return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page, analysis=analysis, ann_dict=ann_dict)
 
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():
