@@ -267,15 +267,15 @@ def ann_assign_colors(list_of_tags):  #take all tags
     no_colors = len(list_of_tags)
     hsl_span = int(255 / no_colors)
     for n in range(no_colors):
-        category_color_dict[list_of_tags[n]] = (n * hsl_span) + (hsl_span / 10)
+        category_color_dict[list_of_tags[n].lower()] = (n * hsl_span) + (hsl_span / 10)
     return(category_color_dict)
 
 def ann_create_css_info(classifications, text, list_of_categories):
     category_color_dict = ann_assign_colors(list_of_categories)
     tups = []
     for word in text.split():
-        if not word.startswith(("#","http","@")):
-                clean_word = re.sub(r'[^\w\s]','',word.lower())
+        #if not word.startswith(("#","http","@")):
+        clean_word = re.sub(r'[^\w\s]','',word.lower())
         if clean_word in classifications and sum(classifications[clean_word].values())>0:
                 # @todo: special case 50/50 
                 max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
@@ -288,12 +288,12 @@ def ann_create_css_info(classifications, text, list_of_categories):
 def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
         ann_tags = list(analysis.annotation_tags.keys())
-        mydict = {word : {a:0 for a in ann_tags} for word in words}
+        mydict = {word.lower() : {a.lower():0 for a in ann_tags} for word in words}
         for a in analysis.annotations:
             if a.text in a_tweet.full_text:
-               # print(a.text +" is in the tweet")
                 for w in a.words:
-                    mydict[w][a.annotation_tag] += 1
+                        if w in mydict.keys():
+                                mydict[w][a.annotation_tag] += 1
         return mydict
 
          

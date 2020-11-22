@@ -638,7 +638,7 @@ def save_annotation():
     coordinates = [txtstart, txtend]
     
     words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
-    annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag)
+    annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag.lower())
     db.session.add(annotation)
     db.session.commit()
    
