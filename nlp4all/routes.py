@@ -309,7 +309,10 @@ def analysis():
         db.session.commit()
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
-    return render_template('analysis.html', analysis=analysis, categories=categories, tweet = the_tweet, form = form, **data)
+    # tags per user
+    ann_tags = TweetAnnotation.query.filter(TweetAnnotation.user==current_user.id).all()
+    tag_list = list(set([a.annotation_tag for a in ann_tags]))
+    return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -643,3 +646,18 @@ def save_annotation():
     db.session.commit()
    
     return jsonify(words)
+
+@app.route('/show_highlights', methods=['GET', 'POST'])
+def show_highlights():
+    args = request.args.to_dict()
+    page = int(args['page'])
+    t_id = int(args['annid'])
+    a_tweet = Tweet.query.get(t_id)
+    analysis_id = int(args['analysis'])
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    ann_tags = list(analysis.annotation_tags.keys())
+    
+    mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
+    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags)
+    
+    return jsonify(my_tuples)
