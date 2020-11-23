@@ -11,9 +11,6 @@
     <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
     this.form.color[1].style.display=(val=='others')?'block':'none'"> 
         <option>Tag your annotation</option>  
-        {% for c in categories %}
-        <option value={{ c.name }}>{{ c.name }}</option>
-        {% endfor %}
         {% for t in analysis.annotation_tags %}
         <option value={{ t }}>{{ t }}</option>
         {% endfor %}
