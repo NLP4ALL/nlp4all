@@ -4,9 +4,9 @@
 
 <div class="content-section">
     <h3>Your annotations</h3>
-      
+    <p id="show_me"> </p>
     {% for ann in anns %}
-        Tweet {{ ann.id }}<br>
+        Tweet <span id="annid" value="{{ ann.id }}">{{ ann.id }}</span><br>
             <i>Category: {{ ann.handle }}<br></i>
            
             <br>
@@ -14,7 +14,7 @@
             {{ ann.full_text }}
         </p>
         {% for tup in word_tuples[page-1] %}
-            <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}} tags">{{ tup.0 }}</span>
+            <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.4}} tags">{{ tup.0 }}</span>
             {% endfor %}
 
 
@@ -111,8 +111,7 @@
             highlight(text)
             }
     }
-   
-   
+       
     });
     
 </script>

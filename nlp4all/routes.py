@@ -312,6 +312,9 @@ def analysis():
     # tags per user
     ann_tags = TweetAnnotation.query.filter(TweetAnnotation.user==current_user.id).all()
     tag_list = list(set([a.annotation_tag for a in ann_tags]))
+    for i in categories:
+        if i.name not in tag_list:
+            tag_list.append(i.name)
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
@@ -602,7 +605,8 @@ def annotations():
     ann_tags = list(analysis.annotation_tags.keys())
     for a_tweet in tweets:
         mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
-        my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags)
+        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
+        my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
         word_tuples.append(my_tuples)
     
     ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
@@ -638,26 +642,51 @@ def save_annotation():
         if txtstart < 0:
             txtstart=0
         txtend = txtstart + len(text)
-    coordinates = [txtstart, txtend]
     
+    coordinates = {}
+    astart=tweet.full_text.find(text)
+    if astart < 0:
+        astart=0
+    txtstart= tweet.full_text.find(text) # make sure this is the full text in the final version!
+    words = text.split()
+    length = list(range(len(words)))
+    coords= {}
+    s= 0
+    left_text = text
+    for w in range(len(words)):
+        txtstart = left_text.find(words[w])
+        left_text = left_text.partition(words[w])[2]
+        if txtstart < 0:
+            txtstart=0
+        elif txtstart > 0:
+            txtstart=s+1 
+        txtend = txtstart + len(words[w])
+        s = s+txtend
+        txt = re.sub(r'[^\w\s]','',words[w].lower())
+        coords[txt] = (txtstart+astart, s-1+astart, length[w])
+    coordinates['txt_coords'] = coords
+
+    words = tweet.full_text.split()
+    length = list(range(len(words)))
+    word_locs = {}
+    left_text = tweet.full_text
+    s= 0
+    for w in range(len(words)):
+        txtstart = left_text.find(words[w])
+        if txtstart < 0:
+            txtstart=0
+        left_text = left_text.partition(words[w])[2]
+        txtend = txtstart + len(words[w])
+        if txtstart > 0:
+            txtstart=s+1
+        s=s+txtend
+        word_locs[length[w]] = {'start': txtstart, 'end': s-1, 'word': words[w]}
     words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
+    coordinates['word_locs'] = word_locs
     annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag.lower())
     db.session.add(annotation)
     db.session.commit()
    
-    return jsonify(words)
+    return jsonify(words,coordinates['txt_coords'])
 
-@app.route('/show_highlights', methods=['GET', 'POST'])
-def show_highlights():
-    args = request.args.to_dict()
-    page = int(args['page'])
-    t_id = int(args['annid'])
-    a_tweet = Tweet.query.get(t_id)
-    analysis_id = int(args['analysis'])
-    analysis = BayesianAnalysis.query.get(analysis_id)
-    ann_tags = list(analysis.annotation_tags.keys())
-    
-    mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
-    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags)
-    
-    return jsonify(my_tuples)
+

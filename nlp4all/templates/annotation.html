@@ -11,7 +11,7 @@
     <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
     this.form.color[1].style.display=(val=='others')?'block':'none'"> 
         <option>Tag your annotation</option>  
-        {% for t in analysis.annotation_tags %}
+        {% for t in tag_list %}
         <option value={{ t }}>{{ t }}</option>
         {% endfor %}
         <option value="others">other</option>
@@ -32,20 +32,22 @@
     // this requires that the tweet is required in the top template
     var annotation = $("#anntext");
     var submitbtn = $("#submitbtn");
+    var tpl = $("#tpl");
     var atag;
     function getSelText()
     
       {
           var txt = '';
+          
            if (window.getSelection)
           {
               txt = window.getSelection().toString();
-              
+             
                    }
           else if (document.getSelection)
           {
               txt = window.getSelection().toString();
-              
+             
                   }
           else if (document.selection)
           {
@@ -78,7 +80,7 @@
     submitbtn.click(function()  {
         $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'analysis': {{ analysis.id }}} ).done(
             function(returnedData) {
-                console.log(returnedData);
+                console.log(returnedData[1]);
                 
                 //
             });
@@ -86,13 +88,14 @@
             //$("#anntext").removeAttr('value');
             //document.annform.anntext.value =  '';
             $("#annform").trigger("reset");
-            
-            //document.annform.ifother.value =  '';
-            //console.log($("#anntext").val())
-            //txt.empty();
-            //$('textarea').empty();
+        
 
     });
+
+// word count
+    var twt = $("#twt");
+   //count = str.split(' ').length;
+   // console.log(twt.innerHTML);
 
 
 
