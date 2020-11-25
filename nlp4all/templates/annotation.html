@@ -81,11 +81,14 @@
         $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'analysis': {{ analysis.id }}} ).done(
             function(returnedData) {
                 console.log(returnedData[1]);
+                
 
             });
 
             $("#annform").trigger("reset");
-        
+            sel.selectedIndex = "Tag your annotation";
+            sel.options[sel.selectedIndex].value = 0
+            console.log(sel.selectedIndex)
 
     });
 
