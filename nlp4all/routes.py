@@ -555,16 +555,27 @@ def tweet_annotation():
         
     return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, analysis=analysis)
 
-@app.route("/annotation_summary", methods=['GET', 'POST'])
+@app.route("/annotation_summary/<tag>", methods=['GET', 'POST'])
 @login_required
-def annotation_summary():
+def annotation_summary(tag):
     analysis_id = request.args.get('analysis', 0, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
-    #anns = TweetAnnotation.query.all()
-    ann_table =  {t.id : {'annotation': t.text, 'category': Tweet.query.get(t.tweet).handle, "tweet_id": t.tweet, "tag":t.annotation_tag}for t in anns} 
-    ann_table = sorted([t for t in ann_table.items()], key=lambda x:x[1]["tweet_id"], reverse=True)
-    ann_table = [t[1] for t in ann_table]
+    # get annotations by selected tag
+    tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
+    tagged_tweets = list(set([t.tweet for t in tag_anns]))
+
+    # relevant annotations
+    tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
+
+    tag_table = {t: {'tweet':t} for t in tagged_tweets}
+    for t in tagged_tweets:
+        t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).filter(TweetAnnotation.tweet==t).all()
+        users = len(set([i.user for i in t_anns ]))
+        tag_table[t]['tag_count'] = len(t_anns)
+        tag_table[t]['users'] = users
+
+    tag_table = sorted([t for t in tag_table.items()], key=lambda x:x[1]["tweet"], reverse=True)
+    tag_table = [t[1] for t in tag_table]
 
     if request.method == "POST" and 'delete' in request.form.to_dict():
         ann_text = request.form.to_dict()['delete']
@@ -573,7 +584,7 @@ def annotation_summary():
         db.session.delete(ann)
         db.session.commit()
         return redirect(url_for('annotation_summary', analysis=analysis.id))
-    return render_template('annotation_summary.html', ann_table=ann_table, analysis=analysis)
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=tag)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
@@ -617,6 +628,7 @@ def annotations():
         if ann_list.has_prev else None
     
     return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page, analysis=analysis, ann_dict=ann_dict)
+
 
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():

@@ -274,43 +274,6 @@ def ann_assign_colors(list_of_tags):  #take all tags
         category_color_dict[list_of_tags[n].lower()] = (n * hsl_span) + (hsl_span / 10)
     return(category_color_dict)
 
-def ann_create_css_info_old(classifications, text, list_of_categories, ann):
-        category_color_dict = ann_assign_colors(list_of_categories)
-        tups = []
-       # word_list =[[(v['word'],v['start'],k) for k,v in m.coordinates['word_locs'].items()][0] for m in myanns]
-       
-        alt_tups =[]
-        for m in range(len(ann)):    
-                word_list =[(v['word'],v['start'],k) for k,v in ann[m].coordinates['word_locs'].items()]
-                if m == 0: 
-                        for w in range(len(word_list)):
-                                word = word_list[w]
-                                clean_word = re.sub(r'[^\w\s]','',word[0].lower())
-                                if clean_word in classifications and sum(classifications[clean_word].values())>0 and clean_word in ann[m].coordinates['txt_coords'].keys() and word_list[w][1]==ann[m].coordinates['txt_coords'][clean_word][0]:
-                                        # @todo: special case 50/50 
-                                        max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                                        the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key],classifications[clean_word][max_key]) #TODO: show all tags
-                                        tups.append(the_tup)
-                                else:
-                                        tups.append((word[0], "none", 0))
-                else:
-                        for w in range(len(word_list)):
-                                word = word_list[w]
-                                clean_word = re.sub(r'[^\w\s]','',word[0].lower())
-                                if clean_word in classifications and sum(classifications[clean_word].values())>0 and clean_word in ann[m].coordinates['txt_coords'].keys() and word_list[w][1]==ann[m].coordinates['txt_coords'][clean_word][0]:
-                                        # @todo: special case 50/50 
-                                        max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                                        the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key],classifications[clean_word][max_key]) #TODO: show all tags
-                                        alt_tups.append(the_tup)
-                                        if tups[w][1] =="none":
-                                                tups[w] = the_tup
-                                        else: 
-                                                tups[w] = (word[0], the_tup[1], int((the_tup[2]+tups[w][2])/2),  max(tups[w][3], the_tup[3]), (the_tup[2]+tups[w][2])/2)
-                                else:
-                                        alt_tups.append((word[0], "none", 0))
-        return(tups)
-
-
 
 def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
