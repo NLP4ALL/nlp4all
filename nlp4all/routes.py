@@ -625,6 +625,7 @@ def save_annotation():
     tweet = Tweet.query.get(t_id)
     text = str(args['text'])
     atag = str(args['atag'])
+    pos = int(args['pos'])
     analysis_id = int(args['analysis'])
     analysis = BayesianAnalysis.query.get(analysis_id)
     analysis.updated_a_tags(atag, tweet)
@@ -644,27 +645,16 @@ def save_annotation():
         txtend = txtstart + len(text)
     
     coordinates = {}
-    astart=tweet.full_text.find(text)
-    if astart < 0:
-        astart=0
-    alen=len(tweet.full_text.partition(text)[0].split())
-    txtstart= tweet.full_text.find(text) # make sure this is the full text in the final version!
-    words = text.split()
-    length = list(range(len(words)))
-    coords= {}
-    s= 0
-    left_text = text
-    for w in range(len(words)):
-        txtstart = left_text.find(words[w])
-        left_text = left_text.partition(words[w])[2]
-        if txtstart < 0:
-            txtstart=0
-        txtend = txtstart + len(words[w])
-        if txtstart > 0:
-            txtstart=s+1 
-        s = s+txtend
-        txt = re.sub(r'[^\w\s]','',words[w].lower())
-        coords[txt] = (txtstart+astart, s-1+astart, int(length[w]+alen))
+    
+    tag_count =0 
+    tag_count_list =[]
+    coords = {}
+    for t in text.split():
+        tag_count_list.append((tag_count+pos, t))
+        txt = re.sub(r'[^\w\s]','',t.lower())
+        tag_pos = tag_count+pos
+        coords[tag_pos] = (txt, t)
+        tag_count +=1
     coordinates['txt_coords'] = coords
 
     words = tweet.full_text.split()
@@ -672,16 +662,10 @@ def save_annotation():
     word_locs = {}
     left_text = tweet.full_text
     s= 0
+    word_count = 0
     for w in range(len(words)):
-        txtstart = left_text.find(words[w])
-        if txtstart < 0:
-            txtstart=0
-        left_text = left_text.partition(words[w])[2]
-        txtend = txtstart + len(words[w])
-        if txtstart > 0:
-            txtstart=s+1
-        s=s+txtend
-        word_locs[length[w]] = {'start': txtstart, 'end': s-1, 'word': words[w]}
+        word_locs[word_count] = words[w] 
+        word_count += 1
     words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
     coordinates['word_locs'] = word_locs
     annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag.lower())

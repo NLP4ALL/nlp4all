@@ -16,6 +16,7 @@
         {% endfor %}
         <option value="others">other</option>
     </select> 
+    <input type="hidden" id="pos" value="">
     <input type="button" id="submitbtn" value="Save annotation">
 </form>
 
@@ -42,21 +43,26 @@
            if (window.getSelection)
           {
               txt = window.getSelection().toString();
-             
+              parent = window.getSelection().anchorNode.parentElement.id;
+              
                    }
           else if (document.getSelection)
           {
               txt = window.getSelection().toString();
+              parent = window.getSelection().anchorNode.parentElement.id;
              
                   }
           else if (document.selection)
           {
               txt = window.getSelection().toString();
+              parent = window.getSelection().anchorNode.parentElement.id;
              
                   }
           else return;
-        console.log(txt);
+        console.log(txt, parent);
+        
         document.annform.anntext.value =  txt;
+        document.annform.pos.value = parent
         console.log(document.annform.anntext.value);
         
         
@@ -78,7 +84,7 @@
             };
     
     submitbtn.click(function()  {
-        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'analysis': {{ analysis.id }}} ).done(
+        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'pos': document.annform.pos.value, 'analysis': {{ analysis.id }}} ).done(
             function(returnedData) {
                 console.log(returnedData[1]);
                 
