@@ -561,31 +561,45 @@ def annotation_summary(analysis_id):
     
     analysis = BayesianAnalysis.query.get(analysis_id)
     all_tags = list(analysis.annotation_tags.keys())
+
+    if request.method == "POST" and 'select-tag' in request.form.to_dict():
+        myargs = request.form.to_dict()
+        new_tag = myargs['select-tag']
+        return redirect(url_for('annotation_summary',analysis_id=analysis.id ,tag = new_tag))
+
     # get annotations by selected tag
     if "tag" in request.args.to_dict():
-        tag = request.args.to_dict()['tag']
+        a_tag = request.args.get('tag', type=str)
     else:
-        tag = all_tags[0]
-    tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
+        a_tag = all_tags[0]
+    
+    tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).all()
     tagged_tweets = list(set([t.tweet for t in tag_anns]))
 
     # relevant annotations
-    tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
+    tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
     tag_table = {t: {'tweet':t} for t in tagged_tweets}
     for t in tagged_tweets:
-        t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).filter(TweetAnnotation.tweet==t).all()
+        t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet==t).all()
         users = len(set([i.user for i in t_anns ]))
         tag_table[t]['tag_count'] = len(t_anns)
         tag_table[t]['users'] = users
 
     tag_table = sorted([t for t in tag_table.items()], key=lambda x:x[1]["tweet"], reverse=True)
     tag_table = [t[1] for t in tag_table]
+   
+    tagdict = {t:{'tag':t} for t in all_tags}
+    # do the same for all tags:
+    for tag in all_tags:
+        tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
+        tagdict[tag]['tag_count'] = len(tag_anns)
+        tagdict[tag]['users'] = len(set([an.user for an in tag_anns]))
+        tagged_tweets = list(set([t.tweet for t in tag_anns]))
+        tagdict[tag]['nr_tweets'] = len(tagged_tweets)
+    alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["nr_tweets"], reverse=True)
+    alltag_table = [t[1] for t in alltag_table]
 
-    if request.method == "POST" and 'select-tag' in request.form.to_dict():
-        myargs = request.form.to_dict()
-        new_tag = myargs['select-tag']
-        return redirect(url_for('annotation_summary',analysis_id=analysis.id ,tag = new_tag))
-    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=tag, all_tags=all_tags)
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=alltag_table)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
