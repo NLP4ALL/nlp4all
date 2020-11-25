@@ -81,21 +81,14 @@
         $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'analysis': {{ analysis.id }}} ).done(
             function(returnedData) {
                 console.log(returnedData[1]);
-                
-                //
+
             });
 
-            //$("#anntext").removeAttr('value');
-            //document.annform.anntext.value =  '';
             $("#annform").trigger("reset");
         
 
     });
 
-// word count
-    var twt = $("#twt");
-   //count = str.split(' ').length;
-   // console.log(twt.innerHTML);
 
 
 
