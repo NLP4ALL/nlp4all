@@ -3,24 +3,15 @@
 <h1>Annotation overview</h1>
 Here you can see how each tag has been used.
 
-<form action="" method="post">
-    <select id="sel-cat" onchange="tagFunction()"> 
-        <option value='0'>Change tag</option>
-        {% for t in all_tags %}
-        <option value={{ t }} >
-                    <span>{{ t }}</span>  
-        </option> 
-        {% endfor %}
-    </select>
- <button id="cat-btn" type="submit" name="select-tag" value="">Change tag</button></form>
- {% include "annotation_form.html" %}
-
 <div class="content-section">
-    <h3>All annotations for tag "{{ tag }}"</h3>
-    {% set table_data = ann_table %}
-    {% set table_name = "tweet_annotations" %}
-    {% include "data_table.html" %}
+    {% set chart_data = allann_table %}
+    {% set table_name = "all_annotations" %}
+    {% include "ann_chart.html" %}
 </div>
+
+<h3>See data per annotation</h3>
+
+{% include "annotation_selscript.html" %}
 
 
 {% endblock content %}
