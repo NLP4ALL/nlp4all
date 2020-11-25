@@ -1,9 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
 <h1>Annotation overview</h1>
+Here you can see how each tag has been used.
 
-<p> <a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}?analysis={{ analysis.id }}">Add more annotations</a></p>
-
+<form action="" method="post">
+    <select id="sel-cat" onchange="tagFunction()"> 
+        <option value='0'>Change tag</option>
+        {% for t in all_tags %}
+        <option value={{ t }} >
+                    <span>{{ t }}</span>  
+        </option> 
+        {% endfor %}
+    </select>
+ <button id="cat-btn" type="submit" name="select-tag" value="">Change tag</button></form>
+ {% include "annotation_form.html" %}
 
 <div class="content-section">
     <h3>All annotations for tag "{{ tag }}"</h3>
