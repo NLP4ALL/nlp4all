@@ -2,8 +2,7 @@
 {% block content %}
 <h1>Annotation overview</h1>
 
-<p> <span><a class="nav-item nav-link" href="{{ url_for('tweet_annotation') }}?analysis={{ analysis.id }}">Add more annotations</a></span>
-    <span><a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis_id={{ analysis.id }}">Back to analysis</a></span></p>
+<p> <span><a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis_id={{ analysis.id }}">Back to analysis</a></span></p>
 
 
     {% include "annotations_colors.html" %}

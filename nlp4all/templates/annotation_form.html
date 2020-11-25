@@ -6,7 +6,14 @@
 
 
 <script>
-    $("#cat-btn").click(function() {
+    function tagFunction() {
+        var newtag = document.getElementById("sel-cat").value;
+        var cat_btn = $("#cat-btn");
+        var catid = newtag
+        cat_btn.attr('value',catid);
+        //document.getElementById("demo").innerHTML = "You selected: " + x;
+        }
+    $("#sel-cat").onchange(function() {
         var cat_id = $("#sel-cat");
         var cat_btn = $("#cat-btn");
         var catid = cat_id.val()

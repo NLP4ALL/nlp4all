@@ -555,18 +555,22 @@ def tweet_annotation():
         
     return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, analysis=analysis)
 
-@app.route("/annotation_summary/<tag>", methods=['GET', 'POST'])
+@app.route("/annotation_summary/<analysis_id>", methods=['GET', 'POST'])
 @login_required
-def annotation_summary(tag):
-    analysis_id = request.args.get('analysis', 0, type=int)
+def annotation_summary(analysis_id):
+    
     analysis = BayesianAnalysis.query.get(analysis_id)
+    all_tags = list(analysis.annotation_tags.keys())
     # get annotations by selected tag
+    if "tag" in request.args.to_dict():
+        tag = request.args.to_dict()['tag']
+    else:
+        tag = all_tags[0]
     tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
     tagged_tweets = list(set([t.tweet for t in tag_anns]))
 
     # relevant annotations
     tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
-
     tag_table = {t: {'tweet':t} for t in tagged_tweets}
     for t in tagged_tweets:
         t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).filter(TweetAnnotation.tweet==t).all()
@@ -577,14 +581,11 @@ def annotation_summary(tag):
     tag_table = sorted([t for t in tag_table.items()], key=lambda x:x[1]["tweet"], reverse=True)
     tag_table = [t[1] for t in tag_table]
 
-    if request.method == "POST" and 'delete' in request.form.to_dict():
-        ann_text = request.form.to_dict()['delete']
-        ann = TweetAnnotation.query.filter(TweetAnnotation.text==ann_text).first()
-        flash("Annotation deleted", "success")
-        db.session.delete(ann)
-        db.session.commit()
-        return redirect(url_for('annotation_summary', analysis=analysis.id))
-    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=tag)
+    if request.method == "POST" and 'select-tag' in request.form.to_dict():
+        myargs = request.form.to_dict()
+        new_tag = myargs['select-tag']
+        return redirect(url_for('annotation_summary',analysis_id=analysis.id ,tag = new_tag))
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=tag, all_tags=all_tags)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
