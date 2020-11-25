@@ -664,7 +664,7 @@ def save_annotation():
             txtstart=s+1 
         s = s+txtend
         txt = re.sub(r'[^\w\s]','',words[w].lower())
-        coords[txt] = (txtstart+astart, s-1+astart, length[w]+alen)
+        coords[txt] = (txtstart+astart, s-1+astart, int(length[w]+alen))
     coordinates['txt_coords'] = coords
 
     words = tweet.full_text.split()

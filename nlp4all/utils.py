@@ -307,21 +307,21 @@ def ann_create_css_info_old(classifications, text, list_of_categories, ann):
                                         alt_tups.append((word[0], "none", 0))
         return(tups)
 
-def ann_create_css_info(classifications, text, list_of_categories, myanns):
+def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
-        tups = []
-        word_list =[(v['word'],v['start'],k) for k,v in myanns[0].coordinates['word_locs'].items()]   
+        word_list =[(v['word'],v['start'],k) for k,v in ann[0].coordinates['word_locs'].items()]   
+        tups = [(word_list[w][0], "none", 0) for w in range(len(word_list))]
         for w in range(len(word_list)):
                 word = word_list[w]
                 clean_word = re.sub(r'[^\w\s]','',word[0].lower())
                 if clean_word in classifications and sum(classifications[clean_word].values())>0:
                         relevants=[]
-                        for m in myanns:
+                        for m in ann:
                             if clean_word in m.coordinates['txt_coords'].keys():
                                 if m.coordinates['txt_coords'][clean_word] not in relevants:
                                     relevants.append(m.coordinates['txt_coords'][clean_word])
                         for r in relevants:
-                            if word_list[w][1] == r[0]:
+                            if int(word_list[w][1]) == r[0]: # if the word position is the same
                                 key_list=[]
                                 value_list=[]
                                 # @todo: special case 50/50 
@@ -329,15 +329,10 @@ def ann_create_css_info(classifications, text, list_of_categories, myanns):
                                     if v>0:
                                         key_list.append(k),value_list.append(v)
                                 max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                                the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
-                                tups.append(the_tup)
-                            else:
-                                tups.append((word[0], "none", 0))
-                                
-                else:
-                        tups.append((word[0], "none", 0))
+                                the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, list(set(key_list))) #TODO: show all tags
+                                if tups[w][1] == 'none':
+                                    tups[w] = the_tup
         return(tups)
-
 
 def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
