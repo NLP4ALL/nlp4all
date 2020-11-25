@@ -20,9 +20,9 @@
 </div>
 <div class="content-section">
 <p> {{ tweet.time_posted }} </p>
-<span id="twt">
+<span>
 {% for tup in word_tuples %}
-<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl">{{ tup.0 }}</span>
+<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
 {% endfor %}
 </span>
 

@@ -40,15 +40,18 @@ def create_css_info(classifications, text, list_of_categories):
     category_color_dict = assign_colors(list_of_categories)
     tups = []
     split_list = text.split()
+    word_counter = 0
     for word in split_list:
         clean_word = clean_non_transparencynum(word).lower()
         if clean_word in classifications:
             # @todo: special case 50/50 
             max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-            the_tup = (word, max_key, round( 100 * classifications[clean_word][max_key]), category_color_dict[max_key])
+            the_tup = (word, max_key, round( 100 * classifications[clean_word][max_key]), category_color_dict[max_key], word_counter)
             tups.append(the_tup)
+            word_counter += 1
         else:
-            tups.append((word, "none", 0))
+            tups.append((word, "none", 0, '', word_counter))
+            word_counter += 1
     return(tups)
             
         
@@ -307,9 +310,11 @@ def ann_create_css_info_old(classifications, text, list_of_categories, ann):
                                         alt_tups.append((word[0], "none", 0))
         return(tups)
 
+
+
 def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
-        word_list =[(v['word'],v['start'],k) for k,v in ann[0].coordinates['word_locs'].items()]   
+        word_list =[(v,k) for k,v in ann[0].coordinates['word_locs'].items()]   
         tups = [(word_list[w][0], "none", 0) for w in range(len(word_list))]
         for w in range(len(word_list)):
                 word = word_list[w]
@@ -317,21 +322,20 @@ def ann_create_css_info(classifications, text, list_of_categories, ann):
                 if clean_word in classifications and sum(classifications[clean_word].values())>0:
                         relevants=[]
                         for m in ann:
-                            if clean_word in m.coordinates['txt_coords'].keys():
-                                if m.coordinates['txt_coords'][clean_word] not in relevants:
-                                    relevants.append(m.coordinates['txt_coords'][clean_word])
+                            if str(w) in m.coordinates['txt_coords'].keys(): # if the position is in the tagged area
+                                if m.coordinates['txt_coords'][str(w)] not in relevants:
+                                    relevants.append((m.coordinates['txt_coords'][str(w)][0],w))     
                         for r in relevants:
-                            if int(word_list[w][1]) == r[0]: # if the word position is the same
-                                key_list=[]
-                                value_list=[]
-                                # @todo: special case 50/50 
-                                for k,v in classifications[clean_word].items():
-                                    if v>0:
-                                        key_list.append(k),value_list.append(v)
-                                max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                                the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, list(set(key_list))) #TODO: show all tags
-                                if tups[w][1] == 'none':
-                                    tups[w] = the_tup
+                            key_list=[]
+                            value_list=[]
+                            # @todo: special case 50/50 
+                            for k,v in classifications[clean_word].items():
+                                if v>0:
+                                    key_list.append(k),value_list.append(v)
+                            max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
+                            the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
+                            if tups[w][1] == 'none':
+                                tups[w] = the_tup           
         return(tups)
 
 def get_tags(analysis, words, a_tweet): #set of tweet words
