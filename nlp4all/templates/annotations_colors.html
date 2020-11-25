@@ -14,7 +14,7 @@
             {{ ann.full_text }}
         </p>
         {% for tup in word_tuples[page-1] %}
-            <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.4}} tags">{{ tup.0 }}</span>
+            <span class="{{tup.1}}-{{tup.2}}" title="{{ tup.5 }} = {{tup.4}} tags">{{ tup.0 }}</span>
             {% endfor %}
 
 

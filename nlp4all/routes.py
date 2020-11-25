@@ -647,6 +647,7 @@ def save_annotation():
     astart=tweet.full_text.find(text)
     if astart < 0:
         astart=0
+    alen=len(tweet.full_text.partition(text)[0].split())
     txtstart= tweet.full_text.find(text) # make sure this is the full text in the final version!
     words = text.split()
     length = list(range(len(words)))
@@ -658,12 +659,12 @@ def save_annotation():
         left_text = left_text.partition(words[w])[2]
         if txtstart < 0:
             txtstart=0
-        elif txtstart > 0:
-            txtstart=s+1 
         txtend = txtstart + len(words[w])
+        if txtstart > 0:
+            txtstart=s+1 
         s = s+txtend
         txt = re.sub(r'[^\w\s]','',words[w].lower())
-        coords[txt] = (txtstart+astart, s-1+astart, length[w])
+        coords[txt] = (txtstart+astart, s-1+astart, length[w]+alen)
     coordinates['txt_coords'] = coords
 
     words = tweet.full_text.split()

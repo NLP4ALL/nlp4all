@@ -464,3 +464,4 @@ class TweetAnnotation(db.Model):
     text = db.Column(db.String(50))
     coordinates = db.Column(JSON)
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
