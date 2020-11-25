@@ -6,10 +6,10 @@
 
 
 <div class="content-section">
-    <h3>Your annotations</h3>
+    <h3>All annotations for tag "{{ tag }}"</h3>
     {% set table_data = ann_table %}
     {% set table_name = "tweet_annotations" %}
-    {% include "data_table_del.html" %}
+    {% include "data_table.html" %}
 </div>
 
 
