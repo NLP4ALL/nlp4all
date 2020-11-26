@@ -574,6 +574,10 @@ def matrix(matrix_id):
             tnt_list = list(range(0, len(tnt_sets)))
             tnt_nr = sample(tnt_list, 1)[0]
             a_tnt_set = tnt_sets[tnt_nr] # tnt_set id
+            train_tweet_ids = a_tnt_set[0].keys()
+            train_set_size = len(a_tnt_set[0].keys())
+            test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+
             # train on the training set:
             matrix.train_data = matrix.train_model(train_tweet_ids)
             flag_modified(matrix, "train_data")
@@ -595,8 +599,7 @@ def matrix(matrix_id):
 
             true_keys = [str("Pred_"+i+"_Real_"+i) for i in cat_names]
             True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
-            #False_dict = dict(filter(lambda item: "Pred" in item[0], matrix_classes.items()))
-                # accuracy = sum(correct predictions)/sum(all matrix points)
+            
             accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
             
             # summarise data
@@ -630,7 +633,7 @@ def matrix(matrix_id):
         true_keys = [str("Pred_"+i+"_Real_"+i) for i in cat_names]
         True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
         
-            # accuracy = sum(correct predictions)/sum(all matrix points)
+        # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         
         # summarise data
@@ -651,8 +654,8 @@ def matrix(matrix_id):
         t = [str('Pred_'+counts[i][0]+'_Real_'+p) for i in range(len(counts))]
         index_list.append(t)
     [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
-    index_list =[[(counts[j][i], index_list[j][i]) for i in range(0, len(counts[j]))] for j in range(len(counts))]#[[[index_list[i][j],counts[i][j]] for i in range(len(index_list))] for j in range(len(index_list))]
-    
+    index_list =[[[counts[j][i], index_list[j][i], (j,i)] for i in range(0, len(counts[j]))] for j in range(len(counts))]
+    index_list = nlp4all.utils.matrix_css_info(index_list)
     return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, counts = counts, index_list=index_list)
   
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
