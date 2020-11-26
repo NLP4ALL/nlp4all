@@ -573,10 +573,10 @@ def annotation_summary(analysis_id):
     else:
         a_tag = all_tags[0]
     
+    # relevant annotations for a_tag
     tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).all()
     tagged_tweets = list(set([t.tweet for t in tag_anns]))
 
-    # relevant annotations
     tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
     tag_table = {t: {'tweet':t} for t in tagged_tweets}
     for t in tagged_tweets:
@@ -584,12 +584,12 @@ def annotation_summary(analysis_id):
         users = len(set([i.user for i in t_anns ]))
         tag_table[t]['tag_count'] = len(t_anns)
         tag_table[t]['users'] = users
-
     tag_table = sorted([t for t in tag_table.items()], key=lambda x:x[1]["tweet"], reverse=True)
     tag_table = [t[1] for t in tag_table]
-   
-    tagdict = {t:{'tag':t} for t in all_tags}
+    
     # do the same for all tags:
+    tagdict = {t:{'tag':t} for t in all_tags}
+    
     for tag in all_tags:
         tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
         tagdict[tag]['tag_count'] = len(tag_anns)
@@ -599,7 +599,9 @@ def annotation_summary(analysis_id):
     alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["nr_tweets"], reverse=True)
     alltag_table = [t[1] for t in alltag_table]
 
-    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=alltag_table)
+    chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['users'] for tag in all_tags}, title="Annotation tags")
+
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
