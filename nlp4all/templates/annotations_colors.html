@@ -9,10 +9,7 @@
         Tweet <span id="annid" value="{{ ann.id }}">{{ ann.id }}</span><br>
             <i>Category: {{ ann.handle }}<br></i>
            
-            <br>
-        <p id="tweettxt">
-            {{ ann.full_text }}
-        </p>
+            <div class="content-section">
         {% for tup in word_tuples[page-1] %}
             <span class="{{tup.1}}-{{tup.2}}" title="{{ tup.5 }} = {{tup.4}} tags">{{ tup.0 }}</span>
             {% endfor %}
@@ -24,38 +21,17 @@
                 background : hsl({{tup.3}}, {{(tup.2 - 0.50) * 200 }}% , 70%);
             }   
             {% endfor %}
+            
             </style>
+        </div>
 
-
-            <style>
-                input[type=text]{
-            width:200px;
-            padding:8px 10px;
-                }
-
-                span em {
-                background:#ff6;
-                font-weight:bold;
-                font-style:normal;
-                }
-                .highlight {
-            background-color: yellow;
-            }
-            </style>
-       
-       
         <div class="content-section">
            
-
+            <h3>Annotationer i denne tweet:</h3>
             {% set table_data = ann_dict[ann.id] %}
             {% set table_name = "tweet_annotations" %}
             {% include "data_table.html" %}
 
-            <table id="ann-list" type="hidden">
-                <div style="display:none">
-                <tr type="hidden">{% for a in ann.annotations %} <td type="hidden" style="display:none">{{ a.text }}</td> {% endfor %}</tr>
-                </div>
-            </table>
             
     {% endfor %}
    
@@ -65,12 +41,12 @@
             <table>
                 <tr><td>
                 {% if prev_url %}
-                <a class="nav-item nav-link" href="{{ prev_url }}">Previous tweet</a>
+                <a class="nav-item nav-link" href="{{ prev_url }}">Forrige tweet</a>
                 {% endif %}
             </td>
             <td>
                 {% if next_url %}
-                <a class="nav-item nav-link"  href="{{ next_url }}">Next tweet</a>
+                <a class="nav-item nav-link"  href="{{ next_url }}">Næste tweet</a>
                 {% endif %}
             </td>
                 </tr>
@@ -84,36 +60,7 @@
 
 <script>
     
-    function highlight(celltxt) {
-            var inputText = document.getElementById("tweettxt") // text you want to find
-            var innerHTML = inputText.innerHTML;
-            var index = innerHTML.indexOf(celltxt);
-           
-            if (index >= 0) { 
-            innerHTML = innerHTML.substring(0,index) + "<span class='highlight'>" + innerHTML.substring(index,index+celltxt.length) + "</span>" + innerHTML.substring(index + celltxt.length);
-            
-            inputText.innerHTML = innerHTML;
-            }
-        };
 
-    $(document).ready(function () {
-        var table = document.getElementById("ann-list");
-       
-        for (let row of table.rows) 
-            {
-            for(let cell of row.cells) 
-            { 
-            
-            var celltxt = cell
-            console.log('celltxt:'+ celltxt.innerHTML);
-            var text = celltxt.innerHTML
-            console.log(text)
-            highlight(text)
-            }
-    }
-       
-    });
-    
 </script>
 
 
