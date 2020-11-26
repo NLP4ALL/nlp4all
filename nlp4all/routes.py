@@ -914,6 +914,13 @@ def aggregate_matrix():
         for j in range(len(counts_list))][0]
     matrix_values = [[round(count_sum[i][j]/len(counts_list),2) for j in range(len(count_sum[i]))] for i in range(len(count_sum))]
     [matrix_values[i].insert(0, cat_names[i]) for i in range(len(matrix_values))]
+    # add cell indices
+    for i in range(len(matrix_values)):
+        t=0
+        for j in range(len(matrix_values[i])):
+            matrix_values[i][j] = [matrix_values[i][j],(i,0+t)]
+            t += 1
+    matrix_values = nlp4all.utils.matrix_css_info(matrix_values)
     return jsonify(avg_quadrants, averages, n, loop_table, matrix_values)
 
 @app.route('/get_matrix_categories', methods=['GET', 'POST'])
@@ -1001,8 +1008,20 @@ def get_compare_matrix_data():
 
     [counts1[i].insert(0, old_names[i]) for i in range(len(counts1))]
     [counts2[i].insert(0, cat_names[i]) for i in range(len(counts2))]
+    for i in range(len(counts1)):
+        t=0
+        for j in range(len(counts1[i])):
+            counts1[i][j] = [counts1[i][j],(i,0+t)]
+            t += 1
+    for i in range(len(counts2)):
+        t=0
+        for j in range(len(counts2[i])):
+            counts2[i][j] = [counts2[i][j],(i,0+t)]
+            t += 1
     
     table_data = [[m.id, m.data['accuracy'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    counts1=nlp4all.utils.matrix_css_info(counts1)
+    counts2=nlp4all.utils.matrix_css_info(counts2)
     return jsonify(counts1, counts2, matrix.threshold, matrix.ratio, table_data)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
