@@ -570,14 +570,15 @@ def annotation_summary(analysis_id):
     # get annotations by selected tag
     if "tag" in request.args.to_dict():
         a_tag = request.args.get('tag', type=str)
+        
     else:
         a_tag = all_tags[0]
     
     # relevant annotations for a_tag
     tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).all()
     tagged_tweets = list(set([t.tweet for t in tag_anns]))
-
-    tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
+    
+    #tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
     tag_table = {t: {'tweet':t} for t in tagged_tweets}
     for t in tagged_tweets:
         t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet==t).all()
