@@ -289,3 +289,25 @@ def create_bar_chart_data(predictions, title=""):
 def hsl_color_to_string(hsltup):
         return(f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)")
          
+
+# return a list of tuples with
+# (word, tag, number, color) 
+# for the tag and number that is highest
+def matrix_css_info(index_list):
+    matrix_colors = [[0, 100, 50],[120, 100, 25],[0,100,100]]
+    tups = []
+    x =0
+    green_list = []
+    for i in range(len(index_list)):
+        green_list.append((x,x+1))
+        x += 1
+    for i in index_list:
+        for j in i:
+            if j[2] in green_list:
+                j.append(matrix_colors[1]) # green
+            elif j[2][1] == 0:
+                j.append(matrix_colors[2]) #grey
+            else:
+                j.append(matrix_colors[0]) # red
+        tups.append(i)
+    return(tups)

@@ -12,15 +12,37 @@
     </thead>
     <tbody>
         {% for l in index_list %}
+        
         <tr>
             {% for i in l %}
-            <td><a href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm={{ i[1] }}">{{ i[0] }}</a></td>
+            <td class='{{ i[1] }}'><a class='link' href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm={{ i[1] }}">{{ i[0] }}</a></td>
             {% endfor %}
         </tr>
+        
         {% endfor %}
     </tbody>
    </table>
-    
+
+    <style type="text/css">
+        {% for l in index_list %}
+        {% for i in l %}
+        .{{ i[1] }} {
+            background-color : hsl({{i[3][0]}}, {{i[3][1]}}%, {{i[3][2]}}%, 0.7);
+            text-align: center; 
+            }
+        {% endfor %}
+        {% endfor %}
+
+        .link {
+            color:black;
+            text-decoration: underline;
+            
+        }
+        .table {
+            text-align: center;
+        }
+    </style>
+
         <ul>
         <p>Trained on {{ matrix.data.nr_train_tweets }} tweets.</p>
         <p>Current certainty threshold: {{ matrix.threshold }}</p>
