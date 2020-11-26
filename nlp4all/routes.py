@@ -601,9 +601,17 @@ def matrix(matrix_id):
             True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
             
             accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-            
+            metrics = {}
+            for i in cat_names:
+                selected_cat = i
+                tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+                recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+                recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+                precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+                precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+                metrics[i] = {'recall': recall, 'precision':precision}
             # summarise data
-            matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+            matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy, 'metrics':metrics, 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
             flag_modified(matrix, "data")
             db.session.add(matrix)
             db.session.merge(matrix)
@@ -635,9 +643,17 @@ def matrix(matrix_id):
         
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-        
+        metrics = {}
+        for i in cat_names:
+            selected_cat = i
+            tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+            recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+            recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+            precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+            precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+            metrics[i] = {'recall': recall, 'precision':precision}
         # summarise data
-        matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+        matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
         flag_modified(matrix, "data")
         db.session.add(matrix)
         db.session.merge(matrix)
@@ -727,9 +743,18 @@ def my_matrices():
         
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+        metrics = {}
+        for i in cat_names:
+            selected_cat = i
+            tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+            recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+            recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+            precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+            precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+            metrics[i] = {'recall': recall, 'precision':precision}
         
         # summarise data
-        matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+        matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy, 'metrics':metrics ,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
         flag_modified(matrix, "data")
         db.session.add(matrix)
         db.session.merge(matrix)
