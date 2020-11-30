@@ -55,6 +55,18 @@
                 row.append( cell );
             }
             }
+
+            $("#metricsTable > tbody").empty();
+            var table = $('#metricsTable');
+
+            for(var i=0; i<returnedData[5].length; i++){
+                row = $( '<tr />' );
+                table.append( row );
+            for(var j=0; j<returnedData[5][i].length; j++){
+                cell = $('<td>'+returnedData[5][i][j]+'</td>')
+                row.append( cell );
+            }
+            };
               
         }); 
         
