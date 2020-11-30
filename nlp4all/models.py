@@ -421,7 +421,7 @@ class BayesianAnalysis(db.Model):
     def updated_a_tags(self, atag,tweet):
         if atag not in self.annotation_tags.keys():
             self.annotation_tags[atag] = {'counts' : 0, 'category' : tweet.handle, 'tweets':[]}
-        self.annotation_tags[atag]['counts'] = (self.annotation_tags[atag].get('counts', 0)) + 1
+        self.annotation_tags[atag]['counts'] = self.annotation_tags[atag]['counts']+1
         if tweet.id not in self.annotation_tags[atag]['tweets']:
             self.annotation_tags[atag]['tweets'].append(tweet.id)
         return self.annotation_tags
