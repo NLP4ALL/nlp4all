@@ -452,6 +452,32 @@ class BayesianAnalysis(db.Model):
 
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
+    def annotation_counts(self, tweets):
+        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+        a_list = set([a.tweet for a in anns])
+        annotated_tweets = list(set([a.tweet for a in anns]))
+        ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+        a_list=[]
+        for tweet in annotated_tweets:
+            a_list.append(sorted([t for t in ann_table.items() if t[1]["tweet_id"]==tweet], key=lambda x:x[1]["tweet_id"], reverse=True))
+        new_list=[]
+        for l in a_list:
+            li=[t[1] for t in l]
+            new_list.append(li)   
+        keys=[i[0].get('tweet_id') for i in new_list]
+        values=[[{'tag':j.get('tag'), 'annotation':j.get('annotation')} for j in i] for i in new_list]
+        countlist=[[] for _ in range(len(values))]
+        for x in range(len(values)):
+            for i in values[x]:
+                n=values[x].count(i)
+                c= i.copy()
+                c.update({'count':n})
+                if c not in countlist[x]:
+                    countlist[x].append(c) 
+        n_dict = {key:value for key, value in zip(keys, countlist)}
+        return(n_dict)
+
+
 
 class TweetAnnotation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
