@@ -951,7 +951,7 @@ def aggregate_matrix():
         
     # accuracy, excluded, included
     averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_included)/len(list_included),2), round(sum(list_excluded)/n,2)]
-    #metrics = round(sum(accuracy_list)/len(accuracy_list),3)
+    avg_metrix = [[metrics_list[0][0]['category'],round(sum(i[0]['recall'] for i in metrics_list)/len(metrics_list),3),round(sum(i[0]['precision'] for i in metrics_list)/len(metrics_list),3)], [metrics_list[0][1]['category'],round(sum(i[1]['recall'] for i in metrics_list)/len(metrics_list),3), round(sum(i[1]['precision'] for i in metrics_list)/len(metrics_list),3)]]
     # quadrants
     avg_quadrants = {}
     quadrants = [agg_data[m]["data"]['matrix_classes'] for m in agg_data]
@@ -963,7 +963,7 @@ def aggregate_matrix():
                 avg_quadrants[key] = value
     avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
     # get info from each iteration to show how it varies
-    loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i]] for i in range(n)]
+    loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i],list(metrics_list[i][0].values())[1:],list(metrics_list[i][1].values())[1:]] for i in range(n)]
     count_sum = [[[counts_list[j][l][i] + counts_list[j][l][i] for i in range(len(counts_list[0]))] 
         for l in range(len(counts_list[0]))]
         for j in range(len(counts_list))][0]
@@ -976,7 +976,7 @@ def aggregate_matrix():
             matrix_values[i][j] = [matrix_values[i][j],(i,0+t)]
             t += 1
     matrix_values = nlp4all.utils.matrix_css_info(matrix_values)
-    return jsonify(avg_quadrants, averages, n, loop_table, matrix_values)
+    return jsonify(avg_quadrants, averages, n, loop_table, matrix_values, avg_metrix)
 
 @app.route('/get_matrix_categories', methods=['GET', 'POST'])
 def get_matrix_categories():
