@@ -616,19 +616,9 @@ def annotations():
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
     
     ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
-    ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
-    annotated_tweets = list(set([a.tweet for a in anns]))
-    a_list=[]
-    for tweet in annotated_tweets:
-        a_list.append(sorted([t for t in ann_table.items() if t[1]["tweet_id"]==tweet], key=lambda x:x[1]["tweet_id"], reverse=True))
-    new_list=[]
-    for l in a_list:
-        li=[t[1] for t in l]
-        new_list.append(li)   
-    keys=[i[0].get('tweet_id') for i in new_list]
-    values=[[{'tag':j.get('tag'), 'annotation':j.get('annotation'), 'counts':1} for j in i] for i in new_list]
-
-    ann_dict = {key:value for key, value in zip(keys, values)}
+    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+    
+    ann_dict = analysis.annotation_counts(tweets)
 
     word_tuples=[]
     ann_tags = list(analysis.annotation_tags.keys())
