@@ -593,7 +593,8 @@ def matrix(matrix_id):
 
             # count different occurences
             class_list = [t[1]['class'] for t in incl_tweets]
-            matrix_classes = {} #dict.fromkeys(key_list, 0)
+            class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+            matrix_classes = {c:0 for c in class_list_all} 
             for i in set(class_list):
                 matrix_classes[i] = class_list.count(i)
 
@@ -637,7 +638,8 @@ def matrix(matrix_id):
 
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        matrix_classes = {} #dict.fromkeys(key_list, 0)
+        class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
@@ -743,7 +745,8 @@ def my_matrices():
 
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        matrix_classes = {}
+        class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
@@ -889,10 +892,10 @@ def aggregate_matrix():
         list_excluded.append(len(excl_tweets))
         list_included.append(len(incl_tweets))
         
-       # count different occurences
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        matrix_classes = {} #dict.fromkeys(key_list, 0)
+        class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
@@ -1032,10 +1035,11 @@ def get_compare_matrix_data():
     # filter according to the threshold
     incl_tweets = sorted([t for t in matrix2.matrix_data.items() if t[1]['probability'] >= matrix.threshold and t[1]['class'] != 'undefined'], key=lambda x:x[1]["probability"], reverse=True)
     excl_tweets = sorted([t for t in matrix2.matrix_data.items() if t[1]['probability'] < matrix.threshold or t[1]['class'] == 'undefined'], key=lambda x:x[1]["probability"], reverse=True)
+    
+    # count different occurences
     class_list = [t[1]['class'] for t in incl_tweets]
-     # count different occurences
-    class_list = [t[1]['class'] for t in incl_tweets]
-    matrix_classes = {} #dict.fromkeys(key_list, 0)
+    class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+    matrix_classes = {c:0 for c in class_list_all} 
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
 

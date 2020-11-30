@@ -24,8 +24,8 @@
     </form>
     <div class="content-section">
     <ul>
-        <p>Certainty threshold: <span id="threshold"></span></p>
-        <p>Training ratio: <span id="ratio"></span></p>
+        <p>Certainty threshold: <span id="threshold_here"></span></p>
+        <p>Training ratio: <span id="ratio_here"></span></p>
     </ul>
 
    
@@ -78,14 +78,12 @@
  <script>
    
     var matrix_select = $("#matrix-select");
-    //var alt_cat = $("#alt-category");
-    var ratio = document.getElementById('ratio');
-    var threshold = document.getElementById('threshold');
+    var ratio = document.getElementById('ratio_here');
+    var threshold = document.getElementById('threshold_here');
 
     var row, cell;
-    //document.getElementById("insert").innerHTML = x;
+   
 
-    
     $("#matrix-select").change(function(){
         $.get('/get_matrix_categories', {'matrix_id': matrix_select.val() }).done(
             function(returnedData) {
@@ -103,10 +101,8 @@
             });
     });
 
-    //var compareMx = matrix_select.val();
     var alt_cat = $("#alt-cat");
     var new_cat = $("#new-cat");
-    //var mxtable = document.getElementById('confmx1');
 
     $("#compareBtn").click(function(){
         
@@ -114,6 +110,9 @@
             function(returnedData) {
                 console.log(matrix_select.val());
                 console.log(alt_cat.val());
+                ratio.innerText = returnedData[3];
+                threshold.innerText = returnedData[2];
+                console.log(threshold.innerText)
                 
             $("#confmx1 > tbody").empty();
             $("#head1").empty();
@@ -127,7 +126,7 @@
                 head1.append($('<th>'+returnedData[0][i][0][0]+'</th>'));
             for(var j=0; j<returnedData[0][i].length; j++){
                 cell1 = $('<td style="background-color: hsl('+returnedData[1][i][j][2][0]+', '+returnedData[1][i][j][2][1]+'%, '+returnedData[1][i][j][2][2]+'%, 0.7);">'+returnedData[0][i][j][0]+'</td>')
-                //console.log(returnedData[0][i][j])
+               
                 row1.append( cell1 );
             }
 
@@ -151,9 +150,6 @@
         };
 
             $("#compareTable > tbody").empty();
-           
-            ratio.innerText = returnedData[3];
-            threshold.innerText = returnedData[2];
             var table = $('#compareTable');
 
             for(var i=0; i<returnedData[4].length; i++){
@@ -168,25 +164,25 @@
 
         $("#metricsTable1 > tbody").empty();
             var table = $('#metricsTable1');
-            //console.log(returnedData[5])
+            
             for(var i=0; i<returnedData[5][0].length; i++){
                 row = $( '<tr />' );
                 table.append( row );
             for(var j=0; j<returnedData[5][0][i].length; j++){
                 cell = $('<td>'+returnedData[5][0][i][j]+'</td>')
-                console.log(cell)
+               
                 row.append( cell );
             }
             }
         $("#metricsTable2 > tbody").empty();
             var table = $('#metricsTable2');
-            //console.log(returnedData[5])
+            
             for(var i=0; i<returnedData[5][1].length; i++){
                 row = $( '<tr />' );
                 table.append( row );
             for(var j=0; j<returnedData[5][1][i].length; j++){
                 cell = $('<td>'+returnedData[5][1][i][j]+'</td>')
-                console.log(cell)
+               
                 row.append( cell );
             }
             }
