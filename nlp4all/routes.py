@@ -609,7 +609,7 @@ def matrix(matrix_id):
                 recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
                 precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
                 precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
-                metrics[i] = {'recall': recall, 'precision':precision}
+                metrics[i] = {'category': i,'recall': recall, 'precision':precision}
             # summarise data
             matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy, 'metrics':metrics, 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
             flag_modified(matrix, "data")
@@ -651,7 +651,7 @@ def matrix(matrix_id):
             recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
             precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
             precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
-            metrics[i] = {'recall': recall, 'precision':precision}
+            metrics[i] = {'category': i,'recall': recall, 'precision':precision}
         # summarise data
         matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
         flag_modified(matrix, "data")
@@ -672,7 +672,10 @@ def matrix(matrix_id):
     [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
     index_list =[[[counts[j][i], index_list[j][i], (j,i)] for i in range(0, len(counts[j]))] for j in range(len(counts))]
     index_list = nlp4all.utils.matrix_css_info(index_list)
-    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, counts = counts, index_list=index_list)
+
+    metrics = sorted([t for t in matrix.data['metrics'].items()], key=lambda x:x[1]["recall"], reverse=True)
+    metrics = [t[1] for t in metrics]
+    return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, index_list=index_list, metrics=metrics)
   
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
 @login_required
@@ -751,7 +754,7 @@ def my_matrices():
             recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
             precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
             precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
-            metrics[i] = {'recall': recall, 'precision':precision}
+            metrics[i] = {'category': i,'recall': recall, 'precision':precision}
         
         # summarise data
         matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy, 'metrics':metrics ,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
@@ -834,6 +837,7 @@ def aggregate_matrix():
     used_tnt_sets = [] # log used tnt sets
     agg_data = {m:{'data':{}} for m in range(n)}
     accuracy_list = []
+    metrics_list =[]
     list_excluded = []
     list_included = []
     counts_list = []
@@ -889,15 +893,26 @@ def aggregate_matrix():
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         accuracy_list.append(accuracy)
-
+        metrics = {}
+        for i in cat_names:
+            selected_cat = i
+            tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+            recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+            recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+            precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+            precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+            metrics[i] = {'category': i,'recall': recall, 'precision':precision}
         # summarise data
-        new_mx.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+        new_mx.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
         flag_modified(new_mx, "data")
         db.session.add(new_mx)
         db.session.merge(new_mx)
         db.session.flush()
         db.session.commit()
-        
+        metrix = new_mx.data['metrics'].items()
+        metrix = sorted([t for t in new_mx.data['metrics'].items()], key=lambda x:x[1]["recall"], reverse=True)
+        metrix = [t[1] for t in metrix]
+        metrics_list.append(metrix)
         agg_data[m]['data'] = new_mx.data
         # build matrix data
         currentDataClass = [new_mx.matrix_data[i].get('real_cat') for i in new_mx.matrix_data.keys()]
@@ -921,7 +936,7 @@ def aggregate_matrix():
         
     # accuracy, excluded, included
     averages = [round(sum(accuracy_list)/len(accuracy_list),3), round(sum(list_included)/len(list_included),2), round(sum(list_excluded)/n,2)]
-    
+    #metrics = round(sum(accuracy_list)/len(accuracy_list),3)
     # quadrants
     avg_quadrants = {}
     quadrants = [agg_data[m]["data"]['matrix_classes'] for m in agg_data]
@@ -1017,9 +1032,17 @@ def get_compare_matrix_data():
     
     # accuracy = sum(correct predictions)/sum(all matrix points)
     accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-  
+    metrics = {}
+    for i in cat_names:
+        selected_cat = i
+        tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+        recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+        recall = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+        precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+        precision = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+        metrics[i] = {'category': i,'recall': recall, 'precision':precision}
     # summarise data
-    matrix2.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
+    matrix2.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
     flag_modified(matrix2, "data")
     db.session.add(matrix2)
     db.session.merge(matrix2)
@@ -1047,7 +1070,9 @@ def get_compare_matrix_data():
     table_data = [[m.id, m.data['accuracy'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
     counts1=nlp4all.utils.matrix_css_info(counts1)
     counts2=nlp4all.utils.matrix_css_info(counts2)
-    return jsonify(counts1, counts2, matrix.threshold, matrix.ratio, table_data)
+    metrics= [list(matrix.data['metrics'][cat].values()) for cat in old_names ] , [list(matrix2.data['metrics'][cat].values()) for cat in cat_names ]
+
+    return jsonify(counts1, counts2, matrix.threshold, matrix.ratio, table_data,metrics)
 
 @app.route("/compare_matrices", methods=['GET', 'POST'])
 @login_required
