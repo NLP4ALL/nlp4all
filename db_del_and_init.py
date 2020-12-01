@@ -9,7 +9,7 @@ import time
 import json
 import re
 
-import utils  # potentially used, but see if it's unnecessary
+#import utils  # potentially used, but see if it's unnecessary
 
 db.drop_all()
 
