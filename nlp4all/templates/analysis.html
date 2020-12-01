@@ -20,9 +20,11 @@
 </div>
 <div class="content-section">
 <p> {{ tweet.time_posted }} </p>
+<span>
 {% for tup in word_tuples %}
-<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%">{{ tup.0 }}</span>
+<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
 {% endfor %}
+</span>
 
 <style type="text/css">
 {% for tup in word_tuples %}
@@ -31,12 +33,21 @@
 }   
 {% endfor %}
 </style>
+
 </div>
 <style type="text/css">
 #chart {
     margin-left:auto;margin-right:auto;width:50%;height:45%;
 }
 </style>
+
+<div class="tab-content">
+    <div class="content-section">
+    {% set categories = categories %}
+    {% include "annotation.html" %}
+    </div>
+</div>
+
 <div class="tab-content" id="searchTerms">
     <div class="content-section">
         <table class="table">
@@ -69,4 +80,9 @@
     </div> -->
 </div>
 
+
 {% endblock content %}
+
+
+
+

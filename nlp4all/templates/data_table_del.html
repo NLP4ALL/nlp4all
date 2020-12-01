@@ -8,14 +8,17 @@
             {% for k in table_data[0] %}
             <th>{{ k }}</th>
             {% endfor %}
+            <th></th>
         </tr>
     </thead>
     <tbody>
         {% for datum in table_data %}
-        <tr id={{ datum[2] }}>
+        <tr>
             {% for data_point in datum.values() %}
             <td>{{ data_point }}</td>
             {% endfor %}
+            <td><form action="" method="post"><button type="submit" name="delete" value="{{ datum['annotation'] }}">Delete</button></form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

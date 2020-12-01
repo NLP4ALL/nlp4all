@@ -5,15 +5,16 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms
-from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet
+from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm, AnnotationForms
+from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, TweetAnnotation#, TweetAnnotationCategory
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
 import json, ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects, get_user_project_analyses
-
+import re
+#from flask_paginate import Pagination, get_page_args, paginate
 
 @app.route("/")
 @app.route("/home")
@@ -73,7 +74,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets )
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={} )
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -308,7 +309,13 @@ def analysis():
         db.session.commit()
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
-    return render_template('analysis.html', analysis=analysis, tweet = the_tweet, form = form, **data)
+    # tags per user
+    ann_tags = TweetAnnotation.query.filter(TweetAnnotation.user==current_user.id).all()
+    tag_list = list(set([a.annotation_tag for a in ann_tags]))
+    for i in categories:
+        if i.name not in tag_list:
+            tag_list.append(i.name)
+    return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -516,3 +523,175 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+# this is not used rn
+@app.route("/tweet_annotation", methods=['GET', 'POST']) #here you need the analysis in request args!
+@login_required
+def tweet_annotation():
+    analysis_id = request.args.get('analysis', 0, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project)
+    tweets = project.tweets #Tweet.query.all()
+    a_tweet = sample(tweets,1)[0]
+    categories = project.categories#TweetTagCategory.query.all()
+    tweet_table = {}
+    # if category in request_dict_keys
+    
+    if "cat" in request.args.to_dict().keys():
+        cat_id = request.args.get('cat', type=int)
+        tweets = Tweet.query.filter(Tweet.category==cat_id)
+        tweet_table = { t.id : {'tweet': t.full_text, 'category': t.handle, "id": t.id} for t in tweets}
+        tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
+        tweet_table = [t[1] for t in tweet_table]
+        
+    if request.method == "POST" and 'select-category' in request.form.to_dict():
+        myargs = request.form.to_dict()
+        cat_id = myargs['select-category']
+        tweets = Tweet.query.filter(Tweet.category==cat_id)
+        tweet_table = { t.id : {'tweet': t.full_text, 'category': t.handle, "id": t.id} for t in tweets}
+        tweet_table = sorted([t for t in tweet_table.items()], key=lambda x:x[1]["id"], reverse=True)
+        tweet_table = [t[1] for t in tweet_table]
+        return redirect(url_for('tweet_annotation', analysis=analysis.id,cat = cat_id))
+        
+    return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, analysis=analysis)
+
+@app.route("/annotation_summary/<analysis_id>", methods=['GET', 'POST'])
+@login_required
+def annotation_summary(analysis_id):
+    
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    all_tags = list(analysis.annotation_tags.keys())
+
+    if request.method == "POST" and 'select-tag' in request.form.to_dict():
+        myargs = request.form.to_dict()
+        new_tag = myargs['select-tag']
+        return redirect(url_for('annotation_summary',analysis_id=analysis.id ,tag = new_tag))
+
+    # get annotations by selected tag
+    if "tag" in request.args.to_dict():
+        a_tag = request.args.get('tag', type=str)
+        
+    else:
+        a_tag = all_tags[0]
+    
+    # relevant annotations for a_tag
+    tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).all()
+    tagged_tweets = list(set([t.tweet for t in tag_anns]))
+    
+    #tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
+    tag_table = {t: {'tweet':t} for t in tagged_tweets}
+    for t in tagged_tweets:
+        t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet==t).all()
+        users = len(set([i.user for i in t_anns ]))
+        tag_table[t]['tag_count'] = len(t_anns)
+        tag_table[t]['users'] = users
+    tag_table = sorted([t for t in tag_table.items()], key=lambda x:x[1]["tweet"], reverse=True)
+    tag_table = [t[1] for t in tag_table]
+    
+    # do the same for all tags:
+    tagdict = {t:{'tag':t} for t in all_tags}
+    
+    for tag in all_tags:
+        tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
+        tagdict[tag]['tag_count'] = len(tag_anns)
+        tagdict[tag]['users'] = len(set([an.user for an in tag_anns]))
+        tagged_tweets = list(set([t.tweet for t in tag_anns]))
+        tagdict[tag]['nr_tweets'] = len(tagged_tweets)
+    alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["nr_tweets"], reverse=True)
+    alltag_table = [t[1] for t in alltag_table]
+
+    chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['users'] for tag in all_tags}, title="Annotation tags")
+
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data)
+
+@app.route("/annotations", methods=['GET', 'POST'])
+@login_required
+def annotations():
+    page = request.args.get('page', 1, type=int)
+    analysis_id = request.args.to_dict()['analysis_id']#, 0, type=int)
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    project = Project.query.get(analysis.project)
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
+    a_list = set([a.tweet for a in anns])
+    tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
+    
+    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
+    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+    
+    ann_dict = analysis.annotation_counts(tweets)
+
+    word_tuples=[]
+    ann_tags = list(analysis.annotation_tags.keys())
+    for a_tweet in tweets:
+        mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
+        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
+        my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
+        word_tuples.append(my_tuples)
+    
+    ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
+    
+    next_url = url_for('annotations', analysis_id=analysis_id, page=ann_list.next_num) \
+        if ann_list.has_next else None
+    prev_url = url_for('annotations', analysis_id=analysis_id,page=ann_list.prev_num) \
+        if ann_list.has_prev else None
+    
+    return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page, analysis=analysis, ann_dict=ann_dict)
+
+
+@app.route('/save_annotation', methods=['GET', 'POST'])
+def save_annotation():
+    args = request.args.to_dict()
+    t_id = int(args['tweet_id'])
+    tweet = Tweet.query.get(t_id)
+    text = str(args['text'])
+    atag = str(args['atag'])
+    pos = int(args['pos'])
+    analysis_id = int(args['analysis'])
+    analysis = BayesianAnalysis.query.get(analysis_id)
+    analysis.updated_a_tags(atag, tweet)
+    flag_modified(analysis, "annotation_tags") 
+    db.session.add(analysis)
+    db.session.merge(analysis)
+    db.session.flush()
+    db.session.commit()
+    
+    if 'start' in args:
+        txtstart = min(int(args['start']), int(args['end']))
+        txtend = max(int(args['start']), int(args['end']))
+    else:
+        txtstart= tweet.full_text.find(text) # make sure this is the full text in the final version!
+        if txtstart < 0:
+            txtstart=0
+        txtend = txtstart + len(text)
+    
+    coordinates = {}
+    
+    tag_count =0 
+    tag_count_list =[]
+    coords = {}
+    for t in text.split():
+        tag_count_list.append((tag_count+pos, t))
+        txt = re.sub(r'[^\w\s]','',t.lower())
+        tag_pos = tag_count+pos
+        coords[tag_pos] = (txt, t)
+        tag_count +=1
+    coordinates['txt_coords'] = coords
+
+    words = tweet.full_text.split()
+    length = list(range(len(words)))
+    word_locs = {}
+    left_text = tweet.full_text
+    s= 0
+    word_count = 0
+    for w in range(len(words)):
+        word_locs[word_count] = words[w] 
+        word_count += 1
+    words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
+    coordinates['word_locs'] = word_locs
+    annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag.lower())
+    db.session.add(annotation)
+    db.session.commit()
+   
+    return jsonify(words,coordinates['txt_coords'])
+
+
