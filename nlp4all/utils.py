@@ -39,15 +39,19 @@ def assign_colors(list_of_categories):
 def create_css_info(classifications, text, list_of_categories):
     category_color_dict = assign_colors(list_of_categories)
     tups = []
-    for word in text.split():
+    split_list = text.split()
+    word_counter = 0
+    for word in split_list:
         clean_word = clean_non_transparencynum(word).lower()
         if clean_word in classifications:
             # @todo: special case 50/50 
             max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-            the_tup = (word, max_key, round( 100 * classifications[clean_word][max_key]), category_color_dict[max_key])
+            the_tup = (word, max_key, round( 100 * classifications[clean_word][max_key]), category_color_dict[max_key], word_counter)
             tups.append(the_tup)
+            word_counter += 1
         else:
-            tups.append((word, "none", 0))
+            tups.append((word, "none", 0, '', word_counter))
+            word_counter += 1
     return(tups)
             
         
@@ -288,6 +292,57 @@ def create_bar_chart_data(predictions, title=""):
 
 def hsl_color_to_string(hsltup):
         return(f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)")
+
+
+# takes a list of TweetTagCategory objects, returns
+# a dict with the name of a category and its corresponding
+# color
+def ann_assign_colors(list_of_tags):  #take all tags
+    category_color_dict = {}
+    no_colors = len(list_of_tags)
+    hsl_span = int(255 / no_colors)
+    for n in range(no_colors):
+        category_color_dict[list_of_tags[n].lower()] = (n * hsl_span) + (hsl_span / 10)
+    return(category_color_dict)
+
+
+def ann_create_css_info(classifications, text, list_of_categories, ann):
+        category_color_dict = ann_assign_colors(list_of_categories)
+        word_list =[(v,k) for k,v in ann[0].coordinates['word_locs'].items()]   
+        tups = [(word_list[w][0], "none", 0) for w in range(len(word_list))]
+        for w in range(len(word_list)):
+                word = word_list[w]
+                clean_word = re.sub(r'[^\w\s]','',word[0].lower())
+                if clean_word in classifications and sum(classifications[clean_word].values())>0:
+                        relevants=[]
+                        for m in ann:
+                            if str(w) in m.coordinates['txt_coords'].keys(): # if the position is in the tagged area
+                                if m.coordinates['txt_coords'][str(w)] not in relevants:
+                                    relevants.append((m.coordinates['txt_coords'][str(w)][0],w))     
+                        for r in relevants:
+                            key_list=[]
+                            value_list=[]
+                            # @todo: special case 50/50 
+                            for k,v in classifications[clean_word].items():
+                                if v>0:
+                                    key_list.append(k),value_list.append(v)
+                            max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
+                            the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
+                            if tups[w][1] == 'none':
+                                tups[w] = the_tup           
+        return(tups)
+
+def get_tags(analysis, words, a_tweet): #set of tweet words
+        # take each word  and  calculate a proportion for each tag
+        ann_tags = list(analysis.annotation_tags.keys())
+        mydict = {word.lower() : {a.lower():0 for a in ann_tags} for word in words}
+        for a in analysis.annotations:
+            if a.text in a_tweet.full_text:
+                for w in a.words:
+                        if w in mydict.keys():
+                                mydict[w][a.annotation_tag] += 1
+        return mydict
+
          
 
 # assign cell colors (red/green) for matrices

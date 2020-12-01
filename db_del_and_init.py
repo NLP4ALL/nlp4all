@@ -7,7 +7,9 @@ import json, os
 from datetime import datetime
 import time
 import json
-#import utils
+import re
+
+import utils  # potentially used, but see if it's unnecessary
 
 db.drop_all()
 
@@ -88,7 +90,7 @@ for f in files:
                 full_text = indict['full_text'],
                 handle = indict['twitter_handle'],
                 text= " ".join([clean_word(word) for word in t.split()]), # changed
-                words = [w for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
+                words = [re.sub(r'[^\w\s]','',w) for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
                 links = [w for w in t.split() if "http" in w],
                 hashtags = [w for w in t.split() if "#" in w],
                 mentions = [w for w in t.split() if "@" in w],
