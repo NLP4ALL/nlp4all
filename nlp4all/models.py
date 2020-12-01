@@ -416,6 +416,7 @@ class BayesianAnalysis(db.Model):
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
+    annotate = db.Column(db.Boolean, default=False)
     annotations = db.relationship('TweetAnnotation')
     annotation_tags = db.Column(JSON)
 

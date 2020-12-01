@@ -68,6 +68,7 @@ class AddProjectForm(FlaskForm):
 class AddBayesianAnalysisForm(FlaskForm):
     name = StringField('Title of Analysis', validators=[DataRequired()])
     shared = BooleanField('Shared project?')
+    annotate = BooleanField('Annotate')
     number = IntegerField("How many of each category?")
     submit = SubmitField('Create Analysis')
 
@@ -161,6 +162,3 @@ class SelectCategoryForm(FlaskForm):
     category = IntegerField('cat_id')
     submit = SubmitField('select category')
 
-class AnnotationForms(FlaskForm):
-    annotation_form = FormField(AnnotationForm)
-    category_form = FormField(SelectCategoryForm)

@@ -78,7 +78,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={} )
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={}, annotate=form.annotate.data )
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
