@@ -1,0 +1,70 @@
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
+    <h2> Confusion Matrix with Iterations </h2>
+    <i>Here you can aggregate information by iterating through several train-test sets. Does increasing the number of iterations make the numbers in the matrix stabilize? </i>
+
+    <br>
+    <br>
+    
+    <h3>Matrix {{ matrix.id }}</h3>
+    <ul>
+    <p>Categories: 
+        {% for k in matrix.categories %}
+        <span>{{ k.name }}</span>
+       {% endfor %} </p>
+    <p>Threshold: {{ matrix.threshold }} </p>
+    <p>Train/test ratio: {{ matrix.ratio }} </p>
+    </ul>
+    
+    <div class="content-section">
+    
+
+    <table class="table table-bordered" id="confmx">
+      <thead>
+          <tr>
+              <th>Matrix</th>
+              {% for k in matrix.categories %}
+              <th>{{ k.name }}</th>
+              {% endfor %}
+          </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+        <ul>
+        <p>Looping over <span id='n_id'> X </span> training and testing sets.</p>
+
+        <p>Average accuracy: <span id='average'></span></p>
+        <p>Included tweets on average: <span id='included'> </span></p>
+        <p>Excluded on average: <span id='excluded'></span></p>
+        </ul>
+        <table class="table table-sm" id="metricsTable">
+          <thead><th>Average Metrics </th><th>Recall</th><th>Precision</th></thead>
+          <tbody></tbody>
+          </table>
+      </div>
+        <div class="content-section">
+
+        <p>Per iteration:</p>
+        <table id="loopTable" class="table table-sm" >
+            <thead>
+              <tr><th class="site_name">Iteration</th><th>Accuracy </th><th>Included tweets</th><th>Excluded tweets</th><th>Recall, Precision cat 1</th><th>Recall, Precision cat 2</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+        
+    <div class="content-section">
+    <h4>Update matrix</h4>
+    
+    {% include "matrix_aggregate3.html" %}
+
+    </div>
+    </div>
+    <p><a href="{{ url_for('matrix_overview') }}">Go back to all matrices</a></p>
+
+    
+

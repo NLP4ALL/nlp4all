@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField, TextAreaField, SelectMultipleField, SelectField, RadioField, FormField, HiddenField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField, TextAreaField, SelectMultipleField, SelectField, RadioField, FormField, FloatField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from nlp4all.models import User, Project 
 from wtforms.fields.core import Label
@@ -77,6 +77,17 @@ class RunBayesianAnalysisRobot(FlaskForm):
 class AddBayesianRobotForm(FlaskForm):
     name = StringField('Title of Robot', validators=[DataRequired()])
     submit = SubmitField('Create New Robot')
+
+class CreateMatrixForm(FlaskForm):
+    categories = SelectMultipleField('Categories to compare', validators=[DataRequired()])
+    ratio = IntegerField('Training tweets proportion (%)', validators=[DataRequired()])
+    submit = SubmitField('Create Matrix')
+
+class ThresholdForm(FlaskForm):
+    shuffle = BooleanField('Shuffle tweets')
+    threshold =  FloatField("Set a threshold between 0 and 1")
+    ratio = IntegerField('Change training tweets proportion (%)')
+    submit = SubmitField('Update')
 
 class AnalysisForm(FlaskForm):
     robort_form = FormField(AddBayesianRobotForm)
