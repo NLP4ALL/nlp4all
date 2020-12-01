@@ -11,6 +11,9 @@
                 <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
             </td>
             {% endif %}
+            <td>
+                <a class="nav-item nav-link" href="{{ url_for('annotations') }}?analysis_id={{ analysis.id }}">Se highlightede ord</a>
+            </td>
         </tr>
     </table>
 </div>

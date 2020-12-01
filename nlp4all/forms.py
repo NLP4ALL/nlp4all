@@ -149,3 +149,18 @@ class ResetPasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
+
+class AnnotationForm(FlaskForm):
+    text = TextAreaField('selectedtext', validators=[DataRequired()])
+    start = IntegerField('start')
+    end = IntegerField('end')
+    hidden = HiddenField()
+    submit = SubmitField('save text')
+
+class SelectCategoryForm(FlaskForm):
+    category = IntegerField('cat_id')
+    submit = SubmitField('select category')
+
+class AnnotationForms(FlaskForm):
+    annotation_form = FormField(AnnotationForm)
+    category_form = FormField(SelectCategoryForm)

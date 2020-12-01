@@ -328,6 +328,20 @@ class TweetMatrix(db.Model):
     tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
     matrix = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
 
+# Define the Annotation-Category association table
+#class AnnotationCategories(db.Model):
+#    __tablename__ = 'annotation_category'
+#    id = db.Column(db.Integer(), primary_key=True)
+#    annotation_id = db.Column(db.Integer(), db.ForeignKey('tweet_annotation.id', ondelete='CASCADE'))
+#    category_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
+
+# Define the Tweet-Matrix association table
+#class TweetMatrix(db.Model):
+#    __tablename__ = 'tweet_confusionmatrix'
+#    id = db.Column(db.Integer(), primary_key=True)
+#    tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
+#    matrix = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
+
 # class Post(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     title = db.Column(db.String(100), nullable=False)
@@ -381,8 +395,9 @@ class Tweet(db.Model):
     links = db.Column(JSON)
     mentions = db.Column(JSON)
     url = db.Column(db.String(200), unique=True)
-    text = db.Column(db.String(300)) 
-    
+    text = db.Column(db.String(300))
+    annotations = db.relationship('TweetAnnotation') 
+        
 class TweetTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -401,6 +416,8 @@ class BayesianAnalysis(db.Model):
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
+    annotations = db.relationship('TweetAnnotation')
+    annotation_tags = db.Column(JSON)
 
     def get_project(self):
         return Project.query.get(self.project)
@@ -414,6 +431,14 @@ class BayesianAnalysis(db.Model):
             val = self.data[category.name]['words'].get(w, 0)
             self.data[category.name]['words'][w] = val + 1
         return self.data
+    
+    def updated_a_tags(self, atag,tweet):
+        if atag not in self.annotation_tags.keys():
+            self.annotation_tags[atag] = {'counts' : 0, 'category' : tweet.handle, 'tweets':[]}
+        self.annotation_tags[atag]['counts'] = self.annotation_tags[atag]['counts']+1
+        if tweet.id not in self.annotation_tags[atag]['tweets']:
+            self.annotation_tags[atag]['tweets'].append(tweet.id)
+        return self.annotation_tags
     
     def get_predictions_and_words(self, words):
         # take each word  and  calculate a probabilty for each category
@@ -587,3 +612,42 @@ class ConfusionMatrix(db.Model):
 
     
 
+    def annotation_counts(self, tweets):
+        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+        a_list = set([a.tweet for a in anns])
+        annotated_tweets = list(set([a.tweet for a in anns]))
+        ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+        a_list=[]
+        for tweet in annotated_tweets:
+            a_list.append(sorted([t for t in ann_table.items() if t[1]["tweet_id"]==tweet], key=lambda x:x[1]["tweet_id"], reverse=True))
+        new_list=[]
+        for l in a_list:
+            li=[t[1] for t in l]
+            new_list.append(li)   
+        keys=[i[0].get('tweet_id') for i in new_list]
+        values=[[{'tag':j.get('tag'), 'annotation':j.get('annotation')} for j in i] for i in new_list]
+        countlist=[[] for _ in range(len(values))]
+        for x in range(len(values)):
+            for i in values[x]:
+                n=values[x].count(i)
+                c= i.copy()
+                c.update({'count':n})
+                if c not in countlist[x]:
+                    countlist[x].append(c) 
+        n_dict = {key:value for key, value in zip(keys, countlist)}
+        return(n_dict)
+
+
+
+class TweetAnnotation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    #category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    annotation_tag = db.Column(db.String(50)) ## dropdown: project categories, other
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE"))
+    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    words = db.Column(JSON)
+    text = db.Column(db.String(50))
+    coordinates = db.Column(JSON)
+    time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
