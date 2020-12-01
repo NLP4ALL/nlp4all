@@ -14,17 +14,26 @@
         </tr>
     </table>
 </div>
-<div class="content-section">
+<div class="content-section tweet-container" >
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
 </div>
-<div class="content-section">
+<div class="content-section" id="draggable-tweet">
 <p> {{ tweet.time_posted }} </p>
 <span>
 {% for tup in word_tuples %}
 <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
 {% endfor %}
 </span>
+    <!-- Draggable playing around -->
+    <!-- Title -->
+    <!-- Text -->
+    <p class="card-text">Start event fired <span class="start-event">0</span> times</p>
+    <hr>
+    <p class="card-text">Drag event fired <span class="drag-event">0</span> times</p>
+    <hr>
+    <p class="card-text">Stop event fired <span class="stop-event">0</span> times</p>
+    <p class="card-text">My position is <span class="drag-position">0</span></p>
 
 <style type="text/css">
 {% for tup in word_tuples %}
@@ -34,20 +43,28 @@
 {% endfor %}
 </style>
 
-</div>
+
 <style type="text/css">
 #chart {
     margin-left:auto;margin-right:auto;width:50%;height:45%;
 }
 </style>
+</div>
 
+
+<div class="content-section" id="piechart">
+{% include "pie_chart.html" %}
+</div>
+</div>
+<div class="tab-content">
+{%if analysis.annotate %}
 <div class="tab-content">
     <div class="content-section">
     {% set categories = categories %}
     {% include "annotation.html" %}
     </div>
 </div>
-
+{% endif %}
 <div class="tab-content" id="searchTerms">
     <div class="content-section">
         <table class="table">
@@ -60,6 +77,8 @@
         </table>
     </div>
 </div>
+</div>
+{% include "draggable.html" %}
 
     <!-- <div class="content-section">
         <form method="POST" action="">

@@ -1,0 +1,62 @@
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+<script>
+
+    // contain within a specific container
+    $('#draggable-containment').draggable({
+        containment: '.draggable-container',
+    });
+
+
+    // event triggering
+    $('#draggable-tweet').draggable({
+        start: onDragStart,
+        drag: onDrag,
+        stop: onDragStop,
+        containment: '.tweet-container'
+    });
+    
+    var $startCounter = $('.start-event');
+    var $dragCounter = $('.drag-event');
+    var $stopCounter = $('.stop-event');
+    var $positionTracker = $('.drag-position');
+    
+    
+    var counts = {
+        start: 0,
+        drag: 0,
+        stop: 0,
+        position: 0
+    };
+    
+    function onDragStart() {
+        counts.start++;
+        
+        updateCounter($startCounter, counts.start);
+    }
+    
+    function onDrag() {
+        var position = $('#draggable-tweet').offset();
+        counts.drag++;
+        counts.position = [position.left, position.top];
+        updateCounter($dragCounter, counts.drag);
+        updateCounter($positionTracker, counts.position);
+    }
+    
+    function onDragStop() {
+        var position = $('#draggable-tweet').offset(); 
+        counts.stop++;
+        counts.position = [position.left, position.top];
+        updateCounter($stopCounter, counts.stop);
+        updateCounter($positionTracker, counts.position);
+    }
+
+   
+    function updateCounter(selector, value) {
+        $(selector).text(value);
+    }
+</script>

@@ -1287,4 +1287,8 @@ def save_annotation():
    
     return jsonify(words,coordinates['txt_coords'])
 
+@app.route('/draggable', methods=['GET', 'POST'])
+def draggable():
 
+
+    return render_template('dragging.html')
