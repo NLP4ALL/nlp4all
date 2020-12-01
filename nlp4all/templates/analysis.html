@@ -41,12 +41,14 @@
 }
 </style>
 
+{%if analysis.annotate %}
 <div class="tab-content">
-    <div class="content-section">
+    <div class="content-section" type="hidden">
     {% set categories = categories %}
     {% include "annotation.html" %}
     </div>
 </div>
+{% endif %}
 
 <div class="tab-content" id="searchTerms">
     <div class="content-section">
