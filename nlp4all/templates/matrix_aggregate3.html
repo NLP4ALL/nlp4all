@@ -1,0 +1,81 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
+
+<title>jQuery Submit Form</title>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<body>
+    <form action="" method="post" id="myForm">
+        <label>Set number of iterations:</label>
+        <input type="text" name="first-name" id='n-value'>
+        <button type="button" id="submitBtn">Run loop</button>
+    </form>
+
+
+</body>
+
+
+ <script>
+   
+    var n_value = $("#n-value");
+
+    var row, cell;
+    var myrow, mycell;
+
+    $("#submitBtn").click(function(){
+        $.get('/get_aggregated_data', {'matrix_id': {{ matrix.id }}, 'n' : n_value.val() }).done(
+            function(returnedData) {
+                //console.log(n_value);
+                $("#loopTable > tbody").empty();
+                $("#confmx > tbody").empty();
+               
+            // body.innerText = returnedData[0];
+                average.innerText = returnedData[1][0];
+                included.innerText = returnedData[1][1];
+                excluded.innerText = returnedData[1][2];
+                n_id.innerText = returnedData[2];
+            
+            //matrix
+            var mx = $('#confmx');
+            for(var i=0; i<returnedData[4].length; i++){
+                myrow = $( '<tr />' );
+                mx.append( myrow );
+            for(var j=0; j<returnedData[4][i].length; j++){
+                mycell = $('<td style="background-color: hsl('+returnedData[4][i][j][2][0]+', '+returnedData[4][i][j][2][1]+'%, '+returnedData[4][i][j][2][2]+'%, 0.7);">'+returnedData[4][i][j][0]+'</td>')
+                myrow.append( mycell );
+            }
+            }
+            //loop table
+            var table = $('#loopTable');
+            for(var i=0; i<returnedData[3].length; i++){
+                row = $( '<tr />' );
+                table.append( row );
+            for(var j=0; j<returnedData[3][i].length; j++){
+                cell = $('<td>'+returnedData[3][i][j]+'</td>')
+                row.append( cell );
+            }
+            }
+
+            $("#metricsTable > tbody").empty();
+            var table = $('#metricsTable');
+
+            for(var i=0; i<returnedData[5].length; i++){
+                row = $( '<tr />' );
+                table.append( row );
+            for(var j=0; j<returnedData[5][i].length; j++){
+                cell = $('<td>'+returnedData[5][i][j]+'</td>')
+                row.append( cell );
+            }
+            };
+              
+        }); 
+        
+         
+        //reset submitfield        
+        $("#myForm").trigger("reset");
+    }); 
+
+   
+
+</script>
+
