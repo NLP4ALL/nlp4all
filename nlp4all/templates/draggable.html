@@ -11,13 +11,15 @@
         containment: '.draggable-container',
     });
 
-
+    $('#dragme').draggable()
     // event triggering
     $('#draggable-tweet').draggable({
         start: onDragStart,
         drag: onDrag,
         stop: onDragStop,
-        containment: '.tweet-container'
+        containment: '.tweet-container',
+        revert: true,
+        cursor: "move"
     });
     
     var $startCounter = $('.start-event');
@@ -55,8 +57,71 @@
         updateCounter($positionTracker, counts.position);
     }
 
-   
-    function updateCounter(selector, value) {
-        $(selector).text(value);
+
+  function updateCounter(selector, value) {
+      $(selector).text(value);
+  }
+
+
+  // other functions:
+ 
+  function allowDrop(ev) {
+    ev.preventDefault();
+    console.log("you're on it!", ev.target.id);        
+  }
+  
+  function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+  }
+  
+  function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    ev.target.appendChild(document.getElementById(data))
     }
+    
+    // change dragged object color
+    $( "#pieChart" ).on( "dragover", function(evt) {
+                var activePoints = myPieChart.getElementsAtEvent(evt);
+                if(activePoints.length > 0)
+                {
+                    var clickedElementindex = activePoints[0]["_index"];
+                    var label = myPieChart.data.labels[clickedElementindex];
+                    var value = myPieChart.data.datasets[0].data[clickedElementindex];
+                   console.log(label + ' - ' + value);
+                   $('#dragme').css("background-color", myPieChart.data.datasets[0].backgroundColor[clickedElementindex]);
+                }
+               
+            });
+  
+</script>
+<style>
+    .dropbox {
+      width: 350px;
+      height: 70px;
+      padding: 10px;
+      border: 1px solid #aaaaaa;
+    
+    }
+    .dragme {
+      width: 50px;
+      height: 50px;
+      padding: 10px;
+      color:cadetblue;
+      border: 1px solid #aaaaaa;
+
+    }
+    </style>
+
+
+<div id="droparea">
+<div id='default' ondrop="drop(event)" ondragover="allowDrop(event)" class="dropbox"></div>
+</div>
+<br>
+
+
+<script>
+  
+ 
+// https://javascript.info/mousemove-mouseover-mouseout-mouseenter-mouseleave
 </script>

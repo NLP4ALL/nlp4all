@@ -78,7 +78,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={} )
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={}, annotate=form.annotate.data )
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -297,6 +297,8 @@ def analysis():
     data['user'] = current_user
     data['user_role'] = current_user.roles
     data['tag_options'] = project.categories
+    data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
+   # data['pie_chart']['data_points']['pie_data']
 
     if form.validate_on_submit() and form.data:
         category = TweetTagCategory.query.get(int(form.choices.data))
@@ -313,6 +315,7 @@ def analysis():
         db.session.commit()
         # redirect(url_for('home'))
         return redirect(url_for('analysis', analysis=analysis_id))
+    
     # tags per user
     ann_tags = TweetAnnotation.query.filter(TweetAnnotation.user==current_user.id).all()
     tag_list = list(set([a.annotation_tag for a in ann_tags]))
@@ -605,7 +608,13 @@ def matrix(matrix_id):
 
             # count different occurences
             class_list = [t[1]['class'] for t in incl_tweets]
-            class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+            class_list_all = []#[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+            class_list_all = []# [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+            for c in cat_names: 
+                for cat in cat_names:
+                    class_list_all.append(str('Pred_'+str(c)+"_Real_"+str(cat)))
+                    class_list_all.append(str('Pred_'+str(cat)+"_Real_"+str(c)))
+            class_list_all=list(set(class_list_all))
             matrix_classes = {c:0 for c in class_list_all} 
             for i in set(class_list):
                 matrix_classes[i] = class_list.count(i)
@@ -757,7 +766,13 @@ def my_matrices():
 
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        class_list_all = []#[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        class_list_all = []# [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        for c in cat_names: 
+            for cat in cat_names:
+                class_list_all.append(str('Pred_'+str(c)+"_Real_"+str(cat)))
+                class_list_all.append(str('Pred_'+str(cat)+"_Real_"+str(c)))
+        class_list_all=list(set(class_list_all))
         matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
@@ -878,7 +893,6 @@ def aggregate_matrix():
         tnt_list = [x for x in list(range(0, len(matrix.training_and_test_sets))) if x not in used_tnt_sets]
 
         tnt_nr = sample(tnt_list, 1)[0]
-        #print(tnt_nr)
         used_tnt_sets.append(tnt_nr) # log used sets
         a_tnt_set = tnt_sets[tnt_nr]
         train_tweet_ids = a_tnt_set[0].keys()
@@ -894,7 +908,7 @@ def aggregate_matrix():
         matrix_data = new_mx.make_matrix_data(test_tweets, cat_names)
         new_mx.matrix_data = {i[0]: i[1] for i in matrix_data}
     
-        flag_modified(matrix, "matrix_data")
+        flag_modified(new_mx, "matrix_data")
         db.session.flush()
 
         # filter according to the threshold
@@ -906,7 +920,12 @@ def aggregate_matrix():
         
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        class_list_all = []# [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        for c in cat_names: 
+            for cat in cat_names:
+                class_list_all.append(str('Pred_'+str(c)+"_Real_"+str(cat)))
+                class_list_all.append(str('Pred_'+str(cat)+"_Real_"+str(c)))
+        class_list_all=list(set(class_list_all))
         matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
@@ -922,11 +941,11 @@ def aggregate_matrix():
             selected_cat = i
             tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
             recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
-            if sum([matrix_classes [x] for x in recall_keys]) >0:
+            if sum([matrix_classes[x] for x in recall_keys]) >0:
                 metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
             
             precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
-            if sum([matrix_classes [x] for x in precision_keys]) > 0:
+            if sum([matrix_classes[x] for x in precision_keys]) > 0:
                 metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
 
         # summarise data
