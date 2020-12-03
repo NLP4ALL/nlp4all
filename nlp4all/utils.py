@@ -290,6 +290,23 @@ def create_bar_chart_data(predictions, title=""):
         data['data_points'] = data_points
         return(data)
 
+def create_pie_chart_data(cat_names, title=""):
+        data = {}
+        data['title'] = title
+        colors = generate_n_hsl_colors(len(cat_names))
+        bg_colors = generate_n_hsl_colors(len(cat_names), transparency = .5)
+        data_points = []
+        for tup in zip(list(cat_names), colors, bg_colors):
+                d = {}
+                d['label'] = tup[0] 
+                d['color'] = hsl_color_to_string(tup[1])
+                d['bg_color'] = hsl_color_to_string(tup[2])
+                d['pie_data'] = 100/len(cat_names)
+                data_points.append(d)
+        data['data_points'] = data_points
+        return(data)
+
+
 def hsl_color_to_string(hsltup):
         return(f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)")
 

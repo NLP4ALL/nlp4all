@@ -418,6 +418,7 @@ class BayesianAnalysis(db.Model):
     tweets = db.Column(JSON, default=[])
     annotations = db.relationship('TweetAnnotation')
     annotation_tags = db.Column(JSON)
+    annotate = db.Column(db.Boolean, default=False)
 
     def get_project(self):
         return Project.query.get(self.project)

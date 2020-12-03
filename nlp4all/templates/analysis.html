@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
+
 <div class="content-section">
     <table>
         <tr>
@@ -15,10 +16,12 @@
     </table>
 </div>
 <div class="content-section tweet-container" >
+    <div class="col-md-8">
 <div class="content-section" id="chart">
 {% include "bar_chart.html" %}
 </div>
-<div class="content-section" id="draggable-tweet">
+<div class="content-section" id="draggable-tweet" >
+    
 <p> {{ tweet.time_posted }} </p>
 <span>
 {% for tup in word_tuples %}
@@ -50,12 +53,13 @@
 }
 </style>
 </div>
+<div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" >Tweet goes to:</div>
 
-
-<div class="content-section" id="piechart">
+<div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)"  >
+    
 {% include "pie_chart.html" %}
 </div>
-</div>
+
 <div class="tab-content">
 {%if analysis.annotate %}
 <div class="tab-content">
@@ -78,6 +82,8 @@
     </div>
 </div>
 </div>
+</div>
+{% set categories = categories %}
 {% include "draggable.html" %}
 
     <!-- <div class="content-section">
@@ -98,8 +104,9 @@
         </form>
     </div> -->
 </div>
+</div>
 
-
+</div>
 {% endblock content %}
 
 
