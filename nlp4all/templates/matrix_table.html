@@ -1,13 +1,18 @@
 
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
- 
+<div class="row">
+    
+  <div class="col-md-8"> 
+      
+    <div class="content-section">
     <h2> Confusion Matrix with Iterations </h2>
     <i>Here you can aggregate information by iterating through several train-test sets. Does increasing the number of iterations make the numbers in the matrix stabilize? </i>
 
     <br>
     <br>
-    
+
+    <div class="content-section">
     <h3>Matrix {{ matrix.id }}</h3>
     <ul>
     <p>Categories: 
@@ -17,29 +22,21 @@
     <p>Threshold: {{ matrix.threshold }} </p>
     <p>Train/test ratio: {{ matrix.ratio }} </p>
     </ul>
-    
+  
     <div class="content-section">
-    
-
-    <table class="table table-bordered" id="confmx">
-      <thead>
-          <tr>
-              <th>Matrix</th>
-              {% for k in matrix.categories %}
-              <th>{{ k.name }}</th>
-              {% endfor %}
-          </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-        <ul>
-        <p>Looping over <span id='n_id'> X </span> training and testing sets.</p>
-
-        <p>Average accuracy: <span id='average'></span></p>
-        <p>Included tweets on average: <span id='included'> </span></p>
-        <p>Excluded on average: <span id='excluded'></span></p>
-        </ul>
+      <table class="table table-bordered" id="confmx">
+        <thead>
+            <tr>
+                <th>Matrix</th>
+                {% for k in matrix.categories %}
+                <th>{{ k.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+       
         <table class="table table-sm" id="metricsTable">
           <thead><th>Average Metrics </th><th>Recall</th><th>Precision</th></thead>
           <tbody></tbody>
@@ -47,23 +44,34 @@
       </div>
         <div class="content-section">
 
-        <p>Per iteration:</p>
-        <table id="loopTable" class="table table-sm" >
-            <thead>
-              <tr><th class="site_name">Iteration</th><th>Accuracy </th><th>Included tweets</th><th>Excluded tweets</th><th>Recall, Precision cat 1</th><th>Recall, Precision cat 2</th></tr>
-            </thead>
-            <tbody>
-            </tbody>
+          <p>Per iteration:</p>
+          <table id="loopTable" class="table table-sm" >
+              <thead>
+                <tr><th class="site_name">Iteration</th><th>Accuracy </th><th>Included tweets</th><th>Excluded tweets</th><th>Recall, Precision cat 1</th><th>Recall, Precision cat 2</th></tr>
+              </thead>
+              <tbody>
+              </tbody>
           </table>
         </div>
-        
+      </div>
+    </div>
+  <div class="col-md-4"> 
     <div class="content-section">
-    <h4>Update matrix</h4>
-    
-    {% include "matrix_aggregate3.html" %}
+      <h4>Update matrix</h4>
+      {% include "matrix_aggregate3.html" %}
+    </div>
+    <div class="content-section">
+    <ul>
+      <p>Looping over <span id='n_id'> X </span> training and testing sets.</p>
 
+      <p>Average accuracy: <span id='average'></span></p>
+      <p>Included tweets on average: <span id='included'> </span></p>
+      <p>Excluded on average: <span id='excluded'></span></p>
+      </ul>
     </div>
-    </div>
+</div>
+</div>
+</div>
     
 
     
