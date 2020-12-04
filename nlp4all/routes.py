@@ -1306,8 +1306,57 @@ def save_annotation():
    
     return jsonify(words,coordinates['txt_coords'])
 
-@app.route('/draggable', methods=['GET', 'POST'])
+@app.route('/save_draggable_tweet', methods=['GET', 'POST'])
 def draggable():
+    args = request.args.to_dict()
+    t_id = int(args['tweet_id'])
+    this_tweet = Tweet.query.get(t_id)
+    analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
+    project = Project.query.get(analysis.project)
+    cat= str(args['category'])
+    category = TweetTagCategory.query.get()
 
+    ## save the prediction
+    analysis.data = analysis.updated_data(this_tweet, category)
+    ## all this  stuff is necessary  because the database backend doesnt resgister
+    ## changes on JSON
+    flag_modified(analysis, "data")
+    db.session.add(analysis)
+    db.session.merge(analysis)
+    db.session.flush()
+    db.session.commit()
+    tag = TweetTag (category = category.id, analysis = analysis.id, tweet=this_tweet.id, user = current_user.id)
+    db.session.add(tag)
+    db.session.commit()
 
-    return render_template('dragging.html')
+    # show a new tweet
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
+    tweets = project.tweets
+    the_tweet = None
+    if analysis.shared:
+        completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
+        uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        if(len(uncompleted_tweets) > 0):
+            the_tweet_id = uncompleted_tweets[0]
+            the_tweet = Tweet.query.get(the_tweet_id)
+        else:
+            flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
+            the_tweet = Tweet(full_text = "", words = [])
+    else:
+        the_tweet = sample(tweets, 1)[0]
+
+    number_of_tagged = len(analysis.tags)
+    data = {}
+    data['number_of_tagged']  = number_of_tagged
+    data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
+    data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
+    data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
+    # filter robots that are retired, and sort them alphabetically
+    # data['robots'] = sorted(robots, key= lambda r: r.name)
+    data['analysis_data'] = analysis.data
+    data['user'] = current_user
+    data['user_role'] = current_user.roles
+    data['tag_options'] = project.categories
+    data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
+
+    return jsonify(data, the_tweet)

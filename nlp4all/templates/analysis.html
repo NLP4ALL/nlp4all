@@ -18,7 +18,7 @@
 
     <div class="content-section tweet-container" >
    
-    <div class="content-section" id="draggable-tweet" >
+    <div class="content-section" id="draggable-tweet" t_id=200 >
     
         <p> {{ tweet.time_posted }} </p>
         <span>
@@ -43,17 +43,14 @@
         </style>
 
 
-        <style type="text/css">
-        #chart {
-            margin-left:auto;margin-right:auto;width:50%;height:45%;
-        }
-        </style>
+       
     </div>
     <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" >Tweet</div>
     <p></p>
 
         <div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event, item)"  >
             {% include "pie_chart.html" %}
+            <span id='cat' type='hidden'></span>
         </div>
 
     <div class="tab-content" id="searchTerms">
@@ -111,6 +108,11 @@
 <div class="content-section">
     <h4>Bayesian probabilities</h4>
     {% include "bar_chart.html" %}
+    <style type="text/css">
+        #chart {
+            margin-left:auto;margin-right:auto;width:50%;height:45%;
+        }
+    </style>
 </div>
 
 <div class="content-section">
