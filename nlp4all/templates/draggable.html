@@ -15,10 +15,10 @@
     });
 
   // select the item element
-  const item = document.querySelector('.dragme');
+  //const item = document.querySelector('.dragme');
 
   // attach the dragstart event handler
-  item.addEventListener('dragstart', dragStart);
+  //item.addEventListener('dragstart', dragStart);
 
   // handle the dragstart
 
@@ -43,14 +43,16 @@
                 }
                
             });
- 
+
+
   function allowDrop(ev) {
     setTimeout(() => {
-      ev.preventDefault();
-      item.classList.add('hide');
+      
+      //item.classList.add('hide');
+      console.log("you can drop it now");  
     }, 3000); // wait 3 sec before triggering event
-    
-    console.log("you're on it!");  
+    ev.preventDefault();
+    console.log("you're on it!", ev.dataTransfer.getData("text"));  
         
   }
 
@@ -59,29 +61,37 @@
   }
   
   function drop(ev) {
+    console.log("drop!");  
     ev.preventDefault();
+    //$('#draggable-tweet').css("background-color",'hsl(0, 100%, 100%)');
     var data = ev.dataTransfer.getData("text");
     ev.target.appendChild(document.getElementById(data));
-    ev.target.classList.remove('hide');
-
+    $('#draggable-tweet').css("background-color",'hsl(0, 100%, 100%)');
+    //item.classList.remove('hide');
+    
     var t_id = $("#draggable-tweet").attr('t_id');
     var cat = $("#cat").attr('value');
     console.log(t_id);
     console.log(cat);
+  }
 
-    $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 't_id': t_id, 'category': cat }).done(
+  $("#testBtn").click(function(){
+    console.log('pressed')
+    var t_id = $("#draggable-tweet").attr('t_id');
+    var cat = $("#cat").attr('value');
+    $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
             
             //ratio.innerText = returnedData[3];
             //threshold.innerText = returnedData[2];
             //console.log(threshold.innerText)
-              $( "#time-posted" ).innerText = returnedData[1]['time_posted']   //.append( "<p>Test</p>" );
+              $( "#time-posted" ).innerText = returnedData[2]  //.append( "<p>Test</p>" );
               for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
-                  console.log(returnedData[0]['word_tuples'][i])
-                  //$("#tuples").append('<span class="'+returnedData[0].word_tuples)
+                  
+                  $("#tuples").append('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
                 }
-        })
-      }
+        });
+      });
     
     
   
@@ -111,15 +121,9 @@
     </style>
 
 
-<div id="droparea">
-<div id='default' ondrop="drop(event)" ondragover="allowDrop(event)" class="dropbox"></div>
-</div>
+
 
 <h2>jquery tweeting</h2>
-<div id='tweettuple' class="container">
-  <div class="inner">Hello</div>
-  <div class="inner">Goodbye</div>
-</div>
 
 <div class="content-section" id="jquery-tweet" >
     <p id="time-posted"></p>
@@ -135,20 +139,4 @@
 
 </div>
 
-<script>
-    $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 't_id': t_id.val(), 'category': cat.val() }).done(
-        function(returnedData) {
-            console.log(t_id.val());
-            console.log(cat.val());
-            //ratio.innerText = returnedData[3];
-            //threshold.innerText = returnedData[2];
-            //console.log(threshold.innerText)
-            $( "#time-posted" ).innerText = returnedData[1]['time_posted']   //.append( "<p>Test</p>" );
-            for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
-                console.log(returnedData[0]['word_tuples'][i])
-                //$("#tuples").append('<span class="'+returnedData[0].word_tuples)
-            }
-        
 
-
-</script>    
