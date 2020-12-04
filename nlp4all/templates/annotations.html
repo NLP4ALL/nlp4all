@@ -2,11 +2,21 @@
 {% block content %}
 <h1>Annotation overview</h1>
 
-<p> <span><a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis_id={{ analysis.id }}">Back to analysis</a></span></p>
-
+<div class="row">
+    <div class="col-md-8">
 
     {% include "annotations_colors.html" %}
 
-    
+</div>
+<div class="col-md-4">
 
+   
+        <table>
+            <tr><td><span><a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis_id={{ analysis.id }}">Back to analysis</a></span></td></tr>
+            <tr><td><span><a class="nav-item nav-link" href="{{ url_for('annotation_summary', analysis_id= analysis.id ) }}">See annotation summary</a></span></td>
+            </tr>
+        </table>
+  
+</div>
+</div>
 {% endblock content %}

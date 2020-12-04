@@ -3,30 +3,39 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   
+<div class="content-section" id="jquery-tweet" >
+  <p id="time-posted"></p>
+  <span id="tuples"></span>
+
+  <style type="text/css">
+    {% for tup in word_tuples %}
+    .{{tup.1}}-{{tup.2}} {
+        color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
+    }   
+    {% endfor %}
+</style>
+
+</div>
 
 
 <script>
-
-    
-
     // contain within a specific container
     $('#draggable-containment').draggable({
         containment: '.draggable-container',
     });
 
-  // select the item element
-  //const item = document.querySelector('.dragme');
-
-  // attach the dragstart event handler
-  //item.addEventListener('dragstart', dragStart);
-
-  // handle the dragstart
+  const item = document.querySelector('.dragme');
 
   function dragStart(ev) {
     console.log('drag starts...');
-    //setTimeout(() => {
-    //    ev.target.classList.add('hide');
-    //}, 1);
+    setTimeout(() => {
+        ev.target.classList.add('hide');
+    }, 1);
+  }
+
+  function dragStop(ev) {
+    console.log('drag stops...');
+    item.classList.remove('hide');
   }
 
   // change dragged object color
@@ -41,16 +50,14 @@
                    console.log(label + ' - ' + value);
                    $('#draggable-tweet').css("background-color", myPieChart.data.datasets[0].backgroundColor[clickedElementindex]);
                 }
-               
             });
 
 
   function allowDrop(ev) {
-    setTimeout(() => {
-      
-      //item.classList.add('hide');
-      console.log("you can drop it now");  
-    }, 3000); // wait 3 sec before triggering event
+    
+    console.log("you can drop it now");  
+    item.classList.add('hide');
+    //to do wait 3 sec before triggering event
     ev.preventDefault();
     console.log("you're on it!", ev.dataTransfer.getData("text"));  
         
@@ -58,43 +65,39 @@
 
   function drag(ev) {
     ev.dataTransfer.setData("text", ev.target.id);
+    setTimeout(() => {  
+     // ev.target.classList.add('hide');
+    }, 1000);
   }
   
   function drop(ev) {
-    console.log("drop!");  
     ev.preventDefault();
-    //$('#draggable-tweet').css("background-color",'hsl(0, 100%, 100%)');
-    var data = ev.dataTransfer.getData("text");
-    ev.target.appendChild(document.getElementById(data));
+    //var data = ev.dataTransfer.getData("text");
+    //console.log("drop!"+data+ev.target)
+    //ev.target.appendChild(document.getElementById(data));
+
     $('#draggable-tweet').css("background-color",'hsl(0, 100%, 100%)');
-    //item.classList.remove('hide');
     
     var t_id = $("#draggable-tweet").attr('t_id');
     var cat = $("#cat").attr('value');
     console.log(t_id);
     console.log(cat);
-  }
 
-  $("#testBtn").click(function(){
-    console.log('pressed')
-    var t_id = $("#draggable-tweet").attr('t_id');
-    var cat = $("#cat").attr('value');
+    console.log('jquerying')
+    //var t_id = $("#draggable-tweet").attr('t_id');
+    //var cat = $("#cat").attr('value');
     $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
-            
-            //ratio.innerText = returnedData[3];
-            //threshold.innerText = returnedData[2];
-            //console.log(threshold.innerText)
-              $( "#time-posted" ).innerText = returnedData[2]  //.append( "<p>Test</p>" );
+
+            console.log(returnedData[2])
+            document.getElementById('time-posted').innerText = returnedData[2]  //.append( "<p>Test</p>" );
               for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
                   
                   $("#tuples").append('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
                 }
         });
-      });
+  }
     
-    
-  
 </script>
 
 <style>
@@ -123,20 +126,5 @@
 
 
 
-<h2>jquery tweeting</h2>
-
-<div class="content-section" id="jquery-tweet" >
-    <p id="time-posted"></p>
-    <span id="tuples"></span>
-
-    <style type="text/css">
-        {% for tup in word_tuples %}
-        .{{tup.1}}-{{tup.2}} {
-            color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
-        }   
-        {% endfor %}
-    </style>
-
-</div>
 
 
