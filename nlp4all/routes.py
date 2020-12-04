@@ -1360,3 +1360,23 @@ def draggable():
     data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
 
     return jsonify(data, the_tweet.id, the_tweet.time_posted)
+
+@app.route('/get_bar_chart_data', methods=['GET', 'POST'])
+def get_bar_chart_data():
+    args = request.args.to_dict()
+    t_id = int(args['tweet_id'])
+    this_tweet = Tweet.query.get(t_id)
+    analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
+    project = Project.query.get(analysis.project)
+    categories = project.categories
+    cat= str(args['category'])
+    category = TweetTagCategory.query.filter(TweetTagCategory.name==cat).first()
+    number_of_tagged = len(analysis.tags)
+    data = {}
+    data['number_of_tagged']  = number_of_tagged
+    data['words'], data['predictions'] = analysis.get_predictions_and_words(set(this_tweet.words))
+    data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], this_tweet.full_text, categories)
+    data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
+    # filter robots that are retired, and sort them alphabetically
+
+    return jsonify(data)
