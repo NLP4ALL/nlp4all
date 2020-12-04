@@ -21,7 +21,7 @@
     <div class="content-section tweet-container" >
         <h2>To which category does this tweet belong?</h2>
    
-    <div class="content-section" id="draggable-tweet" t_id=55 >
+    <div class="content-section" id="draggable-tweet" tweet_id=55 >
     
         <p> {{ tweet.time_posted }} </p>
         <span>
@@ -35,11 +35,23 @@
             color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
         }   
         {% endfor %}
-        </style>
-
-
-       
+        </style> 
     </div>
+
+    <div class="content-section" id="jquery-tweet" >
+        <p id="time-posted"></p>
+        <span id="tuples"></span>
+      
+        <style type="text/css">
+          {% for tup in word_tuples %}
+          .{{tup.1}}-{{tup.2}} {
+              color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
+          }   
+          {% endfor %}
+      </style>
+      
+      </div>
+   
     <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" >Tweet</div>
     <p><span id='cat' type='hidden'></span></p>
 
@@ -60,11 +72,9 @@
             </table>
         </div>
     </div>
+    
+    {% include "draggable.html" %}
 
-<div>
-
-{% include "draggable.html" %}
-</div>
     <!-- <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
@@ -100,6 +110,8 @@
 <div class="content-section">
     <h4>Bayesian probabilities</h4>
     {% include "bar_chart.html" %}
+    <button id="myBtn">chart</button>
+    {% include "bar_chart_jq.html" %}
     <style type="text/css">
         #chart {
             margin-left:auto;margin-right:auto;width:50%;height:45%;

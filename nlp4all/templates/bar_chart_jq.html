@@ -1,0 +1,62 @@
+<canvas id="jqChart" width="300" height="300"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+var ctx_jq = document.getElementById('jqChart').getContext('2d');
+
+
+document.getElementById("myBtn").addEventListener("click", function() {
+    var t_id = $("#draggable-tweet").attr('tweet_id');
+    var cat = $("#cat").attr('value');
+    console.log(t_id, cat ,'"from bar"');
+    $.get('/get_bar_chart_data', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
+        function(returnedData) {
+            var chart_data = returnedData['chart_data']
+            {% for d in chart_data.data_points %}
+            label = '{{ d.label }}'
+            console.log(label)
+            {% endfor %}
+        var mydatasets= [
+                    {% for d in chart_data.data_points %}
+                {
+                    label: '{{ d.label }}',
+                    data: [{{d.estimate}}],
+                    backgroundColor: ['{{ d.bg_color }}'],
+                },
+                {% endfor %}
+                
+                ]
+        console.log(mydatasets)
+        var mytitle = returnedData['chart_data']['title']
+
+    var jqChart = new Chart(ctx_jq, {
+            type: 'bar',
+            data: {
+                datasets:  mydatasets
+                
+            },
+            options: {
+                responsive : true,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: mytitle
+                }
+            } 
+            
+            });
+
+            console.log('hello', jqChart)
+    });
+}); 
+
+</script>
