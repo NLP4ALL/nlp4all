@@ -1,90 +1,78 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="content-section">
-    <table>
-        <tr>
-            <td>
-                <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Se statistikker for ord og tweets</a>
-            </td>
-            {% if not analysis.shared %}
-            <td>
-                <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
-            </td>
-            {% endif %}
-        </tr>
-    </table>
-</div>
-<div class="content-section tweet-container" >
-    <div class="col-md-8">
-<div class="content-section" id="chart">
-{% include "bar_chart.html" %}
-</div>
-<div class="content-section" id="draggable-tweet" >
-    
-<p> {{ tweet.time_posted }} </p>
-<span>
-{% for tup in word_tuples %}
-<span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
-{% endfor %}
-</span>
-    <!-- Draggable playing around -->
-    <p class="card-text">Start event fired <span class="start-event">0</span> times</p>
-    <hr>
-    <p class="card-text">Drag event fired <span class="drag-event">0</span> times</p>
-    <hr>
-    <p class="card-text">Stop event fired <span class="stop-event">0</span> times</p>
-    <p class="card-text">My position is <span class="drag-position">0</span></p>
-
-<style type="text/css">
-{% for tup in word_tuples %}
-.{{tup.1}}-{{tup.2}} {
-    color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
-}   
-{% endfor %}
-</style>
-
-
-<style type="text/css">
-#chart {
-    margin-left:auto;margin-right:auto;width:50%;height:45%;
-}
-</style>
-</div>
-<div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" >Tweet</div>
-
-
-<div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)"  >
-    
-{% include "pie_chart.html" %}
-</div>
-
-<div class="tab-content">
-{%if analysis.annotate %}
-<div class="tab-content">
     <div class="content-section">
-    {% set categories = categories %}
-    {% include "annotation.html" %}
-    </div>
-</div>
-{% endif %}
-<div class="tab-content" id="searchTerms">
-    <div class="content-section">
-        <table class="table">
-            <tr><th>Options</th></tr>
+        <table>
             <tr>
-            {% for tag_option in tag_options %}
-                <td><form action="" method="post"><button type="submit" value="{{(tweet.id, tag_option.id)}}" name="tag">{{ tag_option.name }}</button></form></td>
-            {% endfor %}
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Se statistikker for ord og tweets</a>
+                </td>
+                {% if not analysis.shared %}
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+                </td>
+                {% endif %}
             </tr>
         </table>
     </div>
-</div>
-</div>
-</div>
+
+    <div class="content-section tweet-container" >
+   
+    <div class="content-section" id="draggable-tweet" >
+    
+        <p> {{ tweet.time_posted }} </p>
+        <span>
+        {% for tup in word_tuples %}
+        <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
+        {% endfor %}
+        </span>
+            <!-- Draggable playing around -->
+            <p class="card-text">Start event fired <span class="start-event">0</span> times</p>
+            <hr>
+            <p class="card-text">Drag event fired <span class="drag-event">0</span> times</p>
+            <hr>
+            <p class="card-text">Stop event fired <span class="stop-event">0</span> times</p>
+            <p class="card-text">My position is <span class="drag-position">0</span></p>
+
+        <style type="text/css">
+        {% for tup in word_tuples %}
+        .{{tup.1}}-{{tup.2}} {
+            color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
+        }   
+        {% endfor %}
+        </style>
+
+
+        <style type="text/css">
+        #chart {
+            margin-left:auto;margin-right:auto;width:50%;height:45%;
+        }
+        </style>
+    </div>
+    <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" >Tweet</div>
+    <p></p>
+
+        <div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event, item)"  >
+            {% include "pie_chart.html" %}
+        </div>
+
+    <div class="tab-content" id="searchTerms">
+        <div class="content-section">
+            <table class="table">
+                <tr><th>Options</th></tr>
+                <tr>
+                {% for tag_option in tag_options %}
+                    <td><form action="" method="post"><button type="submit" value="{{(tweet.id, tag_option.id)}}" name="tag">{{ tag_option.name }}</button></form></td>
+                {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </div>
+
+<div>
 {% set categories = categories %}
 {% include "draggable.html" %}
-
+</div>
     <!-- <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
@@ -102,12 +90,35 @@
             </div>
         </form>
     </div> -->
-</div>
-</div>
 
 </div>
 {% endblock content %}
 
 
+{% block sidecontent %}
 
+<div class="content-section">
+    <table>
+        <tr>
+            <td>
+              <p>Here a headline?</p>
+            </td>
+           
+        </tr>
+    </table>
+</div>
 
+<div class="content-section">
+    <h4>Bayesian probabilities</h4>
+    {% include "bar_chart.html" %}
+</div>
+
+<div class="content-section">
+    {%if analysis.annotate %}
+    <h4>Add annotations to the tweet</h4>
+    {% set categories = categories %}
+    {% include "annotation.html" %}
+    {% endif %}
+</div>
+
+{% endblock sidecontent %}

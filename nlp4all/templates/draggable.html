@@ -22,14 +22,17 @@
 
   function dragStart(ev) {
     console.log('drag starts...');
-    setTimeout(() => {
-       // e.target.classList.add('hide');
-    }, 0);
+    //setTimeout(() => {
+    //    ev.target.classList.add('hide');
+    //}, 1);
   }
 
  
   function allowDrop(ev) {
-    ev.preventDefault();
+    setTimeout(() => {
+      ev.preventDefault();
+      item.classList.add('hide');
+    }, 3000); // wait 3 sec before triggering event
     //var sth = ui.draggable.context.attributes.src.textContent
     
     console.log("you're on it!");  
@@ -62,6 +65,7 @@
             });
   
 </script>
+
 <style>
     .dropbox {
       width: 350px;
@@ -74,8 +78,10 @@
       width: 50px;
       height: 50px;
       padding: 10px;
+      margin:auto;
       color:cadetblue;
       border: 1px solid #aaaaaa;
+      align-self: center;
 
     }
     .hide {
@@ -87,11 +93,3 @@
 <div id="droparea">
 <div id='default' ondrop="drop(event)" ondragover="allowDrop(event)" class="dropbox"></div>
 </div>
-<br>
-
-
-<script>
-  
- 
-// https://javascript.info/mousemove-mouseover-mouseout-mouseenter-mouseleave
-</script>
