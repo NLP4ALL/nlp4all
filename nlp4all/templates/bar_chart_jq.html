@@ -4,17 +4,23 @@
 var ctx_jq = document.getElementById('jqChart').getContext('2d');
 
 
-document.getElementById("myBtn").addEventListener("click", function() {
+// add event listener i.e. observer
+const observer = new MutationObserver( list => {
+  const evt = new CustomEvent('dom-changed', {detail: list});
+  document.getElementById("time-posted").dispatchEvent(evt)
+});
+observer.observe(document.getElementById("time-posted"), {attributes: true, childList: true, subtree: true});
+
+
+// update the chart
+document.getElementById("time-posted").addEventListener('dom-changed', function() {
+
     var t_id = $("#draggable-tweet").attr('tweet_id');
     var cat = $("#cat").attr('value');
     console.log(t_id, cat ,'"from bar"');
     $.get('/get_bar_chart_data', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
             var chart_data = returnedData['chart_data']
-            {% for d in chart_data.data_points %}
-            label = '{{ d.label }}'
-            console.log(label)
-            {% endfor %}
         var mydatasets= [
                     {% for d in chart_data.data_points %}
                 {
@@ -55,7 +61,7 @@ document.getElementById("myBtn").addEventListener("click", function() {
             
             });
 
-            console.log('hello', jqChart)
+           
     });
 }); 
 
