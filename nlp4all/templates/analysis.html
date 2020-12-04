@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
-
+<div class="row">
+    <div class="col-md-8">
+       
     <div class="content-section">
         <table>
             <tr>
@@ -17,6 +19,7 @@
     </div>
 
     <div class="content-section tweet-container" >
+        <h2>To which category does this tweet belong?</h2>
    
     <div class="content-section" id="draggable-tweet" t_id=55 >
     
@@ -25,15 +28,7 @@
         {% for tup in word_tuples %}
         <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
         {% endfor %}
-        </span>
-            <!-- Draggable playing around -->
-            <p class="card-text">Start event fired <span class="start-event">0</span> times</p>
-            <hr>
-            <p class="card-text">Drag event fired <span class="drag-event">0</span> times</p>
-            <hr>
-            <p class="card-text">Stop event fired <span class="stop-event">0</span> times</p>
-            <p class="card-text">My position is <span class="drag-position">0</span></p>
-
+       
         <style type="text/css">
         {% for tup in word_tuples %}
         .{{tup.1}}-{{tup.2}} {
@@ -45,7 +40,7 @@
 
        
     </div>
-    <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" >Tweet</div>
+    <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" >Tweet</div>
     <p><span id='cat' type='hidden'></span></p>
 
         <div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)"  >
@@ -68,7 +63,6 @@
 
 <div>
 
-<button id="testBtn">press me</button>
 {% include "draggable.html" %}
 </div>
     <!-- <div class="content-section">
@@ -90,11 +84,8 @@
     </div> -->
 
 </div>
-{% endblock content %}
-
-
-{% block sidecontent %}
-
+</div>
+<div class="col-md-4">
 <div class="content-section">
     <table>
         <tr>
@@ -116,12 +107,13 @@
     </style>
 </div>
 
-<div class="content-section">
-    {%if analysis.annotate %}
+{%if analysis.annotate %}
+<div class="content-section"> 
     <h4>Add annotations to the tweet</h4>
     {% set categories = categories %}
     {% include "annotation.html" %}
-    {% endif %}
 </div>
 
-{% endblock sidecontent %}
+{% endif %}
+</div>
+{% endblock content %}
