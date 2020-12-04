@@ -18,7 +18,7 @@
 
     <div class="content-section tweet-container" >
    
-    <div class="content-section" id="draggable-tweet" t_id=200 >
+    <div class="content-section" id="draggable-tweet" t_id=55 >
     
         <p> {{ tweet.time_posted }} </p>
         <span>
@@ -46,11 +46,11 @@
        
     </div>
     <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" >Tweet</div>
-    <p></p>
+    <p><span id='cat' type='hidden'></span></p>
 
-        <div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event, item)"  >
+        <div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)"  >
             {% include "pie_chart.html" %}
-            <span id='cat' type='hidden'></span>
+            
         </div>
 
     <div class="tab-content" id="searchTerms">
@@ -67,7 +67,8 @@
     </div>
 
 <div>
-{% set categories = categories %}
+
+<button id="testBtn">press me</button>
 {% include "draggable.html" %}
 </div>
     <!-- <div class="content-section">
