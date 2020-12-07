@@ -20,24 +20,31 @@ document.getElementById("time-posted").addEventListener('dom-changed', function(
     console.log(t_id, cat ,'"from bar"');
     $.get('/get_bar_chart_data', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
-            var chart_data = returnedData['chart_data']
-        var mydatasets= [
-                    {% for d in chart_data.data_points %}
-                {
-                    label: '{{ d.label }}',
-                    data: [{{d.estimate}}],
-                    backgroundColor: ['{{ d.bg_color }}'],
-                },
-                {% endfor %}
-                
-                ]
-        console.log(mydatasets)
-        var mytitle = returnedData['chart_data']['title']
+            var bar_chart_data = returnedData.chart_data
+            console.log(bar_chart_data.data_points)
+            var data = {
+            datasets: []
+             
+            };
+
+            for(var i=0; i<bar_chart_data.data_points.length; i++){
+                    data.datasets.push(
+                        {
+                            data: [bar_chart_data.data_points[i]['estimate']],
+                            backgroundColor: [bar_chart_data.data_points[i]['bg_color']],
+                            label: bar_chart_data.data_points[i]['label']
+                        }
+                    )
+                   
+                }
+                         
+            console.log('here ' +data.datasets)
+            var mytitle = bar_chart_data.title
 
     var jqChart = new Chart(ctx_jq, {
             type: 'bar',
             data: {
-                datasets:  mydatasets
+                datasets:  data.datasets
                 
             },
             options: {

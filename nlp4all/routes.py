@@ -1317,17 +1317,17 @@ def draggable():
     category = TweetTagCategory.query.filter(TweetTagCategory.name==cat).first()
 
     ## save the prediction
-    analysisdata = analysis.updated_data(this_tweet, category)
+    analysis.data = analysis.updated_data(this_tweet, category)
     ## all this  stuff is necessary  because the database backend doesnt resgister
     ## changes on JSON
-   # flag_modified(analysis, "data")
-    #db.session.add(analysis)
-    #db.session.merge(analysis)
-    #db.session.flush()
-    #db.session.commit()
-    #tag = TweetTag (category = category.id, analysis = analysis.id, tweet=this_tweet.id, user = current_user.id)
-    #db.session.add(tag)
-    #db.session.commit()
+    flag_modified(analysis, "data")
+    db.session.add(analysis)
+    db.session.merge(analysis)
+    db.session.flush()
+    db.session.commit()
+    tag = TweetTag (category = category.id, analysis = analysis.id, tweet=this_tweet.id, user = current_user.id)
+    db.session.add(tag)
+    db.session.commit()
 
     # show a new tweet
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
@@ -1343,7 +1343,7 @@ def draggable():
             flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
             the_tweet = Tweet(full_text = "", words = [])
     else:
-        the_tweet = sample(tweets, 1)[0]
+        the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
 
     number_of_tagged = len(analysis.tags)
     data = {}
@@ -1353,11 +1353,11 @@ def draggable():
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
     # filter robots that are retired, and sort them alphabetically
     # data['robots'] = sorted(robots, key= lambda r: r.name)
-    data['analysis_data'] = analysisdata
-    data['user'] = current_user.id
+    data['analysis_data'] = analysis.data
+    #data['user'] = current_user.id
     #data['user_role'] = current_user.roles
-    data['tag_options'] = [p.id for p in project.categories]
-    data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
+    #data['tag_options'] = [p.id for p in project.categories]
+    #data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
 
     return jsonify(data, the_tweet.id, the_tweet.time_posted)
 
@@ -1368,7 +1368,7 @@ def get_bar_chart_data():
     this_tweet = Tweet.query.get(t_id)
     analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
     project = Project.query.get(analysis.project)
-    categories = project.categories
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()#project.categories
     cat= str(args['category'])
     category = TweetTagCategory.query.filter(TweetTagCategory.name==cat).first()
     number_of_tagged = len(analysis.tags)
