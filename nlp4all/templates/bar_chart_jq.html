@@ -7,13 +7,13 @@ var ctx_jq = document.getElementById('jqChart').getContext('2d');
 // add event listener i.e. observer
 const observer = new MutationObserver( list => {
   const evt = new CustomEvent('dom-changed', {detail: list});
-  document.getElementById("time-posted").dispatchEvent(evt)
+  document.getElementById("tuples").dispatchEvent(evt)
 });
-observer.observe(document.getElementById("time-posted"), {attributes: true, childList: true, subtree: true});
+observer.observe(document.getElementById("tuples"), {attributes: true, childList: true, subtree: true});
 
 
 // update the chart
-document.getElementById("time-posted").addEventListener('dom-changed', function() {
+document.getElementById("tuples").addEventListener('dom-changed', function() {
 
     var t_id = $("#draggable-tweet").attr('tweet_id');
     var cat = $("#cat").attr('value');
