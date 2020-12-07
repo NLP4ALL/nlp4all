@@ -70,14 +70,12 @@
     console.log(t_id);
     console.log(cat);
 
-    console.log('jquerying')
+   
     //var t_id = $("#draggable-tweet").attr('t_id');
     //var cat = $("#cat").attr('value');
     $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
-
-            //console.log(returnedData[2])
-            document.getElementById('time-posted').innerText = returnedData[2]  //.append( "<p>Test</p>" );
+            console.log('tags: '+returnedData[0]['number_of_tagged']) //.append( "<p>Test</p>" );
               for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
                   
                   $("#tuples").append('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
