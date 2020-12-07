@@ -1340,7 +1340,8 @@ def draggable():
             the_tweet_id = uncompleted_tweets[0]
             the_tweet = Tweet.query.get(the_tweet_id)
         else:
-            flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
+            ##flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
+            ## create an alternative message
             the_tweet = Tweet(full_text = "", words = [])
     else:
         the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
