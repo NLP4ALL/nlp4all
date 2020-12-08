@@ -35,8 +35,20 @@
     <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" >Tweet</div>
     <p><span id='cat' type='hidden'></span></p>
 
-        <div class="content-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)"  >
+        <div class="pie-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)" >
             {% include "pie_chart.html" %}
+
+            <style>
+                .pie-section {
+                    margin: auto;
+                    width: 500px;
+                    height: 500px;
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                                        }
+            </style>
             
         </div>
 
