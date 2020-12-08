@@ -21,7 +21,7 @@
     <div class="content-section tweet-container" >
         <h2>To which category does this tweet belong?</h2>
    
-    <div class="content-section" id="draggable-tweet" tweet_id=55 >
+    <div class="content-section" id="draggable-tweet" tweet_id='' >
     
         <p> {{ tweet.time_posted }} </p>
         <span>
@@ -29,26 +29,21 @@
         <span class="{{tup.1}}-{{tup.2}}" title="{{tup.1}} = {{tup.2}}%" name="tpl" value={{tup.4}} id={{tup.4}}>{{ tup.0 }}</span>
         {% endfor %}
        
-        <style type="text/css">
-        {% for tup in word_tuples %}
-        .{{tup.1}}-{{tup.2}} {
-            color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
-        }   
-        {% endfor %}
-        </style> 
+       
     </div>
 
     <div class="content-section" id="jquery-tweet" >
         <p id="time-posted"></p>
+        <span id='tweet_id' type='hidden' value=""></span>
         <span id="tuples"></span>
       
         <style type="text/css">
-          {% for tup in word_tuples %}
-          .{{tup.1}}-{{tup.2}} {
-              color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
-          }   
-          {% endfor %}
-      </style>
+            {% for tup in word_tuples %}
+            .{{tup.1}}-{{tup.2}} {
+                color : hsl({{tup.3}}, {{(tup.2 - 50) * 2 }}% , 50%);
+            }   
+            {% endfor %}
+            </style> 
       
       </div>
    
@@ -109,8 +104,7 @@
 
 <div class="content-section">
     <h4>Bayesian probabilities</h4>
-    {% include "bar_chart.html" %}
-    <button id="myBtn">chart</button>
+   
     {% include "bar_chart_jq.html" %}
     <style type="text/css">
         #chart {
