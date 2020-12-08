@@ -11,14 +11,12 @@ const observer = new MutationObserver( list => {
 });
 observer.observe(document.getElementById("tuples"), {attributes: true, childList: true, subtree: true});
 
-
 // update the chart
 document.getElementById("tuples").addEventListener('dom-changed', function() {
 
     var t_id = $("#draggable-tweet").attr('tweet_id');
-    var cat = $("#cat").attr('value');
-    console.log(t_id, cat ,'"from bar"');
-    $.get('/get_bar_chart_data', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
+    console.log(t_id,'"from bar"');
+    $.get('/get_bar_chart_data', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id }).done(
         function(returnedData) {
             var bar_chart_data = returnedData.chart_data
             console.log(bar_chart_data.data_points)

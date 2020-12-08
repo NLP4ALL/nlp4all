@@ -2,53 +2,41 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
 
-<div class="content-section">
-    <h3 id="tag" value='{{ the_tag }}'>Your annotations</h3>
-    <p id="show_me">text </p>
+    <span id="tag" value='{{ tag }}' type='hidden'></span>
+    <p id="tweet_nr">Tweet: {{ tweet }} </p>
 
-        {% for tweet in tweets %}
-        <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
-        </div>
-        {% endfor %}
-        <div class="content-section" class=test>
+        
+    <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
 
-            this too!
     </div>
-
-        <div class="content-section">
-          how many tweets to show (next page)
-    
-        </div>
-
-      
-</div>
 
 
 <script>
-    var tagged_tweets = [] 
-    var my_tag = $("#tag").attr('value')
+    var tagged_tweets = [] ;
+    var a_tag = $("#tag").attr('value');
     var span ;
-    $('[name]').each(function( ) {
+    $('[tweet_id]').each(function( ) {
         var tweet_id= ($(this).attr('tweet_id'));
-        tagged_tweets.push(tweet_id);
+        console.log(tweet_id)
+        tagged_tweets.push(tweet_id) 
+        });
+
+    tagged_tweets.forEach(function(tweet_id) {
         var element = document.getElementById(tweet_id);
-       
-        $.get('/jq_highlight_tweet', {'tweet_id': tweet_id, 'the_tag' : my_tag }).done(
+        $.get('/jq_highlight_tweet', {'tweet_id': tweet_id, 'the_tag' : a_tag }).done(
             function(returnedData) {  
+                console.log(returnedData.length)
                 for(var i=0; i<returnedData.length; i++){
-                    //element.append('<span class="'+returnedData[i][1]+'" title="MyTitle" id='+returnedData[i][1]+'>'+returnedData[i][0]+' '+'</span>')
+                    
                     span = $('<span class='+returnedData[i][1]+returnedData[i][4]+'>'+returnedData[i][0]+' </span>')
-                    console.log(span[0]);
-                    console.log('hsl(50,'+returnedData[i][3]+'%,'+returnedData[i][2]+'%)')
                     span.css("background-color", 'hsl(60,'+returnedData[i][2]+'%,'+returnedData[i][3]+'%,'+returnedData[i][4]+')');
                     element.append( span[0] );
                     
                 };
             });   
     });
-    console.log(tagged_tweets)
-    $('#tag').append('<span>Hello</span>')
-   
+
+    
     $(document).ready(function() {
         
         //Build your CSS.
