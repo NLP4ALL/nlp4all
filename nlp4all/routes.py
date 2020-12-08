@@ -1193,7 +1193,7 @@ def annotation_summary(analysis_id):
     #tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
     tag_table = {t: {'tweet':t} for t in tagged_tweets}
     for t in tagged_tweets:
-        t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet==t).all()
+        t_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag.lower()).filter(TweetAnnotation.tweet==t).all()
         users = len(set([i.user for i in t_anns ]))
         tag_table[t]['tag_count'] = len(t_anns)
         tag_table[t]['users'] = users
@@ -1204,7 +1204,7 @@ def annotation_summary(analysis_id):
     tagdict = {t:{'tag':t} for t in all_tags}
     
     for tag in all_tags:
-        tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag).all()
+        tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==tag.lower()).all()
         tagdict[tag]['tag_count'] = len(tag_anns)
         tagdict[tag]['users'] = len(set([an.user for an in tag_anns]))
         tagged_tweets = list(set([t.tweet for t in tag_anns]))
@@ -1381,3 +1381,72 @@ def get_bar_chart_data():
     # filter robots that are retired, and sort them alphabetically
 
     return jsonify(data)
+
+@app.route('/get_first_tweet', methods=['GET', 'POST'])
+def get_first_tweet():
+    args = request.args.to_dict()
+    analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
+    project = Project.query.get(analysis.project)
+    # show a new tweet
+    categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
+    tweets = project.tweets
+    the_tweet = None
+    if analysis.shared:
+        completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
+        uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        if(len(uncompleted_tweets) > 0):
+            the_tweet_id = uncompleted_tweets[0]
+            the_tweet = Tweet.query.get(the_tweet_id)
+        else:
+            ##flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
+            ## create an alternative message
+            the_tweet = Tweet(full_text = "", words = [])
+    else:
+        the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
+    number_of_tagged = len(analysis.tags)
+    data = {}
+    data['number_of_tagged']  = number_of_tagged
+    data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
+    data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
+    data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
+    # filter robots that are retired, and sort them alphabetically
+    # data['robots'] = sorted(robots, key= lambda r: r.name)
+    #data['analysis_data'] = analysis.data
+
+    return jsonify(data,the_tweet.id, the_tweet.time_posted)
+
+
+
+@app.route('/highlight_tweet/<analysis>', methods=['GET', 'POST'])
+def highlight_tweet(analysis):
+
+    # add if tag in request.args.to_dict():
+    analysis =  BayesianAnalysis.query.get(analysis) 
+    tags = analysis.annotation_tags # not sure if this is needed
+    the_tag = request.args.get('tag', type=str)
+    # get all tags with a specific tweet
+    tweets= tags[the_tag]['tweets']
+    
+
+    return render_template('annotations_per_tweet.html', the_tag=the_tag, tweets = tweets)
+
+@app.route('/jq_highlight_tweet', methods=['GET', 'POST'])
+def jq_highlight_tweet():
+    args = request.args.to_dict()
+    t_id = int(args['tweet_id'])
+    the_tag = str(args['the_tag'])
+
+    the_tags=TweetAnnotation.query.filter(TweetAnnotation.tweet==t_id and TweetAnnotation.annotation_tag==the_tag).all()
+    pos_list =[]
+    for a in the_tags:
+        pos_list = pos_list + [k for k in a.coordinates['txt_coords'].keys()]
+    pos_dict = {}
+    for t in pos_list:
+        if t not in pos_dict.keys():
+                pos_dict[t] = 1
+        else:
+            pos_dict[t] += 1
+    
+    bg_tuples = nlp4all.utils.create_ann_css_info(the_tags, pos_dict)
+
+    return jsonify(bg_tuples)
