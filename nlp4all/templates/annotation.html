@@ -34,6 +34,8 @@
     var annotation = $("#anntext");
     var submitbtn = $("#submitbtn");
     var tpl = $("#tpl");
+    
+    
     var atag;
     function getSelText()
     
@@ -71,6 +73,8 @@
     var sel = document.getElementById('atag');
     sel.onchange=function() {
         
+            var tweet_id = $("#draggable-tweet").attr('tweet_id').valueOf();
+            console.log("tagtweetid", tweet_id);
             var val = this.options[this.selectedIndex].value;
             if (val == 'others') {
                 var newOption = prompt('Your own tag','');
@@ -80,14 +84,15 @@
                 this.options[this.options.length] = new Option('other','other');
                 }
                 }
-            atag = sel.options[sel.selectedIndex].value
+            atag = sel.options[sel.selectedIndex].value;
+            console.log(atag)
             };
     
     submitbtn.click(function()  {
-        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'pos': document.annform.pos.value, 'analysis': {{ analysis.id }}} ).done(
+        var tweet_id = $("#draggable-tweet").attr('tweet_id');
+        $.get('/save_annotation', {'tweet_id': tweet_id, 'text': document.annform.anntext.value, 'atag': atag , 'pos': document.annform.pos.value, 'analysis': {{ analysis.id }} } ).done(
             function(returnedData) {
                 console.log(returnedData[1]);
-                
 
             });
 

@@ -34,7 +34,7 @@
                     $('#cat').attr("value", label)
                     var value = myPieChart.data.datasets[0].data[clickedElementindex];
                    console.log(label + ' - ' + value);
-                   $('#draggable-tweet').css("background-color", myPieChart.data.datasets[0].backgroundColor[clickedElementindex]);
+                   $('#jquery-tweet').css("background-color", myPieChart.data.datasets[0].backgroundColor[clickedElementindex]);
                 }
             });
 
@@ -63,7 +63,7 @@
     //console.log("drop!"+data+ev.target)
     //ev.target.appendChild(document.getElementById(data));
 
-    $('#draggable-tweet').css("background-color",'hsl(0, 100%, 100%)');
+    $('#jquery-tweet').css("background-color",'hsl(0, 100%, 100%)');
     
     var t_id = $("#draggable-tweet").attr('tweet_id');
     var cat = $("#cat").attr('value');
@@ -76,16 +76,34 @@
     $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
             console.log('tags: '+returnedData[0]['number_of_tagged']) //.append( "<p>Test</p>" );
+            document.getElementById('time-posted').innerText = returnedData[2] 
               for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
-                  
-                  $("#tuples").append('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
+                  console.log('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
+                  var tup_color =  'hsl('+returnedData[0]["word_tuples"][i][3]+', '+((returnedData[0]["word_tuples"][i][2]- 50) * 2)+'% , 50%)'
+                  console.log(tup_color)
+                  $("#tuples").append('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+' color='+tup_color+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
                 }
                 $("#draggable-tweet").attr('tweet_id', returnedData[1]);
-                console.log($("#draggable-tweet").attr('tweet_id'));
+                console.log('tweet is ' +$("#draggable-tweet").attr('tweet_id'));
              
         });
-  }
+  };
     
+  window.onload = function() {
+      $.get('/get_first_tweet', {'analysis_id': {{ analysis.id }}}).done(
+        function(returnedData) {
+          for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
+                  console.log('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
+                  var tup_color =  'hsl('+returnedData[0]["word_tuples"][i][3]+', '+((returnedData[0]["word_tuples"][i][2]- 50) * 2)+'% , 50%)'
+                  console.log(tup_color)
+                  $("#tuples").append('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+' color='+tup_color+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
+                }
+                $("#draggable-tweet").attr('tweet_id', returnedData[1]);
+                console.log('tweet is ' +$("#draggable-tweet").attr('tweet_id'));
+
+        });
+  };
+
 </script>
 
 <style>
