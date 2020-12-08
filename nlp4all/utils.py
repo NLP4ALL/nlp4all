@@ -386,13 +386,13 @@ def matrix_css_info(index_list):
 def create_ann_css_info(annotations, pos_dict):
     max_key = max(pos_dict.items(), key=operator.itemgetter(1))[0]
     alpha = int(100/pos_dict[max_key])*0.01
-    print(alpha)
+    #print(alpha)
     tups = []
     for k,v in annotations[0].coordinates['word_locs'].items(): # w is the word, k positition in the tweet
         if k in pos_dict.keys():
             opacity = alpha*pos_dict[k]
-            print(pos_dict[k])
-            the_tup = (v, k, 100, 60, opacity)
+            #print(pos_dict[k])
+            the_tup = (v, k, 100, 60, opacity, pos_dict[k])
             tups.append(the_tup)
         else:
             tups.append((v, k, 0, '',0))

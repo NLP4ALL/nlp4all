@@ -26,6 +26,25 @@ Here you can see how each tag has been used.
 
     </div>
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+
+        {% for tweet in tweets %}
+        <div class="content-section">
+            <span id="tag" value='{{ tag }}' type='hidden'></span>
+            <p id="tweet_nr">Tweet: {{ tweet }} </p>
+            <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
+                <!-- tweet body comes here -->
+            </div>
+        
+        </div>
+      
+        {% endfor %}
+        {% include "annotations_per_tweet_jq.html" %}
+
+        <div class="content-section">
+            how many tweets to show (next page)?
+      
+        </div>
+  
         
     </div>
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">

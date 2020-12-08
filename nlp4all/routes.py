@@ -1214,7 +1214,12 @@ def annotation_summary(analysis_id):
 
     chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['users'] for tag in all_tags}, title="Annotation tags")
 
-    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data)
+    tags = analysis.annotation_tags # not sure if this is needed
+    #the_tag = request.args.get('tag', type=str)
+    # get all tags with a specific tweet
+    tweets= tags[a_tag]['tweets']
+
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data, tweets=tweets)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
