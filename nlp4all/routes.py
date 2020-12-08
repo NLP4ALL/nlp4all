@@ -1375,8 +1375,7 @@ def get_bar_chart_data():
     analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
     project = Project.query.get(analysis.project)
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all()#project.categories
-    cat= str(args['category'])
-    category = TweetTagCategory.query.filter(TweetTagCategory.name==cat).first()
+    
     number_of_tagged = len(analysis.tags)
     data = {}
     data['number_of_tagged']  = number_of_tagged
@@ -1406,6 +1405,7 @@ def get_first_tweet():
             ##flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
             ## create an alternative message
             the_tweet = Tweet(full_text = "", words = [])
+            return jsonify("You've now been through all tweets. Please wait for the others to finish.")
     else:
         the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
     number_of_tagged = len(analysis.tags)
