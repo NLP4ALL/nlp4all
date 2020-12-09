@@ -769,7 +769,6 @@ def my_matrices():
 
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        class_list_all = []#[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
         class_list_all = []# [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
         for c in cat_names: 
             for cat in cat_names:
@@ -997,7 +996,7 @@ def aggregate_matrix():
                 avg_quadrants[key] = value
     avg_quadrants = [round(m/n,3) for m in avg_quadrants.values()]
     # get info from each iteration to show how it varies
-    loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i],list(metrics_list[i][0].values())[1:],list(metrics_list[i][1].values())[1:]] for i in range(n)]
+    loop_table = [[i+1, accuracy_list[i], list_included[i], list_excluded[i]] for i in range(n)]
     count_sum = [[[counts_list[j][l][i] + counts_list[j][l][i] for i in range(len(counts_list[0]))] 
         for l in range(len(counts_list[0]))]
         for j in range(len(counts_list))][0]
@@ -1072,7 +1071,12 @@ def get_compare_matrix_data():
     
     # count different occurences
     class_list = [t[1]['class'] for t in incl_tweets]
-    class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+    class_list_all = []# [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+    for c in cat_names: 
+        for cat in cat_names:
+            class_list_all.append(str('Pred_'+str(c)+"_Real_"+str(cat)))
+            class_list_all.append(str('Pred_'+str(cat)+"_Real_"+str(c)))
+    class_list_all=list(set(class_list_all))
     matrix_classes = {c:0 for c in class_list_all} 
     for i in set(class_list):
         matrix_classes[i] = class_list.count(i)
