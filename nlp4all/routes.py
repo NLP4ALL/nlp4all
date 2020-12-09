@@ -66,11 +66,13 @@ def project():
     form = AddBayesianAnalysisForm()
     analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project_id).all()
     analyses = nlp4all.utils.get_user_project_analyses(current_user, project)
+    form.annotate.choices = [(1,'no annotations'), (2,'category names'), (3,'add own tags')]
     if form.validate_on_submit():
         userid = current_user.id
         name = form.name.data
         number_per_category = form.number.data
         analysis_tweets = [] 
+        annotate = form.annotate.data 
         if form.shared.data:
             tweets_by_cat = {cat : [t.id for t in project.tweets if t.category == cat.id] for cat in project.categories}
             for cat, tweets in tweets_by_cat.items():
@@ -78,7 +80,7 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={}, annotate=form.annotate.data )
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={}, annotate=annotate)
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
@@ -317,11 +319,12 @@ def analysis():
         return redirect(url_for('analysis', analysis=analysis_id))
     
     # tags per user
-    ann_tags = TweetAnnotation.query.filter(TweetAnnotation.user==current_user.id).all()
+    ann_tags = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id, TweetAnnotation.user==current_user.id).all()
     tag_list = list(set([a.annotation_tag for a in ann_tags]))
     for i in categories:
         if i.name not in tag_list:
             tag_list.append(i.name)
+    print(tag_list)
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
 @app.route("/register", methods=['GET', 'POST'])
