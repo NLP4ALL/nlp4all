@@ -9,12 +9,11 @@
     <textarea id="anntext" name="anntext" rows="2" cols="30"></textarea>
     <br>
     <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
-    this.form.color[1].style.display=(val=='other')?'block':'none'"> 
+    this.form.color[1].style.display=(val=='others')?'block':'none'"> 
         <option>Tag your annotation</option>  
         {% for c in tag_list %}
         <option value={{ c }}>{{ c }}</option>
         {% endfor %}
-        <option value="other">other</option>
     </select> 
     <input type="hidden" id="pos" value="">
     <input type="button" id="submitbtn" value="Save annotation">
@@ -76,21 +75,10 @@
             var tweet_id = $("#draggable-tweet").attr('tweet_id').valueOf();
             console.log("tagtweetid", tweet_id);
             var val = this.options[this.selectedIndex].value;
-            if (val == 'other') {
-                var newOption = prompt('Your own tag','');
-            if (newOption) {
-                this.options[this.options.length-1].text = newOption;
-                this.options[this.options.length-1].value = newOption;
-                this.options[this.options.length] = new Option('other','other');
-                }
-                }
+            
             atag = sel.options[sel.selectedIndex].value;
             console.log(atag)
             };
-    sel.click(function(){
-            alert('other!')
-            console.log('this other thingie')
-    });
     
     submitbtn.click(function()  {
         var tweet_id = $("#draggable-tweet").attr('tweet_id');
@@ -101,11 +89,9 @@
             });
 
             $("#annform").trigger("reset");
-            $('#atag').trigger("reset");
-
-            //sel.selectedIndex = "Tag your annotation";
-            //sel.options[sel.selectedIndex].value = 0
-            console.log("options are" + sel.options[sel.selectedIndex].value)
+            sel.selectedIndex = "Tag your annotation";
+            sel.options[sel.selectedIndex].value = 0
+            console.log(sel.selectedIndex)
 
     });
 

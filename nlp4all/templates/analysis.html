@@ -110,13 +110,21 @@
     </style>
 </div>
 
-{%if analysis.annotate %}
+{%if analysis.annotate == 2 %}
 <div class="content-section"> 
     <h4>Add annotations to the tweet</h4>
-    {% set categories = categories %}
+    {% set tag_list = tag_list %}
+    {% include "annotation2.html" %}
+</div>
+{% endif %}
+
+{%if analysis.annotate == 3 %}
+<div class="content-section"> 
+    <h4>Add annotations to the tweet</h4>
+    {% set tag_list = tag_list %}
     {% include "annotation.html" %}
 </div>
-
 {% endif %}
+
 </div>
 {% endblock content %}
