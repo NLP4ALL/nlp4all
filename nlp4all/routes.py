@@ -1215,7 +1215,11 @@ def annotation_summary(analysis_id):
     alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["nr_tweets"], reverse=True)
     alltag_table = [t[1] for t in alltag_table]
 
-    chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['users'] for tag in all_tags}, title="Annotation tags")
+    #if analysis.shared: ## if you want user counts
+        #show how many users have used the tag
+        #chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['users'] for tag in all_tags}, title="Annotation tags")
+    #else:
+    chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['tag_count'] for tag in all_tags}, title="Annotation tags")
 
     tags = analysis.annotation_tags # not sure if this is needed
     #the_tag = request.args.get('tag', type=str)
