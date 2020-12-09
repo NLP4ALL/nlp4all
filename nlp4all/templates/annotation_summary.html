@@ -5,47 +5,57 @@ Here you can see how each tag has been used.
 
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item">
-        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Alle annotationer</a>
+        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Tweets with the tag {{ tag }}</a>
     </li>
     <li class="nav-item">
     <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Annotation table</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">something</a>
+        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">All used tags</a>
     </li>
 </ul>
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+    <div class ="content-section">
 
-    <div class="content-section" id="chart">
-
-        {% set chart_data = allann_table %}
-            {% set table_name = "all_annotations" %}
-            {% include "bar_chart.html" %}
-    </div>
-
+        <h3>Annotations with the tag {{ tag }}</h3>
+        <div id="tagged-tweets">
+            <table id="tag-tweet-table">
+            {% for tweet in tweets %}
+            <div class="paginate">
+                <span id="tag" value='{{ tag }}' type='hidden'></span>
+                <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
+                    <p id="tweet_nr">Tweet: {{ tweet }} </p>
+                    <!-- tweet body comes here -->
+                </div>
+            </div>
+            {% endfor %}
+            </table>
+            {% include "annotations_per_tweet_jq.html" %}
+        </div>
+        
+        </div>
     </div>
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-
-        {% for tweet in tweets %}
         <div class="content-section">
-            <span id="tag" value='{{ tag }}' type='hidden'></span>
-            <p id="tweet_nr">Tweet: {{ tweet }} </p>
-            <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
-                <!-- tweet body comes here -->
-            </div>
-        
+        <h3>Overall use of tags</h3>
+        <div class="all-annotations" id="chart">
+        {% set chart_data = allann_table %}
+        {% set table_name = "all_annotations" %}
+        {% include "bar_chart.html" %}
+        <style>
+            .all-annotations {
+                    margin: auto;
+                    width: 500px;
+                    height: 500px;
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                                        }
+        </style>
         </div>
-      
-        {% endfor %}
-        {% include "annotations_per_tweet_jq.html" %}
-
-        <div class="content-section">
-            how many tweets to show (next page)?
-      
-        </div>
-  
-        
+    </div>
     </div>
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         
