@@ -21,6 +21,7 @@
 
   function dragStop(ev) {
     console.log('drag stops...');
+    $('#jquery-tweet').css("background-color",'hsl(0, 100%, 100%)');
     item.classList.remove('hide');
   }
 
@@ -59,10 +60,7 @@
   function drop(ev) {
     ev.preventDefault();
     $("#tuples").empty();
-    //var data = ev.dataTransfer.getData("text");
-    //console.log("drop!"+data+ev.target)
-    //ev.target.appendChild(document.getElementById(data));
-
+    
     $('#jquery-tweet').css("background-color",'hsl(0, 100%, 100%)');
     
     var t_id = $("#draggable-tweet").attr('tweet_id');
@@ -71,13 +69,10 @@
     console.log(cat);
     var span ;
    
-    //var t_id = $("#draggable-tweet").attr('t_id');
-    //var cat = $("#cat").attr('value');
     $.get('/save_draggable_tweet', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id, 'category': cat }).done(
         function(returnedData) {
-          
-          if (returnedData.length==1) {
-            $("#tuples").append(returnedData)
+          if (returnedData=="the end") {
+            $("#tuples").append("You've been through all tweets. Please wait for the others to finish.")
         } else {
           console.log('tags: '+returnedData[0]['number_of_tagged']) //.append( "<p>Test</p>" );
           document.getElementById('time-posted').innerText = returnedData[2] 
@@ -99,6 +94,10 @@
   window.onload = function() {
       $.get('/get_first_tweet', {'analysis_id': {{ analysis.id }}}).done(
         function(returnedData) {
+          console.log(returnedData)
+          if (returnedData == "the end") {
+            $("#tuples").append("You've been through all tweets. Please wait for the others to finish.")
+        } else {
           var span ;
           for(var i=0; i<returnedData[0]['word_tuples'].length; i++){
                   document.getElementById('time-posted').innerText = returnedData[2] 
@@ -112,7 +111,7 @@
                 }
                 $("#draggable-tweet").attr('tweet_id', returnedData[1]);
                 console.log('tweet is ' +$("#draggable-tweet").attr('tweet_id'));
-
+              };   
         });
   };
 
