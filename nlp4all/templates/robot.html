@@ -14,7 +14,7 @@
 </table>
 <h5>{{ r.name }} {% if r.retired %} (Færdig) {% endif %}</h5>
 {% if r.retired %}
-<div class="content-section">
+<div class="content-section col-md-8">
 <p>Antal tweets som I fanger: {{ acc_dict.tweets_targeted }}
 {% if r.parent != None %}
 Sidste gang var det: {{ acc_dict.parent_tweets_targeted }}
@@ -41,7 +41,7 @@ Sidste gang var det: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_target
 </ul>
 {% if not r.retired %}
 <div class="tab-content" id="searchTerms">
-    <div class="content-section">
+    <div class="content-section col-md-8">
         <table class="table">
             <tr><th>Term</th><th>Forklaring</th></tr>
             {% for feature in r.features.items() %}
@@ -53,7 +53,7 @@ Sidste gang var det: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_target
 {% endif %}
 
 {% if r.retired %}
-<div class="tab-content" id="searchResults">
+<div class="tab-content col-md-8" id="searchResults">
             {% set table_data = acc_dict.table_data %}
             {% set table_name = "words" %}
             {% include "data_table.html" %}
@@ -62,7 +62,7 @@ Sidste gang var det: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_target
 {% if not r.retired %}
         <form method="POST" action="">
             {{ form.add_feature_form.hidden_tag() }}
-            <fieldset class="form-group">
+            <fieldset class="form-group col-md-8">
                 <legend class="border-bottom mb-4">Tilføj et nyt ord til din robot</legend>
                 <div class="form-group">
                     {{ form.add_feature_form.feature.label(class="form-control-label") }}

@@ -1358,7 +1358,9 @@ def draggable():
         else:
             ##flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
             ## create an alternative message
+            message="You've now been through all tweets. Please wait for the others to finish."
             the_tweet = Tweet(full_text = "", words = [])
+            return jsonify("the end")
     else:
         the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
 
@@ -1416,7 +1418,8 @@ def get_first_tweet():
             ##flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
             ## create an alternative message
             the_tweet = Tweet(full_text = "", words = [])
-            return jsonify("You've now been through all tweets. Please wait for the others to finish.")
+            message="You've now been through all tweets. Please wait for the others to finish."
+            return jsonify("the end")
     else:
         the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
     number_of_tagged = len(analysis.tags)
