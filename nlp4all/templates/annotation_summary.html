@@ -18,24 +18,14 @@ Here you can see how each tag has been used.
     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
     <div class ="content-section">
 
-        <h3>Annotations with the tag {{ tag }}</h3>
-        <div id="tagged-tweets">
-            <table id="tag-tweet-table">
-            {% for tweet in tweets %}
-            <div class="paginate">
-                <span id="tag" value='{{ tag }}' type='hidden'></span>
-                <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
-                    <p id="tweet_nr">Tweet: {{ tweet }} </p>
-                    <!-- tweet body comes here -->
-                </div>
-            </div>
-            {% endfor %}
-            </table>
-            {% include "annotations_per_tweet_jq.html" %}
-        </div>
-        
+        <h3>See data per annotation</h3>
+    
+        {% include "annotation_selscript.html" %}
+
+       
         </div>
     </div>
+   
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
         <div class="content-section">
         <h3>Overall use of tags</h3>
@@ -59,11 +49,22 @@ Here you can see how each tag has been used.
     </div>
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         
-        <h3>See data per annotation</h3>
+        <h3>Annotations with the tag {{ tag }}</h3>
+        <div id="tagged-tweets">
+            <table id="tag-tweet-table">
+            {% for tweet in tweets %}
+            <div class="paginate">
+                <span id="tag" value='{{ tag }}' type='hidden'></span>
+                <div class="content-section" id = {{ tweet }} tweet_id={{ tweet }} name='tweets'>   
+                    <p id="tweet_nr">Tweet: {{ tweet }} </p>
+                    <!-- tweet body comes here -->
+                </div>
+            </div>
+            {% endfor %}
+            </table>
+            {% include "annotations_per_tweet_jq.html" %}
 
-        {% include "annotation_selscript.html" %}
-
-    </div>
+        </div>
 
 </div>
 
