@@ -2,6 +2,9 @@
 {% block content %}
   <h1>Project Title: {{ project.name }} </h1>
 <br>
+<div class="row">
+    
+    <div class="col-md-8"> 
 <div class="content-section">
 <h2>My analyses on project {{ project.name }} </h2>
 {% for a in analyses %}
@@ -14,7 +17,10 @@
 {% for p in projects %}
 <a class="nav-item nav-link" href="{{ url_for('project') }}?project={{ p.id }}">p.name</a>
 {% endfor %}
-<div class="content-section">
+</div>
+
+<div class="col-md-4"> 
+<div class="content-section addform">
 <h2>Create New Analysis</h1>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
@@ -64,4 +70,7 @@
         </div>
     </form>
 </div>
+</div>
+</div>
+
 {% endblock content %}
