@@ -32,7 +32,25 @@
       
       </div>
    
-    <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" >Tweet</div>
+    <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" ><img class="rounded-circle article-img"
+        src="{{ url_for('static', filename='profile_pics/twitter-logo-9.png') }}"
+        alt="Tweet">
+        <style>
+            img{
+                max-width: 100%;
+                max-height: 100%;
+                display: block;
+                }
+                .dragme {
+                width: 50px;
+                height: 50px;
+                margin:auto;
+                align-self: center;
+
+                }
+                </style>
+                </div>
+    
     <p><span id='cat' type='hidden'></span></p>
 
         <div class="pie-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)" >
