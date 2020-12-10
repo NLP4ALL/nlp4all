@@ -1194,7 +1194,7 @@ def annotation_summary(analysis_id):
         a_tag = all_tags[0]
     
     # relevant annotations for a_tag
-    tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).all()
+    tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag, TweetAnnotation.analysis==analysis_id).all()
     tagged_tweets = list(set([t.tweet for t in tag_anns]))
     
     #tweet_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag==a_tag).filter(TweetAnnotation.tweet.in_(tagged_tweets)).all()
