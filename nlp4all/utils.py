@@ -354,10 +354,10 @@ def get_tags(analysis, words, a_tweet): #set of tweet words
         ann_tags = list(analysis.annotation_tags.keys())
         mydict = {word.lower() : {a.lower():0 for a in ann_tags} for word in words}
         for a in analysis.annotations:
-            if a.text in a_tweet.full_text:
-                for w in a.words:
-                        if w in mydict.keys():
-                                mydict[w][a.annotation_tag] += 1
+                if a.text in a_tweet.full_text:
+                        for w in list(a.coordinates['txt_coords'].keys()):
+                                w_to_tag = a.coordinates['txt_coords'][w][1]
+                                mydict[w_to_tag][a.annotation_tag] += 1
         return mydict
 
          
