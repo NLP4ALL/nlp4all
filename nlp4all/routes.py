@@ -1312,8 +1312,13 @@ def save_annotation():
     annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag.lower())
     db.session.add(annotation)
     db.session.commit()
+
+    ann_tags = list(analysis.annotation_tags.keys())
+    mytagcounts = nlp4all.utils.get_tags(analysis,set(tweet.words), tweet)
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet.id, TweetAnnotation.user==current_user.id).all()
+    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, tweet.full_text,ann_tags, myanns)
    
-    return jsonify(words,coordinates['txt_coords'])
+    return jsonify(my_tuples)
 
 @app.route('/save_draggable_tweet', methods=['GET', 'POST'])
 def draggable():
@@ -1427,10 +1432,12 @@ def get_first_tweet():
     #data['analysis_data'] = analysis.data
     ann_tags = list(analysis.annotation_tags.keys())
     mytagcounts = nlp4all.utils.get_tags(analysis,set(the_tweet.words), the_tweet)
-    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id).all()
-    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, the_tweet.full_text,ann_tags, myanns)
-   
-
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id, TweetAnnotation.user==current_user.id).all()
+    # if there already are annotations
+    if len(myanns) > 0:
+        my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, the_tweet.full_text,ann_tags, myanns)
+    else: 
+        my_tuples = 0
     return jsonify(data,the_tweet.id, the_tweet.time_posted, my_tuples)
 
 
