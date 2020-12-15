@@ -1424,8 +1424,19 @@ def get_first_tweet():
     # filter robots that are retired, and sort them alphabetically
     # data['robots'] = sorted(robots, key= lambda r: r.name)
     #data['analysis_data'] = analysis.data
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis.id).all()
+    a_list = set([a.tweet for a in anns])
+    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
+    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
 
-    return jsonify(data,the_tweet.id, the_tweet.time_posted)
+    ann_dict = analysis.annotation_counts(tweets)
+    ann_tags = list(analysis.annotation_tags.keys())
+
+    mytagcounts = nlp4all.utils.get_tags(analysis,set(the_tweet.words), the_tweet)
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id).all()
+    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, the_tweet.full_text,ann_tags, myanns)
+
+    return jsonify(data,the_tweet.id, the_tweet.time_posted, my_tuples)
 
 
 
@@ -1462,3 +1473,27 @@ def jq_highlight_tweet():
     bg_tuples = nlp4all.utils.create_ann_css_info(the_tags, pos_dict)
 
     return jsonify(bg_tuples)
+
+
+@app.route('/show_highlights', methods=['GET', 'POST'])
+def show_highlights():
+    args = request.args.to_dict()
+    t_id = int(args['tweet_id'])
+    analysis_id = int(args['analysis_id'])
+    analysis =  BayesianAnalysis.query.get(analysis_id) 
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
+    a_list = set([a.tweet for a in anns])
+    a_tweet = Tweet.query.get(t_id)
+
+    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
+    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+
+    ann_dict = analysis.annotation_counts(tweets)
+
+    ann_tags = list(analysis.annotation_tags.keys())
+
+    mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
+    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
+    
+    return jsonify(my_tuples)

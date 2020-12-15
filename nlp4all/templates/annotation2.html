@@ -18,6 +18,7 @@
     <input type="hidden" id="pos" value="">
     <input type="hidden" id="pos2" value="">
     <input type="button" id="submitbtn" value="Save annotation">
+    <input type="button" id="cancelbtn" value="Cancel">
 </form>
 
 <script>
@@ -34,9 +35,9 @@
     var annotation = $("#anntext");
     var submitbtn = $("#submitbtn");
     var tpl = $("#tpl");
-    
-    
+    var cancelbtn = $("#cancelbtn");
     var atag;
+
     function getSelText()
     
       {
@@ -97,6 +98,13 @@
             sel.selectedIndex = "Tag your annotation";
             sel.options[sel.selectedIndex].value = 0
             console.log(sel.selectedIndex)
+
+    });
+
+    cancelbtn.click(function()  {
+        $("#annform").trigger("reset");
+        $('#atag').trigger("reset");
+        $("#add-annotation").attr('style',"display: none;");
 
     });
 
