@@ -92,8 +92,6 @@
             function(returnedData) {
                 $('#tuples > span').map(function() {
                     $(this).css({
-                        'font-weight':'normal',
-                        'text-transform':'capitalize',
                         "background-color":'hsl('+returnedData[this.id][3]+', '+((returnedData[this.id][2]- 0.50) * 200)+'% , 90%)'
                     });
                     //$(this).attr("background-color", 'hsl('+returnedData[i][3]+', '+((returnedData[i][2]- 0.50) * 200)+'% , 90%)');
