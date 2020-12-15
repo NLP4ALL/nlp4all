@@ -42,7 +42,7 @@
     var atag;
     function getSelText()
         
-      {
+        {
           var txt = '';
           $("#add-annotation").attr('style',"display: block;");
 
@@ -73,8 +73,7 @@
         document.annform.anntext.value =  txt;
         document.annform.pos.value = node1;
         document.annform.pos2.value = node2;
-        //console.log(document.annform.anntext.value);
-        
+       
         
       };
       
@@ -109,8 +108,9 @@
             $('#atag').trigger("reset");
             $("#add-annotation").attr('style',"display: none;");
 
-
+            mytuples = $("#tuples")
             console.log("options are" + sel.options[sel.selectedIndex].value)
+            console.log(mytuples.innerHTML)
 
     });
 
