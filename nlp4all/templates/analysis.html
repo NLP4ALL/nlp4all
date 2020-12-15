@@ -110,22 +110,11 @@
     <table>
         <tr>
             <td>
-              <p>Here a headline?</p>
+            <p>Analysis: {{ analysis.name }} </p>
             </td>
            
         </tr>
     </table>
-</div>
-
-<div class="content-section">
-    <h4>Bayesian probabilities</h4>
-   
-    {% include "bar_chart_jq.html" %}
-    <style type="text/css">
-        #chart {
-            margin-left:auto;margin-right:auto;width:50%;height:45%;
-        }
-    </style>
 </div>
 
 {%if analysis.annotate == 2 %}
@@ -143,6 +132,19 @@
     {% include "annotation.html" %}
 </div>
 {% endif %}
+
+<div class="content-section">
+    <h4>Bayesian probabilities</h4>
+   
+    {% include "bar_chart_jq.html" %}
+    <style type="text/css">
+        #chart {
+            margin-left:auto;margin-right:auto;width:50%;height:45%;
+        }
+    </style>
+</div>
+
+
 
 </div>
 {% endblock content %}
