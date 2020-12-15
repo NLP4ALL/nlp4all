@@ -1370,7 +1370,8 @@ def draggable():
     #data['user_role'] = current_user.roles
     #data['tag_options'] = [p.id for p in project.categories]
     #data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
-
+   
+    
     return jsonify(data, the_tweet.id, the_tweet.time_posted)
 
 @app.route('/get_bar_chart_data', methods=['GET', 'POST'])
@@ -1424,17 +1425,11 @@ def get_first_tweet():
     # filter robots that are retired, and sort them alphabetically
     # data['robots'] = sorted(robots, key= lambda r: r.name)
     #data['analysis_data'] = analysis.data
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis.id).all()
-    a_list = set([a.tweet for a in anns])
-    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
-    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
-
-    ann_dict = analysis.annotation_counts(tweets)
     ann_tags = list(analysis.annotation_tags.keys())
-
     mytagcounts = nlp4all.utils.get_tags(analysis,set(the_tweet.words), the_tweet)
     myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id).all()
     my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, the_tweet.full_text,ann_tags, myanns)
+   
 
     return jsonify(data,the_tweet.id, the_tweet.time_posted, my_tuples)
 

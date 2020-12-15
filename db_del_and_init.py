@@ -87,9 +87,9 @@ for f in files:
             a_tweet = Tweet(
                 time_posted = timestamp,
                 category = category.id,
-                full_text = indict['full_text'],
+                text = indict['full_text'],
                 handle = indict['twitter_handle'],
-                text= " ".join([clean_word(word) for word in t.split()]), # changed
+                full_text= " ".join([clean_word(word) for word in t.split()]), # changed
                 words = [re.sub(r'[^\w\s]','',w) for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
                 links = [w for w in t.split() if "http" in w],
                 hashtags = [w for w in t.split() if "#" in w],

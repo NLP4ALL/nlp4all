@@ -353,6 +353,7 @@ def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
         ann_tags = list(analysis.annotation_tags.keys())
         mydict = {word.lower() : {a.lower():0 for a in ann_tags} for word in words}
+        print(list(mydict.keys()), a_tweet.id)
         for a in analysis.annotations:
                 if a.text in a_tweet.full_text:
                         for w in list(a.coordinates['txt_coords'].keys()):

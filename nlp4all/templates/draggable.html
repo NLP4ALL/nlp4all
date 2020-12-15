@@ -81,7 +81,7 @@
                 
                 span = $('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
                 span.css("color", 'hsl('+returnedData[0]["word_tuples"][i][3]+', '+((returnedData[0]["word_tuples"][i][2]- 50) * 2)+'% , 50%)');
-                span.css("background-color", 'hsl('+returnedData[3][i][3]+', '+((returnedData[3][i][2]- 0.50) * 200)+'% , 90%)');
+                //span.css("background-color", 'hsl('+returnedData[3][i][3]+', '+((returnedData[3][i][2]- 0.50) * 200)+'% , 90%)');
                 span.css("white-space", 'pre-wrap')
                   
                 $("#tuples").append(span)
@@ -132,7 +132,7 @@
     }
     
     .hide {
-    display: none;
+    opacity: 0;
   }
     </style>
 
