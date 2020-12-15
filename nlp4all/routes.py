@@ -1274,6 +1274,7 @@ def save_annotation():
     text = str(args['text'])
     atag = str(args['atag'])
     pos = int(args['pos'])
+    pos2 = int(args['pos2'])
     analysis_id = int(args['analysis'])
     analysis = BayesianAnalysis.query.get(analysis_id)
     analysis.updated_a_tags(atag, tweet)
@@ -1283,27 +1284,10 @@ def save_annotation():
     db.session.flush()
     db.session.commit()
     
-    if 'start' in args:
-        txtstart = min(int(args['start']), int(args['end']))
-        txtend = max(int(args['start']), int(args['end']))
-    else:
-        txtstart= tweet.full_text.find(text) # make sure this is the full text in the final version!
-        if txtstart < 0:
-            txtstart=0
-        txtend = txtstart + len(text)
-    
     coordinates = {}
-    
-    tag_count =0 
-    tag_count_list =[]
-    coords = {}
-    for t in text.split():
-        tag_count_list.append((tag_count+pos, t))
-        txt = re.sub(r'[^\w\s]','',t.lower())
-        tag_pos = tag_count+pos
-        coords[tag_pos] = (txt, t)
-        tag_count +=1
-    coordinates['txt_coords'] = coords
+    # end and start
+    txtstart = min(pos, pos2)
+    txtend = max(pos, pos2) 
 
     words = tweet.full_text.split()
     length = list(range(len(words)))
@@ -1316,6 +1300,15 @@ def save_annotation():
         word_count += 1
     words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
     coordinates['word_locs'] = word_locs
+
+    # make a list of locations in-between
+    loc_list=list(range(txtstart, txtend+1))
+    # save annotation coordinates + original and cleaned words
+    coords = {}
+    for l in loc_list:
+        coords[l] = [coordinates['word_locs'][l], re.sub(r'[^\w\s]','', coordinates['word_locs'][l].lower())]
+    coordinates['txt_coords'] = coords
+    
     annotation = TweetAnnotation(user = current_user.id, text=text, analysis=analysis_id, tweet=t_id, coordinates=coordinates, words=words,annotation_tag=atag.lower())
     db.session.add(annotation)
     db.session.commit()

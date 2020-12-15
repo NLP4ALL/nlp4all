@@ -16,6 +16,7 @@
         {% endfor %}
     </select> 
     <input type="hidden" id="pos" value="">
+    <input type="hidden" id="pos2" value="">
     <input type="button" id="submitbtn" value="Save annotation">
 </form>
 
@@ -44,26 +45,30 @@
            if (window.getSelection)
           {
               txt = window.getSelection().toString();
-              parent = window.getSelection().anchorNode.parentElement.id;
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
               
                    }
           else if (document.getSelection)
           {
               txt = window.getSelection().toString();
-              parent = window.getSelection().anchorNode.parentElement.id;
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
              
                   }
           else if (document.selection)
           {
               txt = window.getSelection().toString();
-              parent = window.getSelection().anchorNode.parentElement.id;
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
              
                   }
           else return;
-        console.log(txt, parent);
+        console.log(txt, node1,node2);
         
         document.annform.anntext.value =  txt;
-        document.annform.pos.value = parent
+        document.annform.pos.value = node1
+        document.annform.pos2.value = node2
         console.log(document.annform.anntext.value);
         
         
@@ -82,7 +87,7 @@
     
     submitbtn.click(function()  {
         var tweet_id = $("#draggable-tweet").attr('tweet_id');
-        $.get('/save_annotation', {'tweet_id': tweet_id, 'text': document.annform.anntext.value, 'atag': atag , 'pos': document.annform.pos.value, 'analysis': {{ analysis.id }} } ).done(
+        $.get('/save_annotation', {'tweet_id': tweet_id, 'text': document.annform.anntext.value, 'atag': atag , 'pos': document.annform.pos.value, 'pos2': document.annform.pos2.value, 'analysis': {{ analysis.id }} } ).done(
             function(returnedData) {
                 console.log(returnedData[1]);
 
