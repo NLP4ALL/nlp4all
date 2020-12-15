@@ -26,7 +26,7 @@
     <div class="content-section" id="jquery-tweet" >
         <p id="time-posted"></p>
         <span id='tweet_id' type='hidden' value=""></span>
-        <span id="tuples"></span>
+        <span id="tuples" onmouseup="getSelText()"></span>
       
        
       
@@ -137,7 +137,7 @@
 {% endif %}
 
 {%if analysis.annotate == 3 %}
-<div class="content-section"> 
+<div id="add-annotation" class="content-section" style="display: none;"> 
     <h4>Add annotations to the tweet</h4>
     {% set tag_list = tag_list %}
     {% include "annotation.html" %}

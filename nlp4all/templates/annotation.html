@@ -4,8 +4,7 @@
 
 
 <form name="annform" id="annform">
-    <input type="button" value="Get selected words" onmousedown="getSelText()" id="btn" method="post" action ="">
-    <br> 
+   
     <textarea id="anntext" name="anntext" rows="2" cols="30"></textarea>
     <br>
     <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
@@ -20,6 +19,7 @@
     <input type="hidden" id="pos2" value="">
     <input type="button" id="submitbtn" value="Save annotation">
 </form>
+
 
 <script>
     $("#cat-btn").click(function() {
@@ -39,10 +39,11 @@
     
     var atag;
     function getSelText()
-    
+        
       {
           var txt = '';
-          
+          $("#add-annotation").attr('style',"display: block;");
+
            if (window.getSelection)
           {
               txt = window.getSelection().toString();
@@ -68,8 +69,8 @@
         console.log(txt, node1, node2);
         
         document.annform.anntext.value =  txt;
-        document.annform.pos.value = node1
-        document.annform.pos2.value = node2
+        document.annform.pos.value = node1;
+        document.annform.pos2.value = node2;
         //console.log(document.annform.anntext.value);
         
         
@@ -114,8 +115,13 @@
 
     });
 
+    
 
+    function mypopup() {
+       console.log('mouseup!')
+    }
 
+   
 
 </script>
 
