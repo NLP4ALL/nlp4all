@@ -100,15 +100,23 @@
         var tweet_id = $("#draggable-tweet").attr('tweet_id');
         $.get('/save_annotation', {'tweet_id': tweet_id, 'text': document.annform.anntext.value, 'atag': atag , 'pos': document.annform.pos.value, 'pos2': document.annform.pos2.value, 'analysis': {{ analysis.id }} } ).done(
             function(returnedData) {
-                console.log(returnedData[1]);
-
+                $('#tuples > span').map(function() {
+                    $(this).css({
+                        'font-weight':'normal',
+                        'text-transform':'capitalize',
+                        "background-color":'hsl('+returnedData[this.id][3]+', '+((returnedData[this.id][2]- 0.50) * 200)+'% , 90%)'
+                    });
+                    //$(this).attr("background-color", 'hsl('+returnedData[i][3]+', '+((returnedData[i][2]- 0.50) * 200)+'% , 90%)');
+                    console.log(this.id);
             });
 
+            });
+            window.clearSelection()
             $("#annform").trigger("reset");
             $('#atag').trigger("reset");
             $("#add-annotation").attr('style',"display: none;");
-
-            mytuples = $("#tuples")
+            
+            //console.log(mytuples.length)
             console.log("options are" + sel.options[sel.selectedIndex].value)
             
 
@@ -124,6 +132,14 @@
 
     function mypopup() {
        console.log('mouseup!')
+    }
+
+    function clearSelection() {
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        } else if (document.selection) {
+            document.selection.empty();
+        }
     }
 
    
