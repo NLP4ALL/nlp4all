@@ -120,7 +120,7 @@
 </div>
 
 {%if analysis.annotate == 2 %}
-<div class="content-section"> 
+<div id="add-annotation" class="content-section" style="display: none;"> 
     <h4>Add annotations to the tweet</h4>
     {% set tag_list = tag_list %}
     {% include "annotation2.html" %}
