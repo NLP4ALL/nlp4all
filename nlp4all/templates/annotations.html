@@ -18,14 +18,19 @@
         </table>
 
     <div id="delete-form" style="display: none;" class="content-section">
-        This is the delete form to come
-        <table class="table table-bordered" id="del-table" >
-                <thead><tr><th>Tag</th><th>Text</th><th>Delete</th></tr></thead>
+        <span id="del-headline"></span>
+        <table class="table table-delete" id="del-table" >
+                <thead><tr><th></th><th>Tag</th><th>Text</th></tr></thead>
                 <tbody></tbody>
         </table>
-        <button id="button">Delete selected row</button>
     </div>
 </div>
 {% include "annotation_delete.html" %}
+<style>
+    .table-delete { 
+        font-size: 80%; 
+        width: 100%;
+    }
+</style>
 </div>
 {% endblock content %}
