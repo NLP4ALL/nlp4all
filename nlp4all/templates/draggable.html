@@ -104,7 +104,8 @@
                   //console.log('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
                   span = $('<span class="'+returnedData[0]['word_tuples'][i][1]+'-'+returnedData[0]['word_tuples'][i][2]+'" title="'+returnedData[0]['word_tuples'][i][1]+'='+returnedData[0]['word_tuples'][i][2]+'%" value='+returnedData[0]['word_tuples'][i][4]+' id='+returnedData[0]['word_tuples'][i][4]+'>'+returnedData[0]["word_tuples"][i][0]+' '+'</span>')
                   span.css("color", 'hsl('+returnedData[0]["word_tuples"][i][3]+', '+((returnedData[0]["word_tuples"][i][2]- 50) * 2)+'% , 50%)');
-                  span.css("white-space", 'pre-wrap')
+                  //span.css("white-space", 'pre-wrap')
+                  span.css("margin-left",  '.05rem')
                   if (returnedData[3] != 0) {
                     span.css("background-color", 'hsl('+returnedData[3][i][4]+', '+((returnedData[3][i][3]- 0.50) * 200)+'% , 90%)');
                   }
