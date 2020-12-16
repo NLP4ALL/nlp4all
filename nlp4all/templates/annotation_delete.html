@@ -1,3 +1,4 @@
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
 
 
 <script>
@@ -5,15 +6,34 @@
     var tweet_id = $('#annid').attr('value')
 
     function viewAnns(event) {
+        //console.log($('#del-table'))
+        //('#del-table').DataTable().clear()
+        //$('#del-table tbody').empty();
         console.log("You've clicked: " + event.target.nodeName + ", id: " + event.target.id + " tweet id: " + tweet_id);
         $.get('/get_annotations', {'tweet_id': tweet_id, 'span_id' : event.target.id, 'analysis_id' : {{ analysis.id }} }).done(
             function(returnedData) {  
                
                 console.log(returnedData[1], returnedData[2]);
-                del_form.append('<span>' + returnedData[0] +'</span>')
-                del_form.attr('style', "display: block;");
+                var mainObj = returnedData[0];
+                //$("#del-table > tbody").empty();
+                var table = $('#del-table');
+                var data = []
+                for(i = 0;i < mainObj.length; i++){
+                    data.push([mainObj[i].tag, mainObj[i].text, mainObj[i].delete])
+                    }
+                console.log(data)
+                $('#del-table').DataTable({
+                    "aaData":data,
+                        paging: false,
+                        searching:false,
+                        "ordering": false,
+                        info: false,
+                        destroy: true
+                        }); 
+
+                   
             });
-        
+            del_form.attr('style', "display: block;");      
     }
 
 </script>
