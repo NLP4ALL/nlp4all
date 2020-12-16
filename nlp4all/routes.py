@@ -1518,6 +1518,9 @@ def get_annotations():
     # filter relevant annotations
     myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id, TweetAnnotation.user==current_user.id, TweetAnnotation.analysis==analysis.id).all()
     # if the key matches
-    ann_list = [a.text for a in myanns if span_id in a.coordinates['txt_coords'].keys()]
+    ann_list = [a for a in myanns if span_id in a.coordinates['txt_coords'].keys()]
+    tagdict = {a.id:{'tag':a.annotation_tag, 'text': " ".join(a.words) , 'delete':''} for a in ann_list}
+    alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["tag"], reverse=True)
+    alltag_table = [t[1] for t in alltag_table]
 
-    return jsonify(ann_list, span_id, current_user.id)
+    return jsonify(alltag_table, span_id, current_user.id)
