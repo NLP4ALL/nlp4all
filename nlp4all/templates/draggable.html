@@ -108,7 +108,7 @@
                   span.css("color", 'hsl('+returnedData[0]["word_tuples"][i][3]+', '+((returnedData[0]["word_tuples"][i][2]- 50) * 2)+'% , 50%)');
                   span.css("white-space", 'pre-wrap')
                   if (returnedData[3] != 0) {
-                    span.css("background-color", 'hsl('+returnedData[3][i][3]+', '+((returnedData[3][i][2]- 0.50) * 200)+'% , 90%)');
+                    span.css("background-color", 'hsl('+returnedData[3][i][4]+', '+((returnedData[3][i][3]- 0.50) * 200)+'% , 90%)');
                   }
                   $("#tuples").append(span)
                 }

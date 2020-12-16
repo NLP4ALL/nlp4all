@@ -326,7 +326,7 @@ def ann_assign_colors(list_of_tags):  #take all tags
 def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
         word_list =[(v,k) for k,v in ann[0].coordinates['word_locs'].items()]   
-        tups = [(word_list[w][0], "none", 0) for w in range(len(word_list))]
+        tups = [(word_list[w][0], w,"none", 0) for w in range(len(word_list))]
         for w in range(len(word_list)):
                 word = word_list[w]
                 clean_word = re.sub(r'[^\w\s]','',word[0].lower())
@@ -344,9 +344,10 @@ def ann_create_css_info(classifications, text, list_of_categories, ann):
                                 if v>0:
                                     key_list.append(k),value_list.append(v)
                             max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                            the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
-                            if tups[w][1] == 'none':
-                                tups[w] = the_tup           
+                            the_tup = (word[0],w, max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
+                            if tups[w][2] == 'none':
+                                tups[w] = the_tup  
+                print(tups[w])       
         return(tups)
 
 def get_tags(analysis, words, a_tweet): #set of tweet words
