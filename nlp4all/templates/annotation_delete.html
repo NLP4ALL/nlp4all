@@ -1,0 +1,19 @@
+
+
+<script>
+    var del_form = $('#delete-form');
+    var tweet_id = $('#annid').attr('value')
+
+    function viewAnns(event) {
+        console.log("You've clicked: " + event.target.nodeName + ", id: " + event.target.id + " tweet id: " + tweet_id);
+        $.get('/get_annotations', {'tweet_id': tweet_id, 'span_id' : event.target.id, 'analysis_id' : {{ analysis.id }} }).done(
+            function(returnedData) {  
+               
+                console.log(returnedData[1], returnedData[2]);
+                del_form.append('<span>' + returnedData[0] +'</span>')
+                del_form.attr('style', "display: block;");
+            });
+        
+    }
+
+</script>

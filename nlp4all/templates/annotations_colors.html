@@ -9,16 +9,16 @@
         Tweet <span id="annid" value="{{ ann.id }}">{{ ann.id }}</span><br>
             <i>Category: {{ ann.handle }}<br></i>
            
-            <div class="content-section" id="ann-tuples" onclick=viewAnns()>
+            <div class="content-section" id="ann-tuples" onclick=viewAnns(event)>
         {% for tup in word_tuples[page-1] %}
-            <span class="{{tup.1}}-{{tup.2}}" title="{{ tup.5 }} = {{tup.4}} tags">{{ tup.0 }}</span>
+            <span id="{{ tup.1 }}" class="{{tup.2}}-{{tup.3}}" title="{{ tup.6 }} = {{tup.5}} tags">{{ tup.0 }}</span>
             {% endfor %}
 
 
             <style type="text/css">
             {% for tup in word_tuples[page-1] %}
-            .{{tup.1}}-{{tup.2}} {
-                background : hsl({{tup.3}}, {{(tup.2 - 0.50) * 200 }}% , 70%);
+            .{{tup.2}}-{{tup.3}} {
+                background : hsl({{tup.4}}, {{(tup.3 - 0.50) * 200 }}% , 70%);
             }   
             {% endfor %}
             
@@ -58,11 +58,5 @@
 </div>
 
 
-<script>
-    function viewAnns() {
-        console.log('you clicked the tweet!')
-    }
-
-</script>
 
 
