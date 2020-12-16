@@ -1249,7 +1249,10 @@ def annotations():
     ann_dict = analysis.annotation_counts(tweets)
 
     word_tuples=[]
-    ann_tags = list(analysis.annotation_tags.keys())
+    ann_tags = [c.name for c in project.categories]
+    for tag in list(analysis.annotation_tags.keys()):
+        if tag not in ann_tags:
+            ann_tags.append(tag)
     for a_tweet in tweets:
         mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
         myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
