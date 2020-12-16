@@ -1,7 +1,7 @@
 import tweepy
 import re
 import json
-from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix
+from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
 from datetime import datetime
 import time
 import operator
@@ -346,16 +346,18 @@ def ann_create_css_info(classifications, text, list_of_categories, ann):
                             max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
                             the_tup = (word[0],w, max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
                             if tups[w][2] == 'none':
-                                tups[w] = the_tup  
-                print(tups[w])       
+                                tups[w] = the_tup        
         return(tups)
 
 def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
-        ann_tags = list(analysis.annotation_tags.keys())
+        ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
+        for tag in list(analysis.annotation_tags.keys()):
+                if tag not in ann_tags:
+                        ann_tags.append(tag)
         mydict = {word.lower() : {a.lower():0 for a in ann_tags} for word in words}
-        print(list(mydict.keys()), a_tweet.id)
-        for a in analysis.annotations:
+        annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id, TweetAnnotation.analysis==analysis.id).all()
+        for a in annotations:
                 if a.text in a_tweet.full_text:
                         for w in list(a.coordinates['txt_coords'].keys()):
                                 w_to_tag = a.coordinates['txt_coords'][w][1]

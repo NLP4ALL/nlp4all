@@ -1313,7 +1313,10 @@ def save_annotation():
     db.session.add(annotation)
     db.session.commit()
 
-    ann_tags = list(analysis.annotation_tags.keys())
+    ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
+    for tag in list(analysis.annotation_tags.keys()):
+        if tag not in ann_tags:
+            ann_tags.append(tag)
     mytagcounts = nlp4all.utils.get_tags(analysis,set(tweet.words), tweet)
     myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet.id, TweetAnnotation.user==current_user.id).all()
     my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, tweet.full_text,ann_tags, myanns)
@@ -1499,3 +1502,19 @@ def show_highlights():
     my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
     
     return jsonify(my_tuples)
+
+@app.route('/get_annotations', methods=['GET', 'POST'])
+def get_annotations():
+    args = request.args.to_dict()
+    span_id = str(args['span_id'])
+    t_id = int(args['tweet_id'])
+    the_tweet = Tweet.query.get(t_id)
+    analysis_id = int(args['analysis_id'])
+    analysis =  BayesianAnalysis.query.get(analysis_id) 
+
+    # filter relevant annotations
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id, TweetAnnotation.user==current_user.id, TweetAnnotation.analysis==analysis.id).all()
+    # if the key matches
+    ann_list = [a.text for a in myanns if span_id in a.coordinates['txt_coords'].keys()]
+
+    return jsonify(ann_list, span_id, current_user.id)
