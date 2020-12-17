@@ -1,8 +1,11 @@
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='simplePagination.css') }}"/>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.simplePagination.js') }}"></script>
 
 
 <div class="content-section">
+    
     <h3>Your annotations</h3>
     <p id="show_me"> </p>
     {% for ann in anns %}
@@ -35,8 +38,12 @@
             
     {% endfor %}
    
+
     </div>
 
+
+    <div id="tweet-tuples" class="content-section">
+    </div>
         <div class="content-section">
             <table>
                 <tr><td>
@@ -57,16 +64,82 @@
       
 </div>
 
-
 <script>
-    $(document).ready( function () {
-        $("#tweet_annotations").DataTable( {
-        paging: false,
-        searching:false,
-        info: false,
-        retrieve: true
+
+jQuery(function($) {
+        // Grab whatever we need to paginate
+        var pageParts = $(".paginate");
+    
+        // How many parts do we have?
+        var numPages = pageParts.length;
+        console.log(numPages)
+        // How many parts do we want per page?
+        var perPage = 1;
+    
+        // When the document loads we're on page 1
+        // So to start with... hide everything else
+        pageParts.slice(perPage).hide();
+        // Apply simplePagination to our placeholder
+        $("#tag-tweet-table").pagination({
+            items: numPages,
+            itemsOnPage: perPage,
+            cssStyle: "compact-theme",
+            // We implement the actual pagination
+            //   in this next function. It runs on
+            //   the event that a user changes page
+            onPageClick: function(pageNum) {
+                // Which page parts do we show?
+                var start = perPage * (pageNum - 1);
+                var end = start + perPage;
+    
+                // First hide all page parts
+                // Then show those just for our page
+                pageParts.hide()
+                         .slice(start, end).show();
+            }
         });
     });
+    
+</script>
+
+
+<script>
+    var tagged_tweets = [] ;
+    
+    var span ;
+    $('[tweet_id]').each(function( ) {
+        var tweet_id= ($(this).attr('tweet_id'));
+        console.log('this is' + tweet_id);
+        tagged_tweets.push(tweet_id); 
+        });
+
+    function showTweet() {
+        tagged_tweets.forEach(function(tweet_id) {
+            console.log('showing: ' +tweet_id);
+            var element = document.getElementById(tweet_id);
+                $.get('/tweet_annotations', {'analysis_id': {{ analysis.id }}, 'tweet_id': tweet_id}).done(
+                    function(returnedData) {
+                    console.log(returnedData[0].length)
+                    console.log(returnedData[0][1])
+                    var span ;
+                    for(var i=0; i<returnedData[0].length; i++){
+                        for(var j=0; j<returnedData[0][i].length; j++){
+                                span = $('<span class="'+returnedData[0][i][j][2]+'-'+returnedData[0][i][j][3]+'" title="'+returnedData[0][i][j][6]+'='+returnedData[0][i][j][5]+'%" value='+returnedData[0][i][j][1]+' id='+returnedData[0][i][j][1]+'>'+returnedData[0][i][j][0]+' '+'</span>')
+                                console.log(span)
+                                span.css("margin-left",  '.05rem');
+                                span.css("background-color", 'hsl('+returnedData[0][i][j][4]+', '+((returnedData[0][i][j][3]- 0.50) * 200)+'% , 70%)');
+                                element.append(span)
+                            };
+
+                        };
+                        //$("#tagged-tweet").attr('tweet_id', returnedData[1]);
+                        console.log('tweet is ' +returnedData[1]);
+            });   
+        }); 
+    };       
+
+    window.onload = showTweet()
+
 
 </script>
 
