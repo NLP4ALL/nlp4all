@@ -24,9 +24,8 @@
                 <thead><tr><th>Tagged text</th><th>Tag</th><th>Delete?</th></tr></thead>
                 <tbody></tbody>
         </table>
-        <div class="container .mt-0">
-        <button id="hide-btn">Hide</button>
-        </div>
+        
+        <button id="hide-btn" onclick=hide() class="btn">Hide</button>
     </div>
 </div>
 {% include "annotation_delete.html" %}
@@ -34,9 +33,20 @@
     .table-delete { 
         font-size: 80%; 
         width: 100%;
+        margin-top: 40px;
         margin-left: 0%;
         margin-right: 0%
        
+    }
+    .btn {
+    border: black;
+    background-color: #e7e7e7; 
+    color: black;
+    padding: 10px 24px;
+    text-align: center;
+    display: inline-block;
+    font-size: 10px;
+    margin-top: 20px;
     }
 </style>
 </div>
