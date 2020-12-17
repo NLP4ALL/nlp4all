@@ -20,9 +20,12 @@
     <div id="delete-form" style="display: none;" class="content-section">
         <span id="del-headline"></span>
         <table class="table table-delete" id="del-table" >
-                <thead><tr><th></th><th>Tag</th><th>Text</th></tr></thead>
+                <thead><tr><th>Tagged text</th><th>Tag</th><th>Delete?</th></tr></thead>
                 <tbody></tbody>
         </table>
+        <div class="container .mt-0">
+        <button id="hide-btn">Hide</button>
+        </div>
     </div>
 </div>
 {% include "annotation_delete.html" %}
@@ -30,6 +33,9 @@
     .table-delete { 
         font-size: 80%; 
         width: 100%;
+        margin-left: 0%;
+        margin-right: 0%
+       
     }
 </style>
 </div>
