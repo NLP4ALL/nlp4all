@@ -1360,7 +1360,6 @@ def draggable():
             the_tweet_id = uncompleted_tweets[0]
             the_tweet = Tweet.query.get(the_tweet_id)
         else:
-            ##flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
             ## create an alternative message
             message="You've now been through all tweets. Please wait for the others to finish."
             the_tweet = Tweet(full_text = "", words = [])
@@ -1377,11 +1376,6 @@ def draggable():
     # filter robots that are retired, and sort them alphabetically
     # data['robots'] = sorted(robots, key= lambda r: r.name)
     data['analysis_data'] = analysis.data
-    #data['user'] = current_user.id
-    #data['user_role'] = current_user.roles
-    #data['tag_options'] = [p.id for p in project.categories]
-    #data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
-   
     
     return jsonify(data, the_tweet.id, the_tweet.time_posted)
 
@@ -1530,3 +1524,34 @@ def get_annotations():
         return jsonify('no annotations')
 
     return jsonify(alltag_table, the_word, current_user.id)
+
+@app.route('/delete_annotation', methods=['GET', 'POST'])
+def delete_annotation():
+    args = request.args.to_dict()
+    span_id = str(args['span_id'])
+    ann_id = str(args['ann_id'])
+    ann = TweetAnnotation.query.get(ann_id)
+    t_id = int(args['tweet_id'])
+    the_tweet = Tweet.query.get(t_id)
+    analysis_id = int(args['analysis_id'])
+    analysis =  BayesianAnalysis.query.get(analysis_id) 
+
+    # delete
+    db.session.delete(ann)
+    db.session.commit()
+
+    # make new table data
+    # filter relevant annotations
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==the_tweet.id, TweetAnnotation.user==current_user.id, TweetAnnotation.analysis==analysis.id).all()
+    # if the key matches
+    ann_list = [a for a in myanns if span_id in a.coordinates['txt_coords'].keys()]
+    if len(ann_list) > 0:
+        the_word = the_tweet.full_text.split()[int(span_id)]
+        tagdict = {a.id:{'tag':a.annotation_tag, 'text': " ".join(a.words) , 'id': a.id } for a in ann_list}
+        alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["tag"], reverse=True)
+        alltag_table = [t[1] for t in alltag_table]
+    else:
+        return jsonify('no annotations')
+
+
+    return jsonify(alltag_table, the_word)
