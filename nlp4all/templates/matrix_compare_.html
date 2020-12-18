@@ -126,7 +126,7 @@
                 mxtable.append( row1 );
                 head1.append($('<th>'+returnedData[0][i][0][0]+'</th>'));
             for(var j=0; j<returnedData[0][i].length; j++){
-                cell1 = $('<td style="background-color: hsl('+returnedData[1][i][j][2][0]+', '+returnedData[1][i][j][2][1]+'%, '+returnedData[1][i][j][2][2]+'%, 0.7);">'+returnedData[0][i][j][0]+'</td>')
+                cell1 = $('<td style="background-color: hsl('+returnedData[1][i][j][2][0]+', '+returnedData[1][i][j][2][1]+'%, '+returnedData[1][i][j][2][2]+'%, '+returnedData[0][i][j][3]+');">'+returnedData[0][i][j][0]+'</td>')
                
                 row1.append( cell1 );
             }
@@ -144,7 +144,7 @@
                 head2.append($('<th>'+returnedData[1][i][0][0]+'</th>'));
             for(var j=0; j<returnedData[1][i].length; j++){
                 console.log(returnedData[1][i][j][2][0],returnedData[1][i][j][2][1])
-                cell2 = $('<td style="background-color: hsl('+returnedData[1][i][j][2][0]+', '+returnedData[1][i][j][2][1]+'%, '+returnedData[1][i][j][2][2]+'%, 0.7);">'+returnedData[1][i][j][0]+'</td>')
+                cell2 = $('<td style="background-color: hsl('+returnedData[1][i][j][2][0]+', '+returnedData[1][i][j][2][1]+'%, '+returnedData[1][i][j][2][2]+'%, '+returnedData[1][i][j][3]+');">'+returnedData[1][i][j][0]+'</td>')
                 
                 row2.append( cell2 );
             }

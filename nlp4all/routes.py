@@ -695,6 +695,7 @@ def matrix(matrix_id):
         
     # prepare data for matrix table
     counts = matrix.make_table_data(cat_names)
+    count_sums = [sum(i) for i in counts]
     [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
     index_list = []
     for i in range(len(counts)):
@@ -708,7 +709,29 @@ def matrix(matrix_id):
     metrics = sorted([t for t in matrix.data['metrics'].items()], key=lambda x:x[1]["recall"], reverse=True)
     metrics = [t[1] for t in metrics]
     return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, index_list=index_list, metrics=metrics)
-  
+
+@app.route("/precision_recall", methods=['GET', 'POST'])
+def precision_recall():
+    args = request.args.to_dict()
+    m_id = args['matrix_id']
+    matrix = ConfusionMatrix.query.get(int(m_id))
+
+    counts = matrix.make_table_data(cat_names)
+    count_sums = [sum(i) for i in counts]
+    [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+    index_list = []
+    for i in range(len(counts)):
+        p = cat_names[i]
+        t = [str('Pred_'+counts[i][0]+'_Real_'+p) for i in range(len(counts))]
+        index_list.append(t)
+    [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
+    index_list =[[[counts[j][i], index_list[j][i], (j,i)] for i in range(0, len(counts[j]))] for j in range(len(counts))]
+    index_list = nlp4all.utils.matrix_css_info(index_list)
+
+    metrics = sorted([t for t in matrix.data['metrics'].items()], key=lambda x:x[1]["recall"], reverse=True)
+    metrics = [t[1] for t in metrics]
+    return jsonify(index_list, metrics)
+
 @app.route("/matrix_tweets/<matrix_id>", methods=['GET', 'POST'])
 @login_required
 def matrix_tweets(matrix_id):
@@ -1110,6 +1133,8 @@ def get_compare_matrix_data():
     old_names =[c.name for c in matrix.categories]
     counts1 = matrix.make_table_data(old_names)
     counts2 = matrix2.make_table_data(cat_names)
+    count_sums1 = [sum(i) for i in counts1]
+    count_sums2 = [sum(i) for i in counts2]
 
     [counts1[i].insert(0, old_names[i]) for i in range(len(counts1))]
     [counts2[i].insert(0, cat_names[i]) for i in range(len(counts2))]
