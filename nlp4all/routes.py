@@ -1252,10 +1252,16 @@ def annotation_summary(analysis_id):
 
     tags = analysis.annotation_tags # not sure if this is needed
     #the_tag = request.args.get('tag', type=str)
-    # get all tags with a specific tweet
+    # get all tweets with a specific tag
     tweets= tags[a_tag]['tweets']
 
-    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data, tweets=tweets, tagged_tweets=tagged_tweets)
+    # all annotations in the analysis
+    all_tag_anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
+    a_list = set([a.tweet for a in all_tag_anns])
+    all_tagged_tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()#list(set([t.tweet for t in all_tag_anns]))
+    all_ann_dict = analysis.annotation_counts(tweets, 'all')
+
+    return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data, tweets=tweets, tagged_tweets=tagged_tweets, all_tagged_tweets=all_tagged_tweets)
 
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
@@ -1264,15 +1270,15 @@ def annotations():
     analysis_id = request.args.to_dict()['analysis_id']#, 0, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     project = Project.query.get(analysis.project)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
+    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id,  TweetAnnotation.user==current_user.id).all()
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
     
     ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
-    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
-    
-    ann_dict = analysis.annotation_counts(tweets)
 
+    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+    ann_dict = analysis.annotation_counts(tweets, current_user.id)
+    
     word_tuples=[]
     ann_tags = [c.name for c in project.categories]
     for tag in list(analysis.annotation_tags.keys()):
@@ -1280,11 +1286,11 @@ def annotations():
             ann_tags.append(tag)
     for a_tweet in tweets:
         mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
-        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
+        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id, TweetAnnotation.user==current_user.id).all()
         my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
         word_tuples.append(my_tuples)
     
-    ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
+    ann_list = Tweet.query.join(TweetAnnotation, (TweetAnnotation.tweet == Tweet.id)).filter(TweetAnnotation.user==current_user.id).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
     
     next_url = url_for('annotations', analysis_id=analysis_id, page=ann_list.next_num) \
         if ann_list.has_next else None
@@ -1293,41 +1299,9 @@ def annotations():
     
     return render_template('annotations.html',  anns=ann_list.items, next_url=next_url, prev_url=prev_url, word_tuples=word_tuples, page=page, analysis=analysis, ann_dict=ann_dict)
 
-@app.route("/annotations2", methods=['GET', 'POST'])
-@login_required
-def annotations2():
-    #page = request.args.get('page', 1, type=int)
-    analysis_id = request.args.to_dict()['analysis_id']#, 0, type=int)
-    analysis = BayesianAnalysis.query.get(analysis_id)
-    project = Project.query.get(analysis.project)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id, TweetAnnotation.user ==current_user.id).all()
-    a_list = set([a.tweet for a in anns])
-    tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
-    #tagged_tweets = [t.id for t in tweets]
-    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
-    #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
-    
-    ann_dict = analysis.annotation_counts(tweets)
-
-    word_tuples=[]
-    ann_tags = [c.name for c in project.categories]
-    for tag in list(analysis.annotation_tags.keys()):
-        if tag not in ann_tags:
-            ann_tags.append(tag)
-    for a_tweet in tweets:
-        mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
-        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
-        my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
-        word_tuples.append(my_tuples)
-    
-    #ann_list = Tweet.query.join(TweetAnnotation , (TweetAnnotation.tweet == Tweet.id)).filter_by(analysis=analysis_id).order_by(Tweet.id).distinct().paginate(page, per_page=1)
-    
-    
-    
-    return render_template('annotations2.html',  word_tuples=word_tuples,  analysis=analysis, tagged_tweets=a_list, ann_dict=ann_dict)
-
 
 # new jquery way for 'annotations.html'
+## not used now
 @app.route('/tweet_annotations', methods=['GET', 'POST'])
 def tweet_annotations():
     args = request.args.to_dict()
@@ -1336,14 +1310,14 @@ def tweet_annotations():
     analysis =  BayesianAnalysis.query.get(analysis_id) 
     a_tweet = Tweet.query.get(tweet_id)
     project = Project.query.get(analysis.project)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet_id, TweetAnnotation.user==current_user.id, TweetAnnotation.analysis==analysis_id).all()
+    anns = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet_id,  TweetAnnotation.analysis==analysis_id).all()
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
     
     ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
     #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
     
-    ann_dict = analysis.annotation_counts(tweets)
+    ann_dict = analysis.annotation_counts(tweets, 'all')
 
     word_tuples=[]
     tweet_ids = []
@@ -1554,7 +1528,7 @@ def jq_highlight_tweet():
     t_id = int(args['tweet_id'])
     the_tag = str(args['the_tag'])
 
-    the_tags=TweetAnnotation.query.filter(TweetAnnotation.tweet==t_id and TweetAnnotation.annotation_tag==the_tag).all()
+    the_tags=TweetAnnotation.query.filter(TweetAnnotation.tweet==t_id, TweetAnnotation.annotation_tag==the_tag).all()
     pos_list =[]
     for a in the_tags:
         pos_list = pos_list + [k for k in a.coordinates['txt_coords'].keys()]
