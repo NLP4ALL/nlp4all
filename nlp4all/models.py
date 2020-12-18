@@ -467,8 +467,11 @@ class BayesianAnalysis(db.Model):
 
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
-    def annotation_counts(self, tweets):
-        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+    def annotation_counts(self, tweets, user_id):
+        if user_id == "all":
+            anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+        else:
+            anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id, TweetAnnotation.user==user_id).all()
         a_list = set([a.tweet for a in anns])
         annotated_tweets = list(set([a.tweet for a in anns]))
         ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}

@@ -323,8 +323,6 @@ def ann_assign_colors(list_of_tags):  #take all tags
     return(category_color_dict)
 
 
-
-
 def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
         word_list =[(v,k) for k,v in ann[0].coordinates['word_locs'].items()]   
@@ -354,6 +352,7 @@ def ann_create_css_info(classifications, text, list_of_categories, ann):
                                 if tups[w][2] == 'none':
                                     tups[w] = the_tup        
         return(tups)
+
 def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
         ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
@@ -366,7 +365,8 @@ def get_tags(analysis, words, a_tweet): #set of tweet words
                 if a.text in a_tweet.full_text:
                         for w in list(a.coordinates['txt_coords'].keys()):
                                 w_to_tag = a.coordinates['txt_coords'][w][1]
-                                mydict[w_to_tag][a.annotation_tag] += 1
+                                if w_to_tag not in ['hashtag', 'httplink', 'twitter_id']:
+                                        mydict[w_to_tag][a.annotation_tag] += 1
         return mydict
 
          

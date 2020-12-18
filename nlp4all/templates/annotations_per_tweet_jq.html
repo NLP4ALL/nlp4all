@@ -10,14 +10,14 @@
     var a_tag = $("#tag").attr('value');
     var span ;
     $('[tweet_id]').each(function( ) {
-        var tweet_id= ($(this).attr('tweet_id'));
-        console.log(tweet_id)
-        tagged_tweets.push(tweet_id) 
+        var a_tweet_id= ($(this).attr('tweet_id'));
+        console.log(a_tweet_id)
+        tagged_tweets.push(a_tweet_id) 
         });
 
-    tagged_tweets.forEach(function(tweet_id) {
-        var element = document.getElementById(tweet_id);
-        $.get('/jq_highlight_tweet', {'tweet_id': tweet_id, 'the_tag' : a_tag }).done(
+    tagged_tweets.forEach(function(a_tweet_id) {
+        var element = document.getElementById(a_tweet_id);
+        $.get('/jq_highlight_tweet', {'tweet_id': a_tweet_id, 'the_tag' : a_tag }).done(
             function(returnedData) {  
                 console.log(returnedData.length)
                 for(var i=0; i<returnedData.length; i++){
@@ -41,8 +41,17 @@
         }
         //Apply your CSS to the body tag.  You can enter any tag here, as
         //well as ID's and Classes.
-        $("#tweet-text").css(body_tag_css);
+    $("#tweet-text").css(body_tag_css);
         });
+
+        function tagFunction() {
+        var newtag = document.getElementById("sel-cat").value;
+        var cat_btn = $("#cat-btn");
+        var catid = newtag
+        cat_btn.attr('value',catid);
+        
+        }
+
 </script>
 
 
@@ -57,13 +66,13 @@ jQuery(function($) {
     var numPages = pageParts.length;
     console.log(numPages)
     // How many parts do we want per page?
-    var perPage = 5;
+    var perPage = 7;
 
     // When the document loads we're on page 1
     // So to start with... hide everything else
     pageParts.slice(perPage).hide();
     // Apply simplePagination to our placeholder
-    $("#tag-tweet-table").pagination({
+    $("#atag-tweet-table").pagination({
         items: numPages,
         itemsOnPage: perPage,
         cssStyle: "compact-theme",

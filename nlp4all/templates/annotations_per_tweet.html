@@ -49,6 +49,14 @@
         //well as ID's and Classes.
         $("#tweet-text").css(body_tag_css);
         });
+
+    function tagFunction() {
+        var newtag = document.getElementById("sel-cat").value;
+        var cat_btn = $("#cat-btn");
+        var catid = newtag
+        cat_btn.attr('value',catid);
+        
+        }
 </script>
 
 
