@@ -323,9 +323,12 @@ def ann_assign_colors(list_of_tags):  #take all tags
     return(category_color_dict)
 
 
+
+
 def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
         word_list =[(v,k) for k,v in ann[0].coordinates['word_locs'].items()]   
+        #print( category_color_dict)
         tups = [(word_list[w][0], w,"none", 0) for w in range(len(word_list))]
         for w in range(len(word_list)):
                 word = word_list[w]
@@ -333,22 +336,24 @@ def ann_create_css_info(classifications, text, list_of_categories, ann):
                 if clean_word in classifications and sum(classifications[clean_word].values())>0:
                         relevants=[]
                         for m in ann:
+                            #print(str(w))
                             if str(w) in m.coordinates['txt_coords'].keys(): # if the position is in the tagged area
                                 if m.coordinates['txt_coords'][str(w)] not in relevants:
-                                    relevants.append((m.coordinates['txt_coords'][str(w)][0],w))     
-                        for r in relevants:
-                            key_list=[]
-                            value_list=[]
-                            # @todo: special case 50/50 
-                            for k,v in classifications[clean_word].items():
-                                if v>0:
-                                    key_list.append(k),value_list.append(v)
-                            max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                            the_tup = (word[0],w, max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
-                            if tups[w][2] == 'none':
-                                tups[w] = the_tup        
+                                    relevants.append((m.coordinates['txt_coords'][str(w)][0],w)) 
+                                taglist=[m.annotation_tag for m in ann if str(w) in m.coordinates['txt_coords'].keys()]
+                                #print(taglist)
+                                key_list=[]
+                                value_list=[]
+                                for t in taglist:
+                                    if t not in key_list:
+                                        key_list.append(t)
+                                        value_list.append(taglist.count(t))
+                                max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
+                                #print(classifications[clean_word][max_key], category_color_dict[max_key])
+                                the_tup = (word[0],w, m.annotation_tag, classifications[clean_word][m.annotation_tag], category_color_dict[m.annotation_tag], value_list, key_list) #TODO: show all tags
+                                if tups[w][2] == 'none':
+                                    tups[w] = the_tup        
         return(tups)
-
 def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
         ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
