@@ -371,18 +371,22 @@ def matrix_css_info(index_list):
     matrix_colors = [[0, 100, 50],[120, 100, 25],[0,100,100]] # cell colors
     tups = []
     x =0
+    alpha=0.9
     green_list = [] # these are correct prediction cells
     for i in range(len(index_list)):
         green_list.append((x,x+1))
         x += 1
     for i in index_list:
+        row_sum=sum(i[h][0] for h in range(1,len(i)))
         for j in i:
             if j[-1] in green_list:
                 j.append(matrix_colors[1]) # green
+                j.append(round(((j[0]/row_sum)*alpha),2))
             elif j[-1][1] == 0:
                 j.append(matrix_colors[2]) # white
             else:
                 j.append(matrix_colors[0]) # red
+                j.append(round(((j[0]/row_sum)*alpha),2))
         tups.append(i)
     return(tups)
 

@@ -33,7 +33,7 @@
             {% for l in index_list %}
             {% for i in l %}
             .{{ i[1] }} {
-                background-color : hsl({{i[3][0]}}, {{i[3][1]}}%, {{i[3][2]}}%, 0.7);
+                background-color : hsl({{i[3][0]}}, {{i[3][1]}}%, {{i[3][2]}}%, {{i[4]}});
                 text-align: center; 
                 }
             {% endfor %}
@@ -47,6 +47,9 @@
             .table {
                 text-align: center;
             }
+            .table td {
+               width: 33%; 
+            }
         </style>
  
         </div> 
@@ -54,6 +57,10 @@
             {% set table_data = metrics %}
             {% set table_name = "metrics" %}
             {% include "data_table.html" %} 
+        </div>
+
+        <div class="content-section" id="pre-rec">
+            
         </div>
    
     </div> 
@@ -113,3 +120,26 @@
         
 
 
+<script>
+
+$(document).ready( function () {
+    $.get('/tweet_annotations', {'matrix_id': {{ matrix_id }}}).done(
+
+        for(var i=0; i<returnedData[0].length; i++){
+                        for(var j=0; j<returnedData[0][i].length; j++){
+                                span = $('<span class="'+returnedData[0][i][j][1]+'" title="'+returnedData[0][i][j][1]+'" value='+returnedData[0][i][j][1]+'><a class='link' href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm={{ '+returnedData[0][i][j][1]+' }}">{{ '+returnedData[0][i][j][0]+' }}</a>'+'</span>')
+                                console.log(span)
+                                span.css("margin-left",  '.05rem');
+                                span.css("background-color", 'hsl('+returnedData[0][i][j][3][0]+', '+returnedData[0][i][j][3][1]+'% , '+returnedData[0][i][j][3][2]+'%)');
+                                span.css("opacity", returnedData[1])
+                                element.append(span)
+                            };
+
+                        };
+
+       // $('#{{table_name}}').DataTable(
+   //         {'retrieve': true} );
+    });
+    )};
+
+</script>
