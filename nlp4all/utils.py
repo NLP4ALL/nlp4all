@@ -410,3 +410,17 @@ def create_ann_css_info(annotations, pos_dict):
         else:
             tups.append((v, k, 0, '',0))
     return(tups)
+
+def matrix_metrics(cat_names, matrix_classes):
+        metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
+        for i in cat_names:
+                selected_cat = i
+                tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+                recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+                if sum([matrix_classes [x] for x in recall_keys]) >0:
+                        metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+                
+                precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+                if sum([matrix_classes [x] for x in precision_keys]) > 0:
+                        metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+        return(metrics)
