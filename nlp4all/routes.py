@@ -535,22 +535,8 @@ def reset_token(token):
     return render_template('reset_token.html', title='Reset Password', form=form)
 
 
-@app.route("/create_matrix", methods=['GET', 'POST'])
-def create_matrix():
-    form = CreateMatrixForm()
-    form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
-   
-    if form.validate_on_submit():
-        cats = [int(n) for n in form.categories.data]
-        tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
-        ratio = form.ratio.data
-        matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio)
-    
-        db.session.add(matrix)
-        db.session.commit()
-        return(redirect(url_for('create_matrix')))
-    return render_template('create_matrix.html', form=form)
 
+# for the template with three tabs: matrix, iterate, and compare
 @app.route("/matrix/<matrix_id>", methods=['GET', 'POST'])
 @login_required
 def matrix(matrix_id):
@@ -575,19 +561,19 @@ def matrix(matrix_id):
     train_set_size = len(a_tnt_set[0].keys())
     test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
 
+    # threshold and ratio accuracy
     if form.validate_on_submit():
-        if form.threshold.data:
-            matrix.threshold = form.threshold.data
-            flag_modified(matrix, "threshold")
-        if form.ratio.data:
-            matrix.ratio = round(form.ratio.data * 0.01,3)
-            flag_modified(matrix, "ratio")
-            matrix.training_and_test_sets = matrix.update_tnt_set()
-            flag_modified(matrix, "training_and_test_sets")
-            db.session.add(matrix)
-            db.session.merge(matrix)
-            db.session.flush()
-            db.session.commit()
+
+        matrix.threshold = form.threshold.data
+        flag_modified(matrix, "threshold")
+        matrix.ratio = round(form.ratio.data * 0.01,3)
+        flag_modified(matrix, "ratio")
+        matrix.training_and_test_sets = matrix.update_tnt_set()
+        flag_modified(matrix, "training_and_test_sets")
+        db.session.add(matrix)
+        db.session.merge(matrix)
+        db.session.flush()
+        db.session.commit()
         if form.shuffle.data:
             tnt_list = list(range(0, len(tnt_sets)))
             tnt_nr = sample(tnt_list, 1)[0]
@@ -626,18 +612,10 @@ def matrix(matrix_id):
             True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
             
             accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-            metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
-            for i in cat_names:
-                selected_cat = i
-                tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
-                recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
-                if sum([matrix_classes [x] for x in recall_keys]) >0:
-                    metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
-                
-                precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
-                if sum([matrix_classes [x] for x in precision_keys]) > 0:
-                    metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
 
+            # precision and recall
+            metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
+            
             # summarise data
             matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy, 'metrics':metrics, 'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
             flag_modified(matrix, "data")
@@ -667,7 +645,6 @@ def matrix(matrix_id):
             for cat in cat_names:
                 class_list_all.append(str('Pred_'+str(c)+"_Real_"+str(cat)))
                 class_list_all.append(str('Pred_'+str(cat)+"_Real_"+str(c)))
-        #class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
         matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
@@ -677,17 +654,8 @@ def matrix(matrix_id):
         
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-        metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
-        for i in cat_names:
-            selected_cat = i
-            tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
-            recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
-            if sum([matrix_classes [x] for x in recall_keys]) >0:
-                metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
-            
-            precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
-            if sum([matrix_classes [x] for x in precision_keys]) > 0:
-                metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+        # precision and recall
+        metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
 
         # summarise data
         matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
@@ -710,11 +678,12 @@ def matrix(matrix_id):
     [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
     index_list =[[[counts[j][i], index_list[j][i], (j,i)] for i in range(0, len(counts[j]))] for j in range(len(counts))]
     index_list = nlp4all.utils.matrix_css_info(index_list)
-
+    
     metrics = sorted([t for t in matrix.data['metrics'].items()], key=lambda x:x[1]["recall"], reverse=True)
     metrics = [t[1] for t in metrics]
     return render_template('matrix.html', cat_names = cat_names, form=form, matrix=matrix, all_cats= all_cats, matrices=matrices, index_list=index_list, metrics=metrics)
 
+# precision recall table with jquery
 @app.route("/precision_recall", methods=['GET', 'POST'])
 def precision_recall():
     args = request.args.to_dict()
@@ -756,6 +725,7 @@ def matrix_tweets(matrix_id):
     cm_info = [t[1] for t in cm_info]
     return render_template('matrix_tweets.html', cm_info = cm_info, matrix=matrix, title=title)
 
+# landing page when clicking "My matrices on the navigation tab"
 @app.route("/my_matrices", methods=['GET', 'POST'])
 @login_required
 def my_matrices():
@@ -765,6 +735,7 @@ def my_matrices():
     form = CreateMatrixForm()
     form.categories.choices = [( str(s.id), s.name ) for s in TweetTagCategory.query.all()]
    
+    # create a new matrix
     if form.validate_on_submit():
         userid = current_user.id
         cats = [int(n) for n in form.categories.data]
@@ -812,18 +783,8 @@ def my_matrices():
         
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-        metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
-        for i in cat_names:
-            selected_cat = i
-            tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
-            recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
-            if sum([matrix_classes [x] for x in recall_keys]) >0:
-                metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
-            
-            precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
-            if sum([matrix_classes [x] for x in precision_keys]) > 0:
-                metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
-
+        # precision and recall
+        metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
         
         # summarise data
         matrix.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy, 'metrics':metrics ,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
@@ -836,6 +797,7 @@ def my_matrices():
 
     return render_template('my_matrices.html', matrices=matrices, form=form) 
 
+# the link to show all tweets in the matrix (exceeding the threshold)
 @app.route("/included_tweets/<matrix_id>", methods=['GET', 'POST'])
 @login_required
 def included_tweets(matrix_id):
@@ -882,7 +844,7 @@ def matrix_overview():
     form = ThresholdForm()
     return render_template('matrix_overview.html', matrices=matrices, matrix_info=matrix_info, form = form, userid=userid, all_cats=all_cats)
 
-
+#not used, just created when I tried out iterating a matrix
 @app.route('/matrix_loop', methods=['POST','GET'])
 def matrix_loop():
     matrix_id = request.args.get('matrix_id')
@@ -912,7 +874,7 @@ def aggregate_matrix():
     counts_list = []
     cat_names = [n.name for n in matrix.categories]
     
-    # loop
+    # this loop creates a new matrix for each iteration
     for m in range(n):
         new_mx = matrix.clone()
         db.session.add(new_mx)
@@ -966,18 +928,9 @@ def aggregate_matrix():
         # accuracy = sum(correct predictions)/sum(all matrix points)
         accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
         accuracy_list.append(accuracy)
-        metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
-        for i in cat_names:
-            selected_cat = i
-            tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
-            recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
-            if sum([matrix_classes[x] for x in recall_keys]) >0:
-                metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
-            
-            precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
-            if sum([matrix_classes[x] for x in precision_keys]) > 0:
-                metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
-
+        # precision and recall
+        metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
+        
         # summarise data
         new_mx.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
         flag_modified(new_mx, "data")
@@ -1061,10 +1014,11 @@ def get_compare_matrix_data():
     matrix = ConfusionMatrix.query.get(int(m_id))
     alt_cat = TweetTagCategory.query.get(int(alt_cat))
     new_cat = TweetTagCategory.query.get(int(new_cat))
+    # cat ids for the two matrices
     old_cats = [c.id for c in matrix.categories]
     cat_ids = [new_cat.id if x==alt_cat.id else x for x in old_cats]
 
-    # create a new matrix
+    # create a new matrix with the new category
     matrix2 = nlp4all.utils.add_matrix(cat_ids, ratio= matrix.ratio, userid='')
     matrix2.threshold = matrix.threshold
     flag_modified(matrix2, "threshold") 
@@ -1114,18 +1068,9 @@ def get_compare_matrix_data():
     
     # accuracy = sum(correct predictions)/sum(all matrix points)
     accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
-    metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
-    for i in cat_names:
-        selected_cat = i
-        tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
-        recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
-        if sum([matrix_classes [x] for x in recall_keys]) >0:
-            metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+    # precision and recall
+    metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
         
-        precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
-        if sum([matrix_classes [x] for x in precision_keys]) > 0:
-            metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
-
     # summarise data
     matrix2.data = {'matrix_classes' : matrix_classes,'accuracy':accuracy,  'metrics':metrics,'nr_test_tweets': len(test_tweets), 'nr_train_tweets': train_set_size, 'nr_incl_tweets':len(incl_tweets), 'nr_excl_tweets': len(excl_tweets)}
     flag_modified(matrix2, "data")
@@ -1155,8 +1100,11 @@ def get_compare_matrix_data():
             t += 1
     
     table_data = [[m.id, m.data['accuracy'],  m.data['nr_incl_tweets'], m.data['nr_excl_tweets']] for m in [matrix, matrix2]]
+    # for the jquery confusion matrix with colors
     counts1=nlp4all.utils.matrix_css_info(counts1)
     counts2=nlp4all.utils.matrix_css_info(counts2)
+
+    # precision and accuracy table
     metrics= [list(matrix.data['metrics'][cat].values()) for cat in old_names ] , [list(matrix2.data['metrics'][cat].values()) for cat in cat_names ]
 
     return jsonify(counts1, counts2, matrix.threshold, matrix.ratio, table_data,metrics)
@@ -1204,6 +1152,7 @@ def tweet_annotation():
         
     return render_template('tweet_annotate.html', tweet_table= tweet_table, categories=categories, analysis=analysis)
 
+# showing all annotations in an analysis, from all users ==> useful in shared projects
 @app.route("/annotation_summary/<analysis_id>", methods=['GET', 'POST'])
 @login_required
 def annotation_summary(analysis_id):
@@ -1249,10 +1198,7 @@ def annotation_summary(analysis_id):
     alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["nr_tweets"], reverse=True)
     alltag_table = [t[1] for t in alltag_table]
 
-    #if analysis.shared: ## if you want user counts
-        #show how many users have used the tag
-        #chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['users'] for tag in all_tags}, title="Annotation tags")
-    #else:
+    #now showing how many times each tag has been used (tag_count), NOT by how many users (change to 'users')
     chart_data = nlp4all.utils.create_bar_chart_data({tag:tagdict[tag]['tag_count'] for tag in all_tags}, title="Annotation tags")
 
     tags = analysis.annotation_tags # not sure if this is needed
@@ -1260,7 +1206,7 @@ def annotation_summary(analysis_id):
     # get all tweets with a specific tag
     tweets= tags[a_tag]['tweets']
 
-    # all annotations in the analysis
+    # all annotations in the analysis, third tab
     all_tag_anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
     a_list = set([a.tweet for a in all_tag_anns])
     all_tagged_tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()#list(set([t.tweet for t in all_tag_anns]))
@@ -1268,6 +1214,9 @@ def annotation_summary(analysis_id):
 
     return render_template('annotation_summary.html', ann_table=tag_table, analysis=analysis, tag=a_tag, all_tags=all_tags, allann_table=chart_data, tweets=tweets, tagged_tweets=tagged_tweets, all_tagged_tweets=all_tagged_tweets)
 
+# annotations by user
+## TODO: Maybe? a similar tab but without filtering by user? ==> would be interesting to see all tags in a tweet
+### however, remember to check that only own tags can be deleted (delete form)
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
 def annotations():
@@ -1306,7 +1255,7 @@ def annotations():
 
 
 # new jquery way for 'annotations.html'
-## not used now
+## didn't get this to entirely work, not used now
 @app.route('/tweet_annotations', methods=['GET', 'POST'])
 def tweet_annotations():
     args = request.args.to_dict()
@@ -1341,6 +1290,8 @@ def tweet_annotations():
     
     return jsonify(my_tuples, tweet_ids, ann_dict)
 
+# saving the annotation by word position
+# TODO: figure out a better way, now the word before gets saved sometimes..
 @app.route('/save_annotation', methods=['GET', 'POST'])
 def save_annotation():
     args = request.args.to_dict()
@@ -1360,7 +1311,7 @@ def save_annotation():
     db.session.commit()
     
     coordinates = {}
-    # end and start
+    # end and start word position 
     txtstart = min(pos, pos2)
     txtend = max(pos, pos2) 
 
@@ -1373,12 +1324,15 @@ def save_annotation():
     for w in range(len(words)):
         word_locs[word_count] = words[w] 
         word_count += 1
+    # a word list of the words in the annotation
     words = [re.sub(r'[^\w\s]','',w) for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]#text.split() 
+    # coordinates of all words in the tweet
     coordinates['word_locs'] = word_locs
 
     # make a list of locations in-between
     loc_list=list(range(txtstart, txtend+1))
-    # save annotation coordinates + original and cleaned words
+    # save annotation coordinates  + [original, cleaned word] for each highlighted word in the annotation 
+    # later used for the css info
     coords = {}
     for l in loc_list:
         coords[l] = [coordinates['word_locs'][l], re.sub(r'[^\w\s]','', coordinates['word_locs'][l].lower())]
@@ -1394,10 +1348,11 @@ def save_annotation():
             ann_tags.append(tag)
     mytagcounts = nlp4all.utils.get_tags(analysis,set(tweet.words), tweet)
     myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==tweet.id, TweetAnnotation.user==current_user.id).all()
-    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, tweet.full_text,ann_tags, myanns)
+    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, tweet.full_text,ann_tags, myanns) # tuples for the css info
    
     return jsonify(my_tuples)
 
+# save the dragged tweet category guess
 @app.route('/save_draggable_tweet', methods=['GET', 'POST'])
 def draggable():
     args = request.args.to_dict()
@@ -1451,6 +1406,7 @@ def draggable():
     
     return jsonify(data, the_tweet.id, the_tweet.time_posted)
 
+# update the bar chart
 @app.route('/get_bar_chart_data', methods=['GET', 'POST'])
 def get_bar_chart_data():
     args = request.args.to_dict()
@@ -1470,6 +1426,8 @@ def get_bar_chart_data():
 
     return jsonify(data)
 
+# when loading the analysis page
+# load a tweet to show
 @app.route('/get_first_tweet', methods=['GET', 'POST'])
 def get_first_tweet():
     args = request.args.to_dict()
