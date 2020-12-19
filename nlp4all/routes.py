@@ -662,7 +662,12 @@ def matrix(matrix_id):
 
         # count different occurences
         class_list = [t[1]['class'] for t in incl_tweets]
-        class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        class_list_all = []# [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
+        for c in cat_names: 
+            for cat in cat_names:
+                class_list_all.append(str('Pred_'+str(c)+"_Real_"+str(cat)))
+                class_list_all.append(str('Pred_'+str(cat)+"_Real_"+str(c)))
+        #class_list_all = [str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c-1])) for c in range(len(cat_names))]+[str('Pred_'+str(cat_names[c])+"_Real_"+str(cat_names[c])) for c in range(len(cat_names))]
         matrix_classes = {c:0 for c in class_list_all} 
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
