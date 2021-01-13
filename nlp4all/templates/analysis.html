@@ -19,21 +19,12 @@
     </div>
 
     <div class="content-section tweet-container" id="draggable-tweet" tweet_id='' >
-        <h2>To which category does this tweet belong?</h2>
+        <!-- <h2>To which category does this tweet belong?</h2>
         <i>Drag the Twitter Bird on the pie chart to submit your guess.</i>
-        <br></br>
+        <br></br> -->
    
    
 
-    <div class="content-section" id="jquery-tweet" >
-        <p id="time-posted"></p>
-        <span id='tweet_id' type='hidden' value=""></span>
-        <span id="tuples" onmouseup="getSelText()"></span>
-      
-       
-      
-      </div>
-   
     <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" ><img class="rounded-circle article-img"
         src="{{ url_for('static', filename='profile_pics/twitter-logo-9.png') }}"
         alt="Tweet">
@@ -72,7 +63,7 @@
             
         </div>
 
-    <div class="tab-content" id="searchTerms">
+    <!-- <div class="tab-content" id="searchTerms">
         <div class="content-section">
             <table class="table">
                 <tr><th>Options</th></tr>
@@ -83,7 +74,7 @@
                 </tr>
             </table>
         </div>
-    </div>
+    </div> -->
     
     {% include "draggable.html" %}
 
@@ -106,6 +97,15 @@
     </div> -->
 
 </div>
+    <div class="content-section" id="jquery-tweet" >
+        <p id="time-posted"></p>
+        <span id='tweet_id' type='hidden' value=""></span>
+        <span id="tuples" onmouseup="getSelText()"></span>
+      
+       
+      
+      </div>
+   
 </div>
 <div class="col-md-4">
 <div class="content-section">
