@@ -26,7 +26,7 @@ db.session.add(admin_role)
 db.session.commit()
 
 hp = bcrypt.generate_password_hash("1234")
-user = User(username="telma1", email="telma@telma.dk", password=hp)
+user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", password=hp, admin=True)
 user.roles = [admin_role,]
 db.session.add(user)
 
@@ -34,10 +34,10 @@ org = Organization(name="UBI/CCTD")
 db.session.add(org)
 db.session.commit()
 
-#user = User(username="arthurhjorth_teacher", email="arthur.hjorth@u.northwestern.edu", password=hp, organizations=[org,])
-#user.roles = [teacher_role,]
-#db.session.add(user)
-user = User(username="telma", email="telma@email.com", password=hp, organizations=[org,])
+user = User(username="arthurhjorth_teacher", email="arthur.hjorth@u.northwestern.edu", password=hp, organizations=[org,])
+user.roles = [teacher_role,]
+db.session.add(user)
+user = User(username="arthur_student", email="arthur@mgmt.au.dk", password=hp, organizations=[org,])
 user.roles = [student_role,]
 db.session.add(user)
 db.session.commit()
@@ -59,7 +59,7 @@ for f in files:
     with open(data_dir+f) as inf:
         print(f)
         counter = 0
-        for line in inf.readlines()[:200]: # choose how many tweets you want from each party file
+        for line in inf.readlines(): # choose how many tweets you want from each party file
             indict = json.loads(line)
 #             add cateogry if it does not already exist
             if indict['twitter_handle'] not in existing_tag_names:
