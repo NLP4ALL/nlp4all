@@ -89,7 +89,7 @@ def project():
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-
+    print("test called")
     return render_template('test.html', title='Test', buttons=[])
 
 
@@ -1555,7 +1555,39 @@ def get_annotations():
 
     return jsonify(alltag_table, the_word, current_user.id)
 
-@app.route('/delete_annotation', methods=['GET', 'POST'])
+@app.route("/delete_last_annotation", methods=['GET', 'POST'])
+def delete_last_annotation():
+    print("delete last ")
+    args = request.args.to_dict()
+    t_id = int(args['tweet_id'])
+    the_tweet = Tweet.query.get(t_id)
+    analysis_id = int(args['analysis'])
+    analysis =  BayesianAnalysis.query.get(analysis_id) 
+
+    # get all annotations
+    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==t_id, TweetAnnotation.user==current_user.id, TweetAnnotation.analysis==analysis_id).all()
+    print(myanns)
+    if len(myanns) > 0:
+        # delete the last one
+        ann_to_delete = myanns[-1]
+        print(ann_to_delete)
+        db.session.delete(ann_to_delete) 
+        db.session.commit()
+
+    #     # make new table data
+    #     # but exclude the one we just deleted
+    #     ann_list = [a for a in myanns[0:-1] if span_id in a.coordinates['txt_coords'].keys()]
+    #     if len(ann_list) > 0:
+    #         the_word = the_tweet.full_text.split()[int(span_id)]
+    #         tagdict = {a.id:{'tag':a.annotation_tag, 'text': " ".join(a.words) , 'id': a.id } for a in ann_list}
+    #         alltag_table = sorted([t for t in tagdict.items()], key=lambda x:x[1]["tag"], reverse=True)
+    #         alltag_table = [t[1] for t in alltag_table]
+    #     else:
+    #         return jsonify('no annotations')
+    # else:
+    return jsonify({})
+
+@app.route('/elete_annotation', methods=['GET', 'POST'])
 def delete_annotation():
     args = request.args.to_dict()
     span_id = str(args['span_id'])

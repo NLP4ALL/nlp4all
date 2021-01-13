@@ -18,9 +18,11 @@
     <input type="hidden" id="pos2" value="">
     <input type="button" id="submitbtn" value="Save annotation">
     <input type="button" id="cancelbtn" value="Cancel">
+    <input type="button" onClick=deleteLast() id="delete_lastbtn" value="Delete Last">
 </form>
 
 <script>
+
     $("#cat-btn").click(function() {
         var cat_id = $("#sel-cat");
         var cat_btn = $("#cat-btn");
@@ -33,9 +35,23 @@
     // this requires that the tweet is required in the top template
     var annotation = $("#anntext");
     var submitbtn = $("#submitbtn");
+    var deletelastbtn = $("#delete_lastbtn");
     var tpl = $("#tpl");
     var cancelbtn = $("#cancelbtn");
     var atag;
+
+
+
+    function deleteLast(){
+        console.log("deleting last");
+        var tweet_id = $("#draggable-tweet").attr('tweet_id').valueOf();
+        $.get('/delete_last_annotation', {'tweet_id': tweet_id, 'analysis': {{ analysis.id }} } ).done(
+            function(){
+            window.location.reload();
+            });
+    }
+
+
 
     function getSelText()
     
@@ -93,7 +109,6 @@
                     $(this).css({
                         "background-color":'hsl('+returnedData[this.id][4]+', '+((returnedData[this.id][3]- 0.50) * 200)+'% , 90%)'
                     });
-                    //$(this).attr("background-color", 'hsl('+returnedData[i][3]+', '+((returnedData[i][2]- 0.50) * 200)+'% , 90%)');
                     console.log(this.id);
             });
             window.clearSelection()
