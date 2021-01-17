@@ -51,7 +51,18 @@
             });
     }
 
+    function getFromTo(from, to){
+        txt = "";
+        for(var i = from; i <= to; i++){
+            txt = txt + document.getElementById(i).textContent;
+            console.log(txt);
+            if (i < to) {
+                // txt = txt + " ";
+            }
+        }
+        return txt;
 
+    }
 
     function getSelText()
     
@@ -60,13 +71,16 @@
           $("#add-annotation").attr('style',"display: block;");
            if (window.getSelection)
           {
+              console.log("window");
+              console.log(window.getSelection());
               txt = window.getSelection().toString();
               node1 = window.getSelection().anchorNode.parentElement.id;
               node2 = window.getSelection().focusNode.parentElement.id;
-              
-                   }
+              txt = getFromTo(node1, node2) ;
+            }
           else if (document.getSelection)
           {
+              console.log("doc.getsel");
               txt = window.getSelection().toString();
               node1 = window.getSelection().anchorNode.parentElement.id;
               node2 = window.getSelection().focusNode.parentElement.id;
@@ -74,6 +88,7 @@
                   }
           else if (document.selection)
           {
+              console.log("doc.sel");
               txt = window.getSelection().toString();
               node1 = window.getSelection().anchorNode.parentElement.id;
               node2 = window.getSelection().focusNode.parentElement.id;
@@ -131,7 +146,7 @@
 
     function clearSelection() {
         if (window.getSelection) {
-            window.getSelection().removeAllRanges();
+            window.getSelection().removeAllRange();
         } else if (document.selection) {
             document.selection.empty();
         }
