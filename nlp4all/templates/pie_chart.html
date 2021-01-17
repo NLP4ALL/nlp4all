@@ -28,9 +28,13 @@ console.log(data.datasets[0].data)
 {% endfor %}
 
 var myPieChart = new Chart(ctx, {
-    type: 'pie',
+    type: 'doughnut',
     data: data,
     options:{
+        legend: {
+            reverse: true,
+            position: 'bottom'
+        },
         onClick: (evt, item) => {
             myPieChart.update()
             item[0]._model.outerRadius += 10
