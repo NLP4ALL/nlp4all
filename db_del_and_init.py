@@ -33,6 +33,9 @@ db.session.add(user)
 org = Organization(name="UBI/CCTD")
 db.session.add(org)
 db.session.commit()
+org = Organization(name="IMC Seminar Group")
+db.session.add(org)
+db.session.commit()
 
 user = User(username="arthurhjorth_teacher", email="arthur.hjorth@u.northwestern.edu", password=hp, organizations=[org,])
 user.roles = [teacher_role,]
@@ -103,40 +106,39 @@ for f in files:
 db.session.commit()
 db.session.close()
 
-org = Organization.query.first()
-all_cats = TweetTagCategory.query.all()
-cats = [all_cats[1], all_cats[7]]
-cat_ids = [all_cats[1].id, all_cats[7].id]
+# org = Organization.query.last()
+# all_cats = TweetTagCategory.query.all()
+# cats = [all_cats[1], all_cats[7]]
+# cat_ids = [all_cats[1].id, all_cats[7].id]
 
 # Telma added
-tweets1 = Tweet.query.filter_by(category=2).all() # this should be done in a better way..
-tweets2 = Tweet.query.filter_by(category=8).all()
+# tweets1 = Tweet.query.filter_by(category=2).all() # this should be done in a better way..
+# tweets2 = Tweet.query.filter_by(category=8).all()
 
-mytweets = tweets1 +tweets2
+# mytweets = tweets1 +tweets2
 
-tf_idf = {}
-tf_idf['cat_counts'] = { cat.id : 0 for cat in cats}
-tf_idf['words'] = {}
-all_words = sorted(list(set([word for t in mytweets for word in t.words])))
+# tf_idf = {}
+# tf_idf['cat_counts'] = { cat.id : 0 for cat in cats}
+# tf_idf['words'] = {}
+# all_words = sorted(list(set([word for t in mytweets for word in t.words])))
 
-for tweet in mytweets:
-    tf_idf['cat_counts'][tweet.category] = tf_idf['cat_counts'][tweet.category] + 1
-    for word  in tweet.words:
-            the_list = tf_idf['words'].get(word, [])
-            the_list.append((tweet.id, tweet.category))
-            tf_idf['words'][word] = the_list
+# for tweet in mytweets:
+#     tf_idf['cat_counts'][tweet.category] = tf_idf['cat_counts'][tweet.category] + 1
+#     for word  in tweet.words:
+#             the_list = tf_idf['words'].get(word, [])
+#             the_list.append((tweet.id, tweet.category))
+#             tf_idf['words'][word] = the_list
 
-cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
-tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
-training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
+# cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
+# tweet_objs = [t for cat in cats_objs for t in cat.tweets]
+# tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
+# tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
+# training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
 
 
-#project = Project(name="DF og Ehl", organization=org.id, categories=cats)
-#project= add_project(name="DF og ehl", description="", org=org, cat_ids=cats)
-project = Project(name = 'name', description = 'description', organization = org.id, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
-db.session.add(project)
+# project= add_project(name="Bernie and JoeBiden", description="Can you tell the difference between Bernie and Joe Biden, Aug 2019-March 2020?", org=org, cat_ids=cats)
+# project = Project(name = 'name', description = 'description', organization = org.id, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
+# db.session.add(project)
 
 
 db.session.commit()
