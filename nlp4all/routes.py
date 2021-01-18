@@ -1217,21 +1217,28 @@ def annotation_summary(analysis_id):
 # annotations by user
 ## TODO: Maybe? a similar tab but without filtering by user? ==> would be interesting to see all tags in a tweet
 ### however, remember to check that only own tags can be deleted (delete form)
+## AH: when it is a shared analysis, we should be able to see all of them
 @app.route("/annotations", methods=['GET', 'POST'])
 @login_required
 def annotations():
     page = request.args.get('page', 1, type=int)
     analysis_id = request.args.to_dict()['analysis_id']#, 0, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
-    project = Project.query.get(analysis.project)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id,  TweetAnnotation.user==current_user.id).all()
+    shared = analysis.shared
+    prt oject = Project.query.get(analysis.project)
+    anns = []
+    if shared:
+        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
+    else:
+        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id,  TweetAnnotation.user==current_user.id).all()
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
     
-    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag} for a in anns}
+    ann_info ={a.id :{'annotation': a.text, 'tag': a.annotation_tag, 'user' : a.user} for a in anns}
+    print(ann_info)
 
     #ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
-    ann_dict = analysis.annotation_counts(tweets, current_user.id)
+    ann_dict = analysis.annotation_counts(tweets, current_user.id) if not shared else analysis.annotation_counts(tweets, "all")
     
     word_tuples=[]
     ann_tags = [c.name for c in project.categories]
@@ -1240,7 +1247,7 @@ def annotations():
             ann_tags.append(tag)
     for a_tweet in tweets:
         mytagcounts = nlp4all.utils.get_tags(analysis,set(a_tweet.words), a_tweet)
-        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id, TweetAnnotation.user==current_user.id).all()
+        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
         my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text,ann_tags, myanns)
         word_tuples.append(my_tuples)
     
