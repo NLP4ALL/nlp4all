@@ -157,6 +157,9 @@ def robot():
             db.session.add(robot)
             db.session.commit()
             return redirect(url_for('robot', robot = robot.id))
+    table_data = acc_dict['table_data']
+    table_data = [d for d  in table_data if not '*' in d['word']]
+    acc_dict['table_data'] = table_data
     return render_template('robot.html', title='Robot', r = robot, form = form, acc_dict=acc_dict)
 
 @app.route("/shared_analysis_view", methods=['GET', 'POST'])
@@ -231,6 +234,7 @@ def analysis():
         return redirect(url_for('login'))
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
+    print(analysis.annotate)
     project = Project.query.get(analysis.project)
     if 'tag' in request.form.to_dict():
         # category = TweetTagCategory.query.get(int(form.choices.data))
@@ -274,14 +278,16 @@ def analysis():
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
     tweets = project.tweets
     the_tweet = None
+    uncompleted_counts = 0
     if analysis.shared:
         completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
         uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        uncompleted_counts = len(uncompleted_tweets)
         if(len(uncompleted_tweets) > 0):
             the_tweet_id = uncompleted_tweets[0]
             the_tweet = Tweet.query.get(the_tweet_id)
         else:
-            flash('Du er kommet igennem alle tweetsene. Vent på resten af klassen nu :)', 'success')
+            flash('Well done! You finished all your tweets, wait for the rest of the group.', 'success')
             the_tweet = Tweet(full_text = "", words = [])
     else:
         the_tweet = sample(tweets, 1)[0]
@@ -292,6 +298,8 @@ def analysis():
     data['number_of_tagged']  = number_of_tagged
     data['words'], data['predictions'] = analysis.get_predictions_and_words(set(the_tweet.words))
     data['word_tuples'] = nlp4all.utils.create_css_info(data['words'], the_tweet.full_text, categories)
+
+        
     data['chart_data'] = nlp4all.utils.create_bar_chart_data(data['predictions'], "Computeren gætter på...")
     # filter robots that are retired, and sort them alphabetically
     # data['robots'] = sorted(robots, key= lambda r: r.name)
@@ -299,6 +307,7 @@ def analysis():
     data['user'] = current_user
     data['user_role'] = current_user.roles
     data['tag_options'] = project.categories
+    data['uncompleted_counts'] = uncompleted_counts
     data['pie_chart_data'] = nlp4all.utils.create_pie_chart_data([c.name for c in categories], "Categories")
    # data['pie_chart']['data_points']['pie_data']
 
@@ -319,7 +328,13 @@ def analysis():
         return redirect(url_for('analysis', analysis=analysis_id))
     
     # tags per user
-    ann_tags = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id, TweetAnnotation.user==current_user.id).all()
+    ann_tags = []
+    if analysis.annotate == 2:
+        ann_names = [cat.name for cat in project.categories]
+        ann_tags = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag.in_(ann_names), TweetAnnotation.analysis==analysis_id, TweetAnnotation.user==current_user.id).all()
+        categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
+    if analysis.annotate == 3:
+        ann_tags = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id, TweetAnnotation.user==current_user.id).all()
     tag_list = list(set([a.annotation_tag for a in ann_tags]))
     for i in categories:
         if i.name not in tag_list:
@@ -338,10 +353,17 @@ def register_imc():
         fake_password = str(fake_id)
         hashed_password = bcrypt.generate_password_hash(fake_password).decode('utf-8')
         imc_org = Organization.query.filter_by(name="IMC Seminar Group").all()
+        project = imc_org[0].projects[0]
         user = User(username=form.username.data, email=fake_email, password=hashed_password, organizations=imc_org)
         db.session.add(user)
         db.session.commit()
         login_user(user)
+        userid = current_user.id
+        name = current_user.username + "'s personal analysis"
+        number_per_category = 0
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, tweets=[], annotation_tags={}, annotate=1)
+        db.session.add(analysis)
+        db.session.commit()
         return redirect(url_for('home'))
     return render_template('register_imc.html', form=form)
 
@@ -1326,6 +1348,7 @@ def save_annotation():
     tweet = Tweet.query.get(t_id)
     text = str(args['text'])
     atag = str(args['atag'])
+    print(atag)
     pos = int(args['pos'])
     pos2 = int(args['pos2'])
     analysis_id = int(args['analysis'])
@@ -1614,7 +1637,7 @@ def delete_last_annotation():
     # else:
     return jsonify({})
 
-@app.route('/elete_annotation', methods=['GET', 'POST'])
+@app.route('/delete_annotation', methods=['GET', 'POST'])
 def delete_annotation():
     args = request.args.to_dict()
     span_id = str(args['span_id'])

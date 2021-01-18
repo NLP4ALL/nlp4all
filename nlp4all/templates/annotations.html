@@ -1,10 +1,29 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1>Annotation overview</h1>
 
 <div class="row">
 
     <div class="col-md-8">
+    <div class="content-section">
+        <table>
+            <tr>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{ analysis.id }}">Tweets</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Label &amp; Word Statistics</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link">Annotations</a>
+                </td>
+                {% if not analysis.shared %}
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+                </td>
+                {% endif %}
+            </tr>
+        </table>
+    </div>
 
     {% include "annotations_colors.html" %}
 

@@ -7,7 +7,13 @@
         <table>
             <tr>
                 <td>
-                    <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Se statistikker for ord og tweets</a>
+                    <a class="nav-item nav-link" >Tweets</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('shared_analysis_view') }}?analysis={{ analysis.id }}">Label &amp; Word Statistics</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('annotations') }}?analysis_id={{ analysis.id }}">Annotations</a>
                 </td>
                 {% if not analysis.shared %}
                 <td>
@@ -17,7 +23,12 @@
             </tr>
         </table>
     </div>
-
+        
+        {% if analysis.shared %}
+    <div class="content-section">
+        <p>You need to label {{ uncompleted_counts }} more tweets!</p>
+    </div>
+    {% endif %}
     <div class="content-section tweet-container" id="draggable-tweet" tweet_id='' >
         <!-- <h2>To which category does this tweet belong?</h2>
         <i>Drag the Twitter Bird on the pie chart to submit your guess.</i>
