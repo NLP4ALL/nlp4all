@@ -1225,7 +1225,7 @@ def annotations():
     analysis_id = request.args.to_dict()['analysis_id']#, 0, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
     shared = analysis.shared
-    prt oject = Project.query.get(analysis.project)
+    project = Project.query.get(analysis.project)
     anns = []
     if shared:
         anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==analysis_id).all()
