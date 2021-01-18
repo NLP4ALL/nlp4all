@@ -1,12 +1,12 @@
 import os, time
 import secrets
 import nlp4all.utils
-from random import sample, shuffle
+from random import sample, shuffle, randint
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
 
-from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, CreateMatrixForm, ThresholdForm, AnnotationForm
+from nlp4all.forms import IMCRegistrationForm, RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, CreateMatrixForm, ThresholdForm, AnnotationForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, ConfusionMatrix, TweetAnnotation
 #from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm, AnnotationForms
 #from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, TweetAnnotation#, TweetAnnotationCategory
@@ -326,6 +326,26 @@ def analysis():
             tag_list.append(i.name)
     print(tag_list)
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
+
+@app.route("/register_imc", methods=['GET', 'POST'])
+def register_imc():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = IMCRegistrationForm()
+    if form.validate_on_submit():
+        fake_id = randint(0, 99999999999)
+        fake_email = str(fake_id)+"@arthurhjorth.com"
+        fake_password = str(fake_id)
+        hashed_password = bcrypt.generate_password_hash(fake_password).decode('utf-8')
+        imc_org = Organization.query.filter_by(name="IMC Seminar Group").all()
+        user = User(username=form.username.data, email=fake_email, password=hashed_password, organizations=imc_org)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('home'))
+    return render_template('register_imc.html', form=form)
+
+
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():

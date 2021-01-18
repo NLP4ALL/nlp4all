@@ -6,6 +6,10 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 from nlp4all.models import User, Project 
 from wtforms.fields.core import Label
 
+class IMCRegistrationForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Sign Up')
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username',
