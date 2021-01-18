@@ -106,19 +106,6 @@
       
       </div>
    
-</div>
-<div class="col-md-4">
-<div class="content-section">
-    <table>
-        <tr>
-            <td>
-            <p>Analysis: {{ analysis.name }} </p>
-            </td>
-           
-        </tr>
-    </table>
-</div>
-
 {%if analysis.annotate == 2 %}
 <div id="add-annotation" class="content-section" style="display: none;"> 
     <h4>Add annotations to the tweet</h4>
@@ -134,6 +121,19 @@
     {% include "annotation.html" %}
 </div>
 {% endif %}
+</div>
+<div class="col-md-4">
+<div class="content-section">
+    <table>
+        <tr>
+            <td>
+            <p>Analysis: {{ analysis.name }} </p>
+            </td>
+           
+        </tr>
+    </table>
+</div>
+
 
 <div class="content-section">
     <h4>Bayesian probabilities</h4>
