@@ -9,6 +9,7 @@ from nlp4all import db
 import random, itertools
 from nlp4all.models import BayesianAnalysis, BayesianRobot
 
+from flask_login import current_user
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
     no_colors = 1 if no_colors == 0 else no_colors
@@ -136,7 +137,11 @@ def add_category(name, description):
 
 
 def  get_user_project_analyses(a_user, a_project):
-        return BayesianAnalysis.query.filter_by(project=a_project.id)
+        analyses= BayesianAnalysis.query.filter_by(project=a_project.id)
+        if current_user.admin:
+            return analyses
+        else:
+            return [a for a in analyses if a.shared or a.user == current_user.id ]
         # if a_user.admin:
         #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
         # else:

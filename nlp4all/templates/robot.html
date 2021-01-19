@@ -20,9 +20,9 @@
 Last time it was: {{ acc_dict.parent_tweets_targeted }}%
 {% endif %}
 </p>
-<p>Tweets predicted accurately with your terms: {{ acc_dict.accuracy * 100 }}% 
+<p>Tweets predicted accurately with your terms: {{ acc_dict.accuracy * 100 }}%
 {% if r.parent != None %}
-Last time it was: {{ acc_dict.parent_accuracy }}%
+Last time it was: {{ acc_dict.parent_accuracy }}
 {% endif %}
 </p>
 <p><b>Score: {{ acc_dict.accuracy * acc_dict.tweets_targeted }}

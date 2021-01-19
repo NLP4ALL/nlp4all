@@ -84,7 +84,7 @@ def project():
         db.session.add(analysis)
         db.session.commit()
         return(redirect(url_for('project', project=project_id)))
-    return render_template('project.html', title='About', project=project, analyses=analyses, form=form)
+    return render_template('project.html', title='About', project=project, analyses=analyses, form=form, user=current_user)
 
 
 @app.route("/test", methods=['GET', 'POST'])
@@ -132,7 +132,7 @@ def robot():
         redirect(url_for('robot', robot=robot_id))
     form = BayesianRobotForms()
     if request.method == "POST" and 'add_feature_form-submit' in request.form.to_dict():
-        if " " not in form.add_feature_form.data and len(form.add_feature_form.feature.data) > 3 and len(form.add_feature_form.reasoning.data) > 15 and len(robot.features) <= 20:
+        if " " not in form.add_feature_form.data and len(form.add_feature_form.feature.data) > 3 and len(form.add_feature_form.reasoning.data) > 5 and len(robot.features) <= 20:
             new_feature = {form.add_feature_form.feature.data.strip() : form.add_feature_form.reasoning.data}
             robot.features.update(new_feature)
             flag_modified(robot, "features")
@@ -160,7 +160,31 @@ def robot():
     table_data = acc_dict['table_data']
     table_data = [d for d  in table_data if not '*' in d['word']]
     acc_dict['table_data'] = table_data
+    print(table_data)
     return render_template('robot.html', title='Robot', r = robot, form = form, acc_dict=acc_dict)
+
+
+@app.route("/high_score", methods=['GET', 'POST'])
+def high_score():
+    project_id = request.args.get('project', 1, type=int)
+    project = Project.query.get(project_id)
+    table_data = []
+    for a in project.analyses:
+        if len(a.robots) > 1:
+            last_run_robot = a.robots[-2]
+            rob_dict = {}
+            user = User.query.get(a.user)
+            rob_dict['user'] = user.username
+            link_text = "<a href=\"/robot?robot="+str(last_run_robot.id)+"\">"+str(last_run_robot.id)+"</a>"
+            print(link_text)
+            rob_dict['robot'] = last_run_robot.id
+            acc_dict = last_run_robot.accuracy
+            score = acc_dict['accuracy'] * acc_dict['tweets_targeted'] - (1-acc_dict['accuracy']) * acc_dict['tweets_targeted']
+            rob_dict['score'] = score
+            table_data.append(rob_dict)
+
+    print(table_data)
+    return render_template('highscore.html', title='High Score', table_data = table_data)
 
 @app.route("/shared_analysis_view", methods=['GET', 'POST'])
 def shared_analysis_view():
@@ -342,6 +366,10 @@ def analysis():
     print(tag_list)
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
+@app.route("/imc", methods=['GET', 'POST'])
+def imc():
+    return redirect(url_for('register_imc'))
+
 @app.route("/register_imc", methods=['GET', 'POST'])
 def register_imc():
     if current_user.is_authenticated:
@@ -354,7 +382,10 @@ def register_imc():
         hashed_password = bcrypt.generate_password_hash(fake_password).decode('utf-8')
         imc_org = Organization.query.filter_by(name="IMC Seminar Group").all()
         project = imc_org[0].projects[0]
-        user = User(username=form.username.data, email=fake_email, password=hashed_password, organizations=imc_org)
+        the_name = form.username.data
+        if any(User.query.filter_by(username=the_name)):
+            the_name = the_name + str(fake_id)
+        user = User(username=the_name, email=fake_email, password=hashed_password, organizations=imc_org)
         db.session.add(user)
         db.session.commit()
         login_user(user)
