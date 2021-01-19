@@ -187,7 +187,9 @@ class BayesianRobot(db.Model):
             feat_dict['category_prediction'] = "N/A"
             feat_dict['accuracy'] = feature_info[f]['accuracy']
             feat_dict['tweets_targeted'] = feature_info[f]['tweets_targeted']
-            feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+            score = feat_dict['accuracy'] * feat_dict['tweets_targeted'] - ((1 - feat_dict['accuracy']) * feat_dict['tweets_targeted'])
+            print(score)
+            feat_dict['score'] = round(score, 2)
             # calculate the most often predicted category. This isn't trivial - should it be by total tweets in test set, or just the most common
             # category across its words? Well, it's obvious. Boo. It needs to be weighted by how many tweets there are.
             # NO  NO NO! I thought about that wrong. We just want the average of each of the category prediction for each word.
@@ -200,7 +202,9 @@ class BayesianRobot(db.Model):
                 feat_dict['category_prediction'] = word_category_predictions[word]['category_prediction']
                 feat_dict['accuracy'] = feature_info[f]['words'][word]['accuracy']
                 feat_dict['tweets_targeted'] = feature_info[f]['words'][word]['tweets_targeted']
-                feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+                score = feat_dict['accuracy'] * feat_dict['tweets_targeted'] - ((1 - feat_dict['accuracy']) * feat_dict['tweets_targeted'])
+                print(score)
+                feat_dict['score'] = round(score, 2)
                 table_data.append(feat_dict)
         if len(tweet_predictions) == 0:
             accuracy = 0

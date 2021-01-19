@@ -20,6 +20,7 @@
 </div>
 
 <div class="col-md-4"> 
+{% if current_user.admin %}
 <div class="content-section addform">
 <h2>Create New Analysis</h1>
     <form method="POST" action="">
@@ -70,6 +71,7 @@
         </div>
     </form>
 </div>
+{% endif %}
 </div>
 </div>
 

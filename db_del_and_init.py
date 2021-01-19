@@ -135,14 +135,18 @@ db.session.close()
 # tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
 # training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
 
+org = Organization.query.filter_by(name="IMC Seminar Group").first()
+biden = TweetTagCategory.query.filter_by(name="JoeBiden").first()
+bernie = TweetTagCategory.query.filter_by(name="BernieSanders").first()
 
-# project= add_project(name="Bernie and JoeBiden", description="Can you tell the difference between Bernie and Joe Biden, Aug 2019-March 2020?", org=org, cat_ids=cats)
+cats = [biden.id, bernie.id]
+
+project= add_project(name="Bernie and JoeBiden", description="Can you tell the difference between Bernie and Joe Biden, Aug 2019-March 2020?", org=org.id, cat_ids=cats)
 # project = Project(name = 'name', description = 'description', organization = org.id, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
 # db.session.add(project)
 
 
+
+
 db.session.commit()
 
-
-for t in Tweet.query.all():
-    print(t)
