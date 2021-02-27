@@ -1,6 +1,6 @@
 from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from nlp4all import db, login_manager, app
+from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 import collections
@@ -314,6 +314,33 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
 
+# Define the Matrix-Categories association table
+class MatrixCategories(db.Model):
+    __tablename__ = 'confusionmatrix_categories'
+    id = db.Column(db.Integer(), primary_key=True)
+    matrix_id = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
+    category_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
+
+# Define the Tweet-Matrix association table
+class TweetMatrix(db.Model):
+    __tablename__ = 'tweet_confusionmatrix'
+    id = db.Column(db.Integer(), primary_key=True)
+    tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
+    matrix = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
+
+# Define the Annotation-Category association table
+#class AnnotationCategories(db.Model):
+#    __tablename__ = 'annotation_category'
+#    id = db.Column(db.Integer(), primary_key=True)
+#    annotation_id = db.Column(db.Integer(), db.ForeignKey('tweet_annotation.id', ondelete='CASCADE'))
+#    category_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
+
+# Define the Tweet-Matrix association table
+#class TweetMatrix(db.Model):
+#    __tablename__ = 'tweet_confusionmatrix'
+#    id = db.Column(db.Integer(), primary_key=True)
+#    tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
+#    matrix = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
 
 # class Post(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -353,6 +380,7 @@ class TweetTagCategory(db.Model):
     tweets = db.relationship('Tweet')
     tags = db.relationship('TweetTag')
     projects = db.relationship('Project', secondary='project_categories')
+    #matrices = db.relationship('ConfusionMatrix', secondary='matrix_categories')
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -367,8 +395,9 @@ class Tweet(db.Model):
     links = db.Column(JSON)
     mentions = db.Column(JSON)
     url = db.Column(db.String(200), unique=True)
-    text = db.Column(db.String(300)) 
-    
+    text = db.Column(db.String(300))
+    annotations = db.relationship('TweetAnnotation') 
+        
 class TweetTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -387,6 +416,9 @@ class BayesianAnalysis(db.Model):
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
+    annotate = db.Column(db.Boolean, default=False)
+    annotations = db.relationship('TweetAnnotation')
+    annotation_tags = db.Column(JSON)
 
     def get_project(self):
         return Project.query.get(self.project)
@@ -400,6 +432,14 @@ class BayesianAnalysis(db.Model):
             val = self.data[category.name]['words'].get(w, 0)
             self.data[category.name]['words'][w] = val + 1
         return self.data
+    
+    def updated_a_tags(self, atag,tweet):
+        if atag not in self.annotation_tags.keys():
+            self.annotation_tags[atag] = {'counts' : 0, 'category' : tweet.handle, 'tweets':[]}
+        self.annotation_tags[atag]['counts'] = self.annotation_tags[atag]['counts']+1
+        if tweet.id not in self.annotation_tags[atag]['tweets']:
+            self.annotation_tags[atag]['tweets'].append(tweet.id)
+        return self.annotation_tags
     
     def get_predictions_and_words(self, words):
         # take each word  and  calculate a probabilty for each category
@@ -426,3 +466,184 @@ class BayesianAnalysis(db.Model):
                         predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
 
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
+
+    def annotation_counts(self, tweets):
+        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+        a_list = set([a.tweet for a in anns])
+        annotated_tweets = list(set([a.tweet for a in anns]))
+        ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
+        a_list=[]
+        for tweet in annotated_tweets:
+            a_list.append(sorted([t for t in ann_table.items() if t[1]["tweet_id"]==tweet], key=lambda x:x[1]["tweet_id"], reverse=True))
+        new_list=[]
+        for l in a_list:
+            li=[t[1] for t in l]
+            new_list.append(li)   
+        keys=[i[0].get('tweet_id') for i in new_list]
+        values=[[{'tag':j.get('tag'), 'annotation':j.get('annotation')} for j in i] for i in new_list]
+        countlist=[[] for _ in range(len(values))]
+        for x in range(len(values)):
+            for i in values[x]:
+                n=values[x].count(i)
+                c= i.copy()
+                c.update({'count':n})
+                if c not in countlist[x]:
+                    countlist[x].append(c) 
+        n_dict = {key:value for key, value in zip(keys, countlist)}
+        return(n_dict)
+
+class ConfusionMatrix(db.Model):
+   
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    categories = db.relationship('TweetTagCategory', secondary='confusionmatrix_categories')
+    tweets = db.relationship('Tweet', secondary='tweet_confusionmatrix')
+    matrix_data = db.Column(JSON) # here to save the TP/TN/FP/FN
+    train_data = db.Column(JSON) # word counts from the training set
+    tf_idf = db.Column(JSON)
+    training_and_test_sets = db.Column(JSON)
+    threshold = db.Column(db.Float())
+    ratio = db.Column(db.Float())
+    data = db.Column(JSON) # accuracy etc resuts from the matrix
+    parent = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None) # for cloning purposes
+    child = db.Column(db.Integer, db.ForeignKey('confusion_matrix.id'), default=None)
+    
+
+    def clone(self):
+        new_matrix = ConfusionMatrix()
+        new_matrix.parent = self.id
+        new_matrix.categories = self.categories
+        new_matrix.tweets = self.tweets
+        new_matrix.tf_idf = self.tf_idf
+        new_matrix.training_and_test_sets = self.training_and_test_sets
+        new_matrix.ratio = self.ratio
+        new_matrix.train_data = {"counts" : 0, "words" : {}}
+        return(new_matrix)
+
+    def updated_data(self, tweet, category):
+        # update the train_data when you change tnt set, this is mostly copied from a Bayesian analysis function above
+        self.train_data['counts'] = self.train_data['counts'] + 1
+        if category.name not in self.train_data.keys():
+            self.train_data[category.name] = {'counts' : 0, 'words' : {}}
+        self.train_data[category.name]['counts'] = (self.train_data[category.name].get('counts', 0)) + 1
+        for w in set(tweet.words):
+            val = self.train_data[category.name]['words'].get(w, 0)
+            self.train_data[category.name]['words'][w] = val + 1
+        return self.train_data
+
+    def update_tnt_set(self):
+        tweet_id_and_cat = { t.id : t.category for t in self.tweets}
+        self.training_and_test_sets = utils.create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)
+        return self.training_and_test_sets
+
+    def get_predictions_and_words(self, words):
+        # works the same way as for bayesian analysis
+        categories = self.categories
+        category_names = [c.name for c in categories]
+        preds = {}
+        predictions = {}
+        if self.train_data['counts'] == 0:
+            predictions = {c : {w : 0} for w in words for c in category_names}
+            # predictions = {word : {category : 0 for category in category_names} for word in words}
+        else:
+            for w in words: # only categorize each word once
+                preds[w] = {c : 0 for c in category_names}
+                for cat in category_names:
+                    predictions[cat] = predictions.get(cat, {})
+                    prob_ba = self.train_data[cat]['words'].get(w, 0) / self.train_data[cat]['counts']
+                    prob_a = self.train_data[cat]['counts'] / self.train_data['counts'] 
+                    prob_b = sum([self.train_data[c]['words'].get(w, 0) for c in category_names]) / self.train_data['counts']
+                    if  prob_b == 0:
+                        preds[w][cat] = 0
+                        predictions[cat][w] = 0
+                    else:
+                        preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
+                        predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
+
+        return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
+
+    def train_model(self, train_tweet_ids):
+        self.train_data = {"counts" : 0, "words" : {}} # reinitialize the training data
+        # trains the model with the training data tweets
+        for tweet_id in train_tweet_ids:
+            tweet = Tweet.query.get(tweet_id)
+            category_id = tweet.category
+            category = TweetTagCategory.query.get(category_id)
+            train_data = self.updated_data(tweet, category) 
+        return train_data
+    
+    def make_matrix_data(self, test_tweets, cat_names):
+        # classifies the tweets according to the calculated prediction probabilities
+        matrix_data = {t.id : {"predictions" : 0, "pred_cat" : '', "probability" : 0, 'relative probability': 0} for t in test_tweets}
+        words = {t.id : '' for t in test_tweets}
+
+        for a_tweet in test_tweets: 
+            words[a_tweet.id], matrix_data[a_tweet.id]['predictions'] = self.get_predictions_and_words(set(a_tweet.words))
+            # if no data
+            if bool(matrix_data[a_tweet.id]['predictions']) == False:  
+                matrix_data[a_tweet.id]['pred_cat'] = 'none'
+            # if all prob == 0
+            elif sum(matrix_data.get(a_tweet.id)['predictions'].values()) == 0:
+                matrix_data[a_tweet.id]['pred_cat'] = 'none'
+            # else select the biggest prob
+            else: 
+                matrix_data[a_tweet.id]['pred_cat'] = (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[0]) 
+                # bayesian p
+                matrix_data[a_tweet.id]['probability']  =  (max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[1])    
+                # relative p compared to other cats 
+                max_prob = max(matrix_data[a_tweet.id]['predictions'].items(), key=operator.itemgetter(1))[1]
+                matrix_data[a_tweet.id]['relative probability'] = round(max_prob / sum(matrix_data[a_tweet.id]['predictions'].values()),3)
+            # add the real category
+            matrix_data[a_tweet.id]['real_cat'] = a_tweet.handle
+
+        matrix_data = sorted([t for t in matrix_data.items()], key=lambda x:x[1]["probability"], reverse=True)# add matrix classes/quadrants
+        for t in matrix_data: # this is just for indexing tweets
+            for c in self.categories:
+                #if correct prediction
+                if t[1]['pred_cat'] == t[1]['real_cat'] and t[1]['pred_cat'] == c.name:
+                    t[1]['class'] = 'Pred_'+str(c.name)+"_Real_"+t[1]['real_cat']
+                #if uncorrect prediction
+                elif t[1]['pred_cat'] != t[1]['real_cat'] and t[1]['pred_cat'] == c.name:
+                    t[1]['class'] = 'Pred_'+str(c.name)+"_Real_"+t[1]['real_cat'] # predicted 'no', although was 'yes'
+                #if no prediction
+                elif t[1]['pred_cat'] == 'none':   
+                    t[1]['class'] = 'undefined'
+        return (matrix_data)
+
+    def make_table_data(self, cat_names):
+        # this function is a manual way to create confusion matrix data rows
+        currentDataClass = [self.matrix_data[i].get('real_cat') for i in self.matrix_data.keys()]
+        predictedClass = [self.matrix_data[i].get('pred_cat') for i in self.matrix_data.keys()]
+        number_list= list(range(len(cat_names)))
+        # change cat names to numbers 1,2,...
+        for i in number_list: 
+            for o in range(len(currentDataClass)):
+                if currentDataClass[o] == cat_names[i]:
+                    currentDataClass[o] = i+1       
+        for i in number_list:
+            for p in range(len(predictedClass)):
+                if predictedClass[p] == cat_names[i]:
+                    predictedClass[p] = i+1
+        classes = int(max(currentDataClass) - min(currentDataClass)) + 1 #find number of classes
+        counts = [[sum([(currentDataClass[i] == true_class) and (predictedClass[i] == pred_class) 
+                        for i in range(len(currentDataClass))])
+                for pred_class in range(1, classes + 1)] 
+                for true_class in range(1, classes + 1)]
+        
+        return counts
+
+
+
+
+class TweetAnnotation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    #category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
+    annotation_tag = db.Column(db.String(50)) ## dropdown: project categories, other
+    analysis = db.Column(db.Integer, db.ForeignKey('bayesian_analysis.id', ondelete="CASCADE"))
+    tweet = db.Column(db.Integer, db.ForeignKey('tweet.id', ondelete="CASCADE"))
+    words = db.Column(JSON)
+    text = db.Column(db.String(50))
+    coordinates = db.Column(JSON)
+    time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
