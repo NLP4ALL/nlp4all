@@ -17,7 +17,7 @@
                 </td>
                 {% if not analysis.shared %}
                 <td>
-                    <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+                    <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ last_robot.id }}">Gå til seneste Robot</a>
                 </td>
                 {% endif %}
             </tr>
@@ -26,7 +26,7 @@
         
         {% if analysis.shared %}
     <div class="content-section">
-        <p>You need to label {{ uncompleted_counts }} more tweets!</p>
+        <p>You need to label {{ uncompleted_counts }} more tweets! (Refresh browser to update this!)</p>
     </div>
     {% endif %}
     <div class="content-section tweet-container" id="draggable-tweet" tweet_id='' >

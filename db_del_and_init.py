@@ -136,8 +136,8 @@ db.session.close()
 # training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
 
 org = Organization.query.filter_by(name="IMC Seminar Group").first()
-biden = TweetTagCategory.query.filter_by(name="JoeBiden").first()
-bernie = TweetTagCategory.query.filter_by(name="BernieSanders").first()
+biden = TweetTagCategory.query.filter_by(name="JoeBiden.json").first()
+bernie = TweetTagCategory.query.filter_by(name="BernieSanders.json").first()
 
 cats = [biden.id, bernie.id]
 

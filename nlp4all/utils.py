@@ -141,7 +141,7 @@ def  get_user_project_analyses(a_user, a_project):
         if current_user.admin:
             return analyses
         else:
-            return [a for a in analyses if a.shared or a.user == current_user.id ]
+            return [a for a in analyses if a.shared or a.shared_model or a.user == current_user.id ]
         # if a_user.admin:
         #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
         # else:
