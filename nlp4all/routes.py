@@ -80,10 +80,18 @@ def project():
         # make sure all students see tweets in the same order. So shuffle them now, and then 
         # put them in the database
         shuffle(analysis_tweets)
-        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={}, annotate=annotate)
+        analysis = BayesianAnalysis(user = userid, name=name, project=project.id, data = {"counts" : 0, "words" : {}}, shared=form.shared.data, tweets=analysis_tweets, annotation_tags={}, annotate=annotate, shared_model = form.shared_model.data)
         db.session.add(analysis)
         db.session.commit()
-        return(redirect(url_for('project', project=project_id)))
+        ## this is where robot creation would go. Make one for everyone in the org if it is a shared model, but not if it is a "shared", meaning
+        ## everyone tags the same tweets
+        org = Organization.query.get(project.organization)
+        for user in org.users:
+            robot = BayesianRobot(name =current_user.username + "s robot", analysis=analysis.id)
+            db.session.add(robot)
+            db.session.flush()
+            db.session.commit()
+        # return(redirect(url_for('project', project=project_id)))
     return render_template('project.html', title='About', project=project, analyses=analyses, form=form, user=current_user)
 
 
@@ -258,7 +266,6 @@ def analysis():
         return redirect(url_for('login'))
     analysis_id = request.args.get('analysis', 1, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
-    print(analysis.annotate)
     project = Project.query.get(analysis.project)
     if 'tag' in request.form.to_dict():
         # category = TweetTagCategory.query.get(int(form.choices.data))
@@ -280,12 +287,6 @@ def analysis():
         db.session.add(tag)
         db.session.commit()
         # redirect(url_for('home'))
-        return redirect(url_for('analysis', analysis=analysis_id))
-    if len(analysis.robots) < 1: #TODO: move the creation of a robot to the creation of an analysis.
-        robot = BayesianRobot(name =current_user.username + "s robot", analysis=analysis.id)
-        db.session.add(robot)
-        db.session.flush()
-        db.session.commit()
         return redirect(url_for('analysis', analysis=analysis_id))
     ## check if user has access to this.
     ## either it is a shared project. In that case the user needs to be a member of 
@@ -363,7 +364,19 @@ def analysis():
     for i in categories:
         if i.name not in tag_list:
             tag_list.append(i.name)
-    print(tag_list)
+
+    if not analysis.shared:
+        user_analysis_robots = BayesianRobot.query.filter(BayesianRobot.user==current_user.id, BayesianRobot.analysis==analysis.id).all()
+        if len(user_analysis_robots) == 0:
+            robot = BayesianRobot(name =current_user.username + "s robot", analysis=analysis.id, user=current_user.id)
+            db.session.add(robot)
+            db.session.flush()
+            db.session.commit()
+            return redirect(url_for('analysis', analysis=analysis_id))
+    if not analysis.shared:
+        data['last_robot'] = user_analysis_robots[-1]
+
+    ## finally get the last robot to link, if it is not a shared analysis
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
 @app.route("/imc", methods=['GET', 'POST'])

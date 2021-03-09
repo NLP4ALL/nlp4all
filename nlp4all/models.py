@@ -14,6 +14,7 @@ def load_user(user_id):
 
 class BayesianRobot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(25))
     parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
     child = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
@@ -419,6 +420,7 @@ class BayesianAnalysis(db.Model):
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
+    shared_model = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
     annotations = db.relationship('TweetAnnotation')
     annotation_tags = db.Column(JSON)
