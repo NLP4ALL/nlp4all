@@ -100,9 +100,9 @@ class AnalysisForm(FlaskForm):
     add_category_form = FormField(AddTweetCategoryForm)
 
 class AddBayesianRobotFeatureForm(FlaskForm):
-    feature = StringField('Skriv et søgeterm som du vil have at din robot skal lede efter. Du kan bruge wildcard (*) til at søge flere ord. F.eks. *bank vil give alle ord som slutter med bank. bank* vil give alle ord som starter med bank, og *bank* giver alle ord som indeholder bank.')
-    reasoning = StringField("Forklar her hvorfor du tror at lige netop dette søgeterm vil være godt til at skelne mellem de to partier. Er det et emne som et af partierne taler mere om end det andet? Er det et ord som kun dét parti bruger? Skriv et 1-3 sætninger om hvorfor I vælger det.")
-    submit = SubmitField("Tilføj søgeord")
+    feature = StringField('Add a feature to your machine learning model here. You can use wildcard (*) to search for more words. You can add wildcard in the middle or at the beginning or end of your word. Only one wildcard per search term.')
+    reasoning = StringField('Explain here why you think this would be a good search term for classifying these texts.')
+    submit = SubmitField("Add Term")
 
 class BayesianRobotForms(FlaskForm):
     add_feature_form = FormField(AddBayesianRobotFeatureForm)

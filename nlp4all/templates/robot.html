@@ -12,7 +12,7 @@
 <td><a href="{{ url_for('robot') }}?robot={{ r.child}}">Improve your analysis >>>>> </a></td>
 {% endif %}
 </table>
-<h5>{{ r.name }} {% if r.retired %} (Færdig) {% endif %}</h5>
+<h5>{{ r.name }} {% if r.retired %} (Old) {% endif %}</h5>
 {% if r.retired %}
 <div class="content-section col-md-8">
 <p>Tweets "hit" by your features: {{ acc_dict.tweets_targeted }}
@@ -43,7 +43,7 @@ Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted 
 <div class="tab-content" id="searchTerms">
     <div class="content-section col-md-8">
         <table class="table">
-            <tr><th>Term</th><th>Forklaring</th></tr>
+            <tr><th>Term</th><th>Reasoning</th></tr>
             {% for feature in r.features.items() %}
                 <tr><td>{{ feature[0] }}</td><td>{{ feature [1] }}</td><td><form action="" method="post"><button type="submit" value="{{feature[0]}}" name="delete">Delete</button></form></td></tr>
             {% endfor %}
@@ -63,7 +63,7 @@ Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted 
         <form method="POST" action="">
             {{ form.add_feature_form.hidden_tag() }}
             <fieldset class="form-group col-md-8">
-                <legend class="border-bottom mb-4">Tilføj et nyt ord til din robot</legend>
+                <legend class="border-bottom mb-4">Add search term to your robot</legend>
                 <div class="form-group">
                     {{ form.add_feature_form.feature.label(class="form-control-label") }}
                     {% if form.add_feature_form.feature.errors %}
