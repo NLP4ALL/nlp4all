@@ -33,7 +33,7 @@ def home():
 def robot_summary():
     analysis_id = request.args.get('analysis', 0, type=int)
     analysis = BayesianAnalysis.query.get(analysis_id)
-    robots = [r for r in analysis.robots if r.retired]
+    robots = [r for r in analysis.robots if r.retired and r.user == current_user.id]
     return render_template('robot_summary.html', analysis=analysis, robots=robots)
 
 @app.route("/data_table")
