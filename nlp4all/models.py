@@ -30,6 +30,7 @@ class BayesianRobot(db.Model):
         new_robot.analysis = self.analysis
         new_robot.features = self.features
         new_robot.parent = self.id
+        new_robot.user = self.user
         return(new_robot)
     
 
