@@ -78,7 +78,7 @@ class AddBayesianAnalysisForm(FlaskForm):
     submit = SubmitField('Create Analysis')
 
 class RunBayesianAnalysisRobot(FlaskForm):
-    run_analysis = SubmitField('Kør analysen!')
+    run_analysis = SubmitField('Run Model!')
 
 class AddBayesianRobotForm(FlaskForm):
     name = StringField('Title of Robot', validators=[DataRequired()])
