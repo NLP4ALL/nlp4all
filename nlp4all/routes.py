@@ -24,7 +24,6 @@ def home():
     my_projects = get_user_projects(current_user) 
     return render_template('home.html', projects=my_projects)
 
-
 @app.route("/robot_summary", methods=['GET', 'POST'])
 def robot_summary():
     analysis_id = request.args.get('analysis', 0, type=int)
