@@ -423,6 +423,7 @@ class BayesianAnalysis(db.Model):
     shared = db.Column(db.Boolean, default=False)
     shared_model = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
+    annotate = db.Column(db.Boolean, default=False)
     annotations = db.relationship('TweetAnnotation')
     annotation_tags = db.Column(JSON)
     annotate = db.Column(db.Integer, default=1)
