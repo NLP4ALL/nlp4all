@@ -16,7 +16,6 @@ from nlp4all.utils import get_user_projects, get_user_project_analyses
 import operator
 import re
 
-
 @app.route("/")
 @app.route("/home")
 @app.route("/home/", methods=['GET', 'POST'])
