@@ -117,7 +117,7 @@ def add_tweets_from_account(twitter_handle):
                         # outf.write("\n")
                         outdict = {}
                         indict = status
-                        outdict['twitter_handle'] = handle
+                        outdict['twitter_handle'] = twitter_handle
                         outdict['time'] = indict['created_at']
                         outdict['id'] = indict['id']
                         outdict['id_str'] = indict['id_str']

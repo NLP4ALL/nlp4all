@@ -1,13 +1,14 @@
 from nlp4all import db, bcrypt
 from nlp4all.utils import add_project, tf_idf_from_tweets_and_cats_objs, create_n_train_and_test_sets
 from nlp4all.models import User, Role, Organization, Project
-from nlp4all.models import TweetTagCategory, Tweet, User, Organization, Project, BayesianAnalysis
+from nlp4all.models import TweetTagCategory, Tweet, User, Organization, Project, BayesianAnalysis, D2VModel
 from nlp4all import db, bcrypt
 import json, os
 from datetime import datetime
 import time
 import json
 import re
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
 #import utils  # potentially used, but see if it's unnecessary
 
@@ -140,6 +141,42 @@ db.session.add(project)
 
 
 db.session.commit()
+
+
+### Doc2Vec
+
+# parameters
+# Arbitrary. Could be changed
+vector_size = 50
+min_count = 2
+epochs = 50
+
+
+# Initializing the model
+d2v_model = Doc2Vec(vector_size=vector_size, min_count=min_count, epochs=epochs)
+
+
+# creating the database
+tweets = Tweet.query.all()
+train_corpus = []
+
+for tweet in tweets:
+    train_corpus.append(TaggedDocument(tweet.text, [tweet.id]))
+
+
+# Create the vocabulary and train the model
+d2v_model.build_vocab(train_corpus)
+d2v_model.train(train_corpus, total_examples=d2v_model.corpus_count, epochs=d2v_model.epochs)
+
+
+# save d2v_model into the database
+d2v = D2VModel(id=1, description="trained on the entire corpus")
+d2v.save(d2v_model)
+
+
+db.session.add(d2v)
+db.session.commit()
+
 
 
 for t in Tweet.query.all():

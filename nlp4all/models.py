@@ -6,6 +6,7 @@ from sqlalchemy.types import JSON
 import collections
 import collections, functools, operator 
 import statistics
+import pickle
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -33,7 +34,7 @@ class BayesianRobot(db.Model):
     
 
     # def run_analysis(self):
-    def get_analysis():
+    def get_analysis(self):
         return BayesianAnalysis.query.get(self.analysis)
 
 
@@ -370,7 +371,7 @@ class Project(db.Model):
     training_and_test_sets = db.Column(JSON)
 
     def get_tweets(self):
-        return [t for cat in categories for t in cat.tweets]
+        return [t for cat in self.categories for t in cat.tweets]
 
 
 class TweetTagCategory(db.Model):
@@ -647,3 +648,16 @@ class TweetAnnotation(db.Model):
     coordinates = db.Column(JSON)
     time_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
+
+class D2VModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(50))
+    model = db.Column(db.PickleType)
+
+    def save(self, gensim_model):
+        # /!\ Erases an possible already saved model
+        pickled_model = pickle.dumps(gensim_model)
+        self.model = pickled_model
+
+    def load(self):
+        return pickle.loads(self.model)
