@@ -94,7 +94,7 @@ def add_numbers():
     
 @app.route("/ajax")
 def ajax():
-    o = request.args.get('a', 0, type=int)
+    a = request.args.get('a', 0, type=int)
     b = request.args.get('b', 0, type=int)
     number = a + b
     return render_template('ajax.html', title='Test')
@@ -154,7 +154,7 @@ def robot():
 
 @app.route("/shared_analysis_view", methods=['GET', 'POST'])
 def shared_analysis_view():
-    analysis_id = request.args.get('analysis', 0, type=int)
+    analysis_id = request.args.getq('analysis', 0, type=int)
     tweet_info = {}
     all_words = []
     if analysis_id != 0:

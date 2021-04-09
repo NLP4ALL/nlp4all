@@ -9,6 +9,7 @@ import time
 import json
 import re
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from gensim.utils import simple_preprocess
 
 #import utils  # potentially used, but see if it's unnecessary
 
@@ -161,7 +162,8 @@ tweets = Tweet.query.all()
 train_corpus = []
 
 for tweet in tweets:
-    train_corpus.append(TaggedDocument(tweet.text, [tweet.id]))
+    train_corpus.append(TaggedDocument(simple_preprocess(tweet.text), [tweet.id]))
+print(train_corpus[1])
 
 
 # Create the vocabulary and train the model
@@ -177,6 +179,31 @@ d2v.save(d2v_model)
 db.session.add(d2v)
 db.session.commit()
 
+
+## tests
+
+d2vs = D2VModel.query.all()
+print(len(d2vs))
+
+new_d2v = d2vs[0]
+gensim_d2v = new_d2v.load()  # loaded model. d2v_model is the initial one
+
+# compare some stuff
+# vocab length
+print(len(d2v_model.wv.index_to_key))
+print(len(gensim_d2v.wv.index_to_key))
+
+# a word vector
+print(d2v_model.wv['advare'])
+print(gensim_d2v.wv['advare'])
+
+# a doc vector
+print(d2v_model.dv[2])
+print(gensim_d2v.dv[2])
+
+# a model parameter
+print(d2v_model.epochs)
+print(gensim_d2v.epochs)
 
 
 for t in Tweet.query.all():
