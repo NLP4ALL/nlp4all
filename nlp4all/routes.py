@@ -5,11 +5,8 @@ from random import sample, shuffle
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from nlp4all import app, db, bcrypt, mail
-
 from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, CreateMatrixForm, ThresholdForm, AnnotationForm
 from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, ConfusionMatrix, TweetAnnotation
-#from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm, AnnotationForms
-#from nlp4all.models import User, Organization, Project, BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet, TweetAnnotation#, TweetAnnotationCategory
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
@@ -19,7 +16,6 @@ from nlp4all.utils import get_user_projects, get_user_project_analyses
 import operator
 import re
 
-
 @app.route("/")
 @app.route("/home")
 @app.route("/home/", methods=['GET', 'POST'])
@@ -27,7 +23,6 @@ import re
 def home():
     my_projects = get_user_projects(current_user) 
     return render_template('home.html', projects=my_projects)
-
 
 @app.route("/robot_summary", methods=['GET', 'POST'])
 def robot_summary():
