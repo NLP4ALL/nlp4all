@@ -135,7 +135,7 @@ def add_category(name, description):
         db.session.commit()
 
 
-def  get_user_project_analyses(a_user, a_project):
+def get_user_project_analyses(a_user, a_project):
         return BayesianAnalysis.query.filter_by(project=a_project.id)
         # if a_user.admin:
         #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())

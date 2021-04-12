@@ -159,11 +159,13 @@ d2v_model = Doc2Vec(vector_size=vector_size, min_count=min_count, epochs=epochs)
 
 # creating the database
 tweets = Tweet.query.all()
-train_corpus = []
 
+train_corpus = []
 for tweet in tweets:
     train_corpus.append(TaggedDocument(simple_preprocess(tweet.text), [tweet.id]))
 print(train_corpus[1])
+
+# see the categories contained the training set
 
 
 # Create the vocabulary and train the model

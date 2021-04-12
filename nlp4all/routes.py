@@ -270,7 +270,7 @@ def analysis():
     if analysis.shared:
         completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
         uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
-        if(len(uncompleted_tweets) > 0):
+        if len(uncompleted_tweets) > 0:
             the_tweet_id = uncompleted_tweets[0]
             the_tweet = Tweet.query.get(the_tweet_id)
         else:
