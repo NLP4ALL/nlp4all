@@ -654,10 +654,14 @@ class D2VModel(db.Model):
     description = db.Column(db.String(50))
     model = db.Column(db.PickleType)
 
-    def save(self, gensim_model):
+    def save(self, gensim_model, description=None):
         # /!\ Erases an possible already saved model
         pickled_model = pickle.dumps(gensim_model)
+        if description:
+            self.description = description
         self.model = pickled_model
 
-    def load(self):
+    def load(self, verbose=False):
+        if verbose:
+            print(self.description)
         return pickle.loads(self.model)

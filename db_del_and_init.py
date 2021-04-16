@@ -177,8 +177,31 @@ d2v_model.train(train_corpus, total_examples=d2v_model.corpus_count, epochs=d2v_
 d2v = D2VModel(id=1, description="trained on the entire corpus")
 d2v.save(d2v_model)
 
-
 db.session.add(d2v)
+db.session.commit()
+
+
+## Adding a danish only model to the db
+
+danish_model = Doc2Vec(vector_size=50, min_count=5, epochs=300)
+
+for cat in TweetTagCategory.query.all():
+    print(cat.id, cat.name)
+danish_cats_numbers = [1,2,3,4,5,6,8,9,10,11]
+danish_tweets = Tweet.query.filter(Tweet.category.in_(danish_cats_numbers)).all()  # training set. Only danish tweets
+#print(danish_tweets)
+
+train_corpus = []
+for tweet in danish_tweets:
+    train_corpus.append(TaggedDocument(simple_preprocess(tweet.text), [tweet.id]))
+
+danish_model.build_vocab(train_corpus)
+danish_model.train(train_corpus, total_examples=danish_model.corpus_count, epochs=danish_model.epochs)
+
+danish_d2v = D2VModel(id=2)
+danish_d2v.save(danish_model, description="Model trained only on danish tweets")
+
+db.session.add(danish_d2v)
 db.session.commit()
 
 

@@ -6,9 +6,12 @@ from nlp4all.utils import assign_colors
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 """
@@ -57,11 +60,7 @@ d2v.save(d2v_model)
 """
 
 
-### Use a trained model
-
-# load the model
-D2V = D2VModel.query.first()
-d2v_model = D2V.load()
+### Visualization functions
 
 
 def reduce_with_PCA(data, n_components=2, verbose=False):
@@ -75,11 +74,11 @@ def reduce_with_PCA(data, n_components=2, verbose=False):
 
 
 # probably takes a few minutes -> do it in the background
-def reduce_with_TSNE(data, n_components=2, verbose=0, perplexity=40, n_iter=300):
+def reduce_with_TSNE(data, n_components=2, perplexity=30, n_iter=1000):
     # if too much dimensions, use PCA to reduce first
     if len(data[0]) > 50:
         data = reduce_with_PCA(data, n_components=50)
-    tsne = TSNE(n_components=n_components, verbose=verbose, perplexity=perplexity, n_iter=n_iter)
+    tsne = TSNE(n_components=n_components, perplexity=perplexity, n_iter=n_iter)
     tsne_reduced = tsne.fit_transform(data)
     return tsne_reduced
 
@@ -95,13 +94,16 @@ def projection_2D(data, wv1, wv2):
     return projected_vectors
 
 
-def display_2D(data, colors, nb_cats, title=None, opacity=0.3):
+def display_2D(data, tweets_cats, nb_cats, title=None, opacity=0.3):
+    # data is a list of projected word/doc vectors on 2D
+    # tweets_cats is a list of categories associated to each tweet in the same order
+    # nb_cats is the number of different categories present is the data (information already conatained in tweets_cats)
     plt.figure()
     if title:
         plt.title(title)
     sns.scatterplot(
         x=data[:,0], y=data[:,1],
-        hue=colors,
+        hue=tweets_cats,
         palette=sns.color_palette("hls", nb_cats),
         legend="full",
         alpha=opacity)
@@ -113,6 +115,7 @@ def display_from_cats(model, cats_ids, opacity=0.3):
     tweets = Tweet.query.filter(Tweet.category.in_(cats_ids)).all()  # tweets within the tweet_cats
     tweets_cats = [tweet.category for tweet in tweets]  # their categories
     dv = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]  # their word vectors
+    #dv = [model.dv[tweet.id] for tweet in tweets]  # possible only if the tweets have been in the training set
 
     pca_results = reduce_with_PCA(dv)
     tsne_results = reduce_with_TSNE(dv)
@@ -123,18 +126,13 @@ def display_from_cats(model, cats_ids, opacity=0.3):
 
 """# get doc_id and doc vector
 for key in d2v_model.dv.index_to_key:
-    print(key, d2v_model.dv[key])
-
-
-print(d2v_model.wv.index_to_key)
-print(d2v_model.wv.key_to_index)
-print(d2v_model.dv.index_to_key)
-print(d2v_model.dv.key_to_index)"""
+    print(key, d2v_model.dv[key])"""
 
 
 
 ### Visualization
 
+## proto visualisation. Deprecated
 '''# getting the project categories
 project = Project.query.first()
 proj_cats = project.categories
@@ -171,26 +169,115 @@ tsne_results = reduce_with_TSNE(docvecs)
 
 ### try with another model
 
-## create and train a model
-danish_model = Doc2Vec(vector_size=300, min_count=5, epochs=50)
+## get the model trained only on the danish tweets
 
-danish_cats_numbers = [1,2,3,4,5,6,8,9,10,11]
-danish_tweets = Tweet.query.filter(Tweet.category.in_(danish_cats_numbers)).all()  # training set
-#print(danish_tweets)
-danish_tweets_cats = [tweet.category for tweet in danish_tweets]
-danish_cats = TweetTagCategory.query.filter(TweetTagCategory.id.in_(danish_cats_numbers)).all()
+# the category 6 is shorter than the others (50 tweets instead of 200)
+"""for cat in TweetTagCategory.query.all():
+    tweets = Tweet.query.filter_by(category=cat.id).all()
+    print(len(tweets))"""
 
-train_corpus = []
-for tweet in danish_tweets:
-    train_corpus.append(TaggedDocument(simple_preprocess(tweet.text), [tweet.id]))
+danish_cats = [1,2,3,4,5,6,8,9,10,11]
+danish_model = D2VModel.query.filter_by(id=2).first().load(verbose=1)
 
-danish_model.build_vocab(train_corpus)
-danish_model.train(train_corpus, total_examples=danish_model.corpus_count, epochs=danish_model.epochs)
+## get the full model from the db (trained on all the tweets)
+full_model = D2VModel.query.filter_by(id=1).first().load()
 
 
 ## testing data -> clustering with PCA and t-SNE
-test_cats = [1,11]  # the categories used in the test set
+test_cats = [1,2,3,4,5,8,9,10,11]  # the categories used in the test set
+
+# on danish_model
 display_from_cats(danish_model, test_cats)
+display_from_cats(danish_model, [2,8])
+
+
+# on full_model
+#display_from_cats(full_model, test_cats)
 
 
 
+'''### Trying LDA
+
+lda = LinearDiscriminantAnalysis(n_components=2)
+
+tweets = Tweet.query.filter(Tweet.category.in_(test_cats)).all()
+X = [danish_model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]
+tweets_cats = [tweet.category for tweet in tweets]
+
+X_new = lda.fit_transform(X,tweets_cats)
+#print(X_new.shape)
+
+plt.title("Danish_model")
+sns.scatterplot(
+        x=X_new[:,0], y=X_new[:,1],
+        hue=tweets_cats,
+        palette=sns.color_palette("hls", len(test_cats)),
+        legend="full",
+        alpha=0.3)
+
+
+plot_confusion_matrix(lda, X, tweets_cats)
+plt.figure(3)
+
+### LDA on pretrained model
+
+pretrained_model = D2VModel.query.filter_by(id=3).first().load()
+print(pretrained_model.corpus_count)
+lda = LinearDiscriminantAnalysis(n_components=2)
+
+X = [pretrained_model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]
+X_new = lda.fit_transform(X,tweets_cats)
+
+sns.scatterplot(
+        x=X_new[:,0], y=X_new[:,1],
+        hue=tweets_cats,
+        palette=sns.color_palette("hls", len(test_cats)),
+        legend="full",
+        alpha=0.3)
+
+plt.title("Pretrained model")
+plot_confusion_matrix(lda, X, tweets_cats)
+
+## Train the pretrained model
+
+# data
+n = pretrained_model.corpus_count
+training_set = [TaggedDocument(simple_preprocess(tweet.text),[tweet.id+n]) for tweet in tweets]
+
+print("build vocab")
+pretrained_model.build_vocab(training_set, update=True)
+print("train")
+pretrained_model.train(training_set, total_examples=len(training_set), epochs=pretrained_model.epochs)
+print('ok')
+
+# replot LDA
+lda = LinearDiscriminantAnalysis(n_components=2)
+
+X = [pretrained_model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]
+X_new = lda.fit_transform(X,tweets_cats)
+
+sns.scatterplot(
+        x=X_new[:,0], y=X_new[:,1],
+        hue=tweets_cats,
+        palette=sns.color_palette("hls", len(test_cats)),
+        legend="full",
+        alpha=0.3)
+
+plt.title("Pretrained model")
+plot_confusion_matrix(lda, X, tweets_cats)'''
+
+
+
+### data shape
+"""from nlp4all.models import TweetTagCategory, Tweet, User, Organization, Project, BayesianAnalysis
+from nlp4all import db, bcrypt, models
+import json
+from datetime import datetime
+import time
+import json
+
+
+proj = models.Project.query.first()
+print(proj.tf_idf)
+analysis = models.BayesianAnalysis.query.first()
+print(analysis.data)"""
