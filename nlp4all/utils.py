@@ -8,6 +8,8 @@ import operator
 from nlp4all import db
 import random, itertools
 from nlp4all.models import BayesianAnalysis, BayesianRobot
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -364,3 +366,25 @@ def matrix_css_info(index_list):
                 j.append(matrix_colors[0]) # red
         tups.append(i)
     return(tups)
+
+
+### Visualization functions
+
+def reduce_with_PCA(data, n_components=2, verbose=False):
+    # data should be a list of numpy arrays, or a pandas dataframe, or something similar
+    # row = a tweet ; column = a dimension of the word space
+    pca = PCA(n_components=n_components)
+    pca_results = pca.fit_transform(data)
+    if verbose:
+        print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
+    return pca_results
+
+
+# probably takes a few minutes -> do it in the background
+def reduce_with_TSNE(data, n_components=2, perplexity=30, n_iter=1000):
+    # if too much dimensions, use PCA to reduce first
+    if len(data[0]) > 50:
+        data = reduce_with_PCA(data, n_components=50)
+    tsne = TSNE(n_components=n_components, perplexity=perplexity, n_iter=n_iter)
+    tsne_reduced = tsne.fit_transform(data)
+    return tsne_reduced

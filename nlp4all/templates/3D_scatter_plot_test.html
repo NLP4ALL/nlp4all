@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Scatter plot</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div id="tester" style="width:600px;height:500px;"></div>
+<script>
+    TESTER = document.getElementById('tester');
+    var data = [];
+    var data_x = {{ data_x }};
+    var data_y = {{ data_y }};
+    var data_z = {{ data_z }};
+    for (i = 0; i < data_x.length; i++) {
+        var trace = {
+            x: data_x[i],
+            y: data_y[i],
+            z: data_z[i],
+            mode: 'markers',
+            marker: {
+                size: 12,
+                line: {
+                color: 'rgba(217, 217, 217, 0.14)',
+                width: 0.5},
+                opacity: 0.4},
+            type: 'scatter3d'
+        };
+        data.push(trace);
+    };
+    var layout = {margin: {
+        l: 0,
+        r: 0,
+        b: 0,
+        t: 0
+      }};
+    Plotly.newPlot(TESTER, data, layout);
+</script>
+</body>
+</html>
