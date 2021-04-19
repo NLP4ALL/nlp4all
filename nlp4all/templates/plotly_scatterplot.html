@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div id="graph_plotly" style="width:600px;height:500px;"></div>
+<script>
+	TESTER = document.getElementById('graph_plotly');
+	var data = []
+    var data_x = {{ data_x }};
+    var data_y = {{ data_y }};
+    for (i = 0; i < data_x.length; i++) {
+        var trace = {
+          x: data_x[i],
+          y: data_y[i],
+          mode: 'markers',
+          type: 'scatter',
+          name: 'Team A',
+          text: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5'],
+          marker: {
+                size: 12,
+                line: {
+                color: 'rgba(217, 217, 217, 0.14)',
+                width: 0.5},
+                opacity: 0.4}
+        };
+        data.push(trace);
+    }
+
+	var layout = {
+	  title:'Data Labels Hover'
+	};
+
+	Plotly.newPlot( TESTER, data, layout);
+</script>
+</body>
+</html>

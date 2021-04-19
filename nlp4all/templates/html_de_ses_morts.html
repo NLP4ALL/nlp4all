@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>On met des trucs</h1>
+    <h1 id="1"></h1>
+    <h1>Pour voir si ca marche</h1>
+    <script>
+        let truc = {{ truc }};
+        TESTER = document.getElementById('1');
+        var liste = [];
+        for (i = 0; i < 3; i++) {
+            liste += truc[i];
+        };
+        TESTER.innerHTML = liste;
+    </script>
+</body>
+</html>

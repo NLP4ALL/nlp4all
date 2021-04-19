@@ -1284,24 +1284,6 @@ def save_annotation():
     return jsonify(words,coordinates['txt_coords'])
 
 
-# based on https://stackoverflow.com/questions/49927893/flask-with-chart-js-scatter-plot-struggle
-@app.route('/scatter_plot', methods=['GET'])
-def scatter_plot():
-    X = [1,2,3,4,5]
-    Y = [2,1,4,3,5]
-    new_list = []
-    for x,y in zip(X,Y):
-        new_list.append({'x': x, 'y': y})
-    data = str(new_list).replace('\'', '')
-    return render_template('scatter_plot.html', data=data)
-
-
-# based on https://www.anychart.com/blog/2020/05/27/scatter-plot-js-tutorial/
-@app.route('/scatter_plot2', methods=['GET'])
-def scatter_plot2():
-    return render_template('scatter_plot2.html')
-
-
 @app.route('/plotly_scatter_plot', methods=['GET'])
 def plotly_scatter_plot():
     model = D2VModel.query.filter_by(id=2).first().load()
@@ -1314,24 +1296,11 @@ def plotly_scatter_plot():
         vecs = reduce_with_PCA(dv, n_components=2)
         data_x.append(list(vecs[:,0]))
         data_y.append(list(vecs[:,1]))
-    print(len(data_x))
     return render_template('plotly_scatterplot.html', data_x=data_x, data_y=data_y)
 
 
 @app.route('/3D_scatter_plot', methods=['GET'])
 def scatter_plot_3D():
-    model = D2VModel.query.filter_by(id=2).first().load()
-    tweets = Tweet.query.filter_by(category=1)
-    dv = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]  # vecs is a list of 3D vectors
-    vecs = reduce_with_PCA(dv, n_components=3)
-    data_x = list(vecs[:,0])
-    data_y = list(vecs[:,1])
-    data_z = list(vecs[:,2])
-    return render_template('3D_scatter_plot.html', data_x=data_x, data_y=data_y, data_z=data_z)
-
-
-@app.route('/3D_scatter_plot_test', methods=['GET'])
-def scatter_plot_3D_test():
     model = D2VModel.query.filter_by(id=2).first().load()
     cats = [1,2,3]
     data_x = []
@@ -1344,7 +1313,7 @@ def scatter_plot_3D_test():
         data_x.append(list(vecs[:,0]))
         data_y.append(list(vecs[:,1]))
         data_z.append(list(vecs[:,2]))
-    return render_template('3D_scatter_plot_test.html', data_x=data_x, data_y=data_y, data_z=data_z)
+    return render_template('3D_scatter_plot.html', data_x=data_x, data_y=data_y, data_z=data_z)
 
 
 @app.route('/html_de_ses_morts', methods=['GET'])
