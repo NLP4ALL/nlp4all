@@ -1290,34 +1290,62 @@ def plotly_scatter_plot():
     cats = [1,2,3]
     data_x = []
     data_y = []
+    labels = [TweetTagCategory.query.filter_by(id=cats[i]).first().name for i in range(len(cats))]
+    docvecs = []
+    pca = PCA(n_components=3)
     for cat_id in cats:
-        tweets = Tweet.query.filter_by(category=cat_id)
-        dv = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]  # vecs is a list of 3D vectors
-        vecs = reduce_with_PCA(dv, n_components=2)
+        tweets = Tweet.query.filter_by(category=cat_id).all()
+        dv = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]
+        pca.fit(dv)  # calculates the parameters of the PCA
+        docvecs.append(dv)
+    for dv in docvecs:
+        vecs = pca.transform(dv)  # actually transform the vectors
         data_x.append(list(vecs[:,0]))
         data_y.append(list(vecs[:,1]))
-    return render_template('plotly_scatterplot.html', data_x=data_x, data_y=data_y)
+    print(labels)
+    return render_template('plotly_scatterplot.html', data_x=data_x, data_y=data_y, labels=json.dumps(labels))
 
 
 @app.route('/3D_scatter_plot', methods=['GET'])
 def scatter_plot_3D():
     model = D2VModel.query.filter_by(id=2).first().load()
-    cats = [1,2,3]
+    cats = [2,8,9,10]
     data_x = []
     data_y = []
     data_z = []
+    labels = [TweetTagCategory.query.filter_by(id=cats[i]).first().name for i in range(len(cats))]
+    docvecs = []
+    pca = PCA(n_components=3)
     for cat_id in cats:
-        tweets = Tweet.query.filter_by(category=cat_id)
-        dv = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]  # vecs is a list of 3D vectors
-        vecs = reduce_with_PCA(dv, n_components=3)
+        tweets = Tweet.query.filter_by(category=cat_id).all()
+        dv = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]
+        pca.fit(dv)
+        docvecs.append(dv)
+    for dv in docvecs:
+        vecs = pca.transform(dv)
         data_x.append(list(vecs[:,0]))
         data_y.append(list(vecs[:,1]))
         data_z.append(list(vecs[:,2]))
-    return render_template('3D_scatter_plot.html', data_x=data_x, data_y=data_y, data_z=data_z)
+    return render_template('3D_scatter_plot.html', data_x=data_x, data_y=data_y, data_z=data_z,
+                           labels=json.dumps(labels))
 
-
+from sklearn.decomposition import PCA
 @app.route('/html_de_ses_morts', methods=['GET'])
 def test_html():
-    truc = [3,2,1]
-    return render_template('html_de_ses_morts.html', truc=truc)
-# not possible to put a feed a list of strings
+    model = D2VModel.query.filter_by(id=2).first().load()
+    cats = [1,2,3]
+    dict_dv = {}
+    list_dv = []
+    for cat_id in cats:
+        tweets = Tweet.query.filter_by(category=cat_id).all()
+        dv_i = [model.infer_vector(simple_preprocess(tweet.text)) for tweet in tweets]
+        dict_dv[TweetTagCategory.query.filter_by(id=cat_id).first().name] = dv_i
+        list_dv.extend(dv_i)
+    pca = PCA(n_components=2)
+    pca.fit(list_dv)
+    for key in dict_dv.keys():
+        dict_dv[key] = pca.transform(dict_dv[key])
+    print(dict_dv)
+    return render_template('html_de_ses_morts.html', **dict_dv)
+# not possible to feed a list of strings
+# I want to die

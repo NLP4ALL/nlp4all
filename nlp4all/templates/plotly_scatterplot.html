@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>2D scatter plot</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
@@ -12,16 +12,16 @@
 	var data = []
     var data_x = {{ data_x }};
     var data_y = {{ data_y }};
+    var labels = {{ labels|safe }};
     for (i = 0; i < data_x.length; i++) {
         var trace = {
           x: data_x[i],
           y: data_y[i],
           mode: 'markers',
           type: 'scatter',
-          name: 'Team A',
-          text: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5'],
+          name: labels[i],
           marker: {
-                size: 12,
+                size: 10,
                 line: {
                 color: 'rgba(217, 217, 217, 0.14)',
                 width: 0.5},
