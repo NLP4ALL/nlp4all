@@ -55,6 +55,13 @@ def add_project():
         return(redirect(url_for('home', project=project_id)))
     return render_template('add_project.html', title='Add New Project', form=form)
 
+@app.route("/project2", methods=['GET', "POST"])
+def project2():
+    project_id = request.args.get('project', None, type=int)
+    project = Project.query.get(project_id)
+    analyses = []
+    return render_template('project2.html', title='About', project=project, analyses=analyses)
+
 @app.route("/project", methods=['GET', "POST"])
 def project():
     project_id = request.args.get('project', None, type=int)
@@ -83,8 +90,8 @@ def project():
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-
-    return render_template('test.html', title='Test', buttons=[])
+    a = ['1', '3', '4']
+    return render_template('test.html', title='Test', test_var = a)
 
 
 @app.route('/_add_numbers')
