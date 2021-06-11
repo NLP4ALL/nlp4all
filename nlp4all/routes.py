@@ -66,7 +66,7 @@ def project():
     form = AddBayesianAnalysisForm()
     analyses = BayesianAnalysis.query.filter_by(user = current_user.id).filter_by(project=project_id).all()
     analyses = nlp4all.utils.get_user_project_analyses(current_user, project)
-    form.annotate.choices = [(1,'no annotations'), (2,'category names'), (3,'add own tags')]
+    form.annotate.choices = [(1,'No Annotations'), (2,'Category names'), (3,'add own tags')]
     if form.validate_on_submit():
         userid = current_user.id
         name = form.name.data
@@ -379,7 +379,7 @@ def analysis():
     ## finally get the last robot to link, if it is not a shared analysis
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
-@app.route("/imc", methods=['GET', 'POST'])
+@app.route("/naacl", methods=['GET', 'POST'])
 def imc():
     return redirect(url_for('register_imc'))
 
@@ -393,7 +393,7 @@ def register_imc():
         fake_email = str(fake_id)+"@arthurhjorth.com"
         fake_password = str(fake_id)
         hashed_password = bcrypt.generate_password_hash(fake_password).decode('utf-8')
-        imc_org = Organization.query.filter_by(name="IMC Seminar Group").all()
+        imc_org = Organization.query.filter_by(name="NAACL").all()
         project = imc_org[0].projects[0]
         the_name = form.username.data
         if any(User.query.filter_by(username=the_name)):
