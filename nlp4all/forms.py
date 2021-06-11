@@ -73,7 +73,7 @@ class AddBayesianAnalysisForm(FlaskForm):
     name = StringField('Title of Analysis', validators=[DataRequired()])
     shared = BooleanField('Shared project?')
     shared_model = BooleanField('Shared Underlying Model?')
-    annotate = SelectField('Annotate analysis?', validators=[DataRequired()])
+    annotate = SelectField('Annotate analysis?')
     number = IntegerField("How many of each category?")
     submit = SubmitField('Create Analysis')
 
