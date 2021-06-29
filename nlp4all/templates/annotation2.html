@@ -1,0 +1,168 @@
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+
+
+<form name="annform" id="annform">
+
+    <textarea id="anntext" name="anntext" rows="2" cols="30"></textarea>
+    <br>
+    <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
+    this.form.color[1].style.display=(val=='others')?'block':'none'"> 
+        <option>Tag your annotation</option>  
+        {% for c in tag_list %}
+        <option value={{ c }}>{{ c }}</option>
+        {% endfor %}
+    </select> 
+    <input type="hidden" id="pos" value="">
+    <input type="hidden" id="pos2" value="">
+    <input type="button" id="submitbtn" value="Save annotation">
+    <input type="button" id="cancelbtn" value="Cancel">
+    <input type="button" onClick=deleteLast() id="delete_lastbtn" value="Delete Last">
+</form>
+
+<script>
+
+    $("#cat-btn").click(function() {
+        var cat_id = $("#sel-cat");
+        var cat_btn = $("#cat-btn");
+        var catid = cat_id.val()
+        console.log(catid);
+        
+        cat_btn.attr('value',catid);
+       
+    });
+    // this requires that the tweet is required in the top template
+    var annotation = $("#anntext");
+    annotation.hide();
+    var submitbtn = $("#submitbtn");
+    var deletelastbtn = $("#delete_lastbtn");
+    var tpl = $("#tpl");
+    var cancelbtn = $("#cancelbtn");
+    var atag;
+
+
+
+    function deleteLast(){
+        console.log("deleting last");
+        var tweet_id = $("#draggable-tweet").attr('tweet_id').valueOf();
+        $.get('/delete_last_annotation', {'tweet_id': tweet_id, 'analysis': {{ analysis.id }} } ).done(
+            function(){
+            window.location.reload();
+            });
+    }
+
+    function getFromTo(from, to){
+        txt = "";
+        for(var i = from; i <= to; i++){
+            txt = txt + document.getElementById(i).textContent;
+            console.log(txt);
+            if (i < to) {
+                // txt = txt + " ";
+            }
+        }
+        return txt;
+
+    }
+
+    function getSelText()
+    
+      {
+          var txt = '';
+          $("#add-annotation").attr('style',"display: block;");
+           if (window.getSelection)
+          {
+              console.log("window");
+              console.log(window.getSelection());
+              txt = window.getSelection().toString();
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
+              txt = getFromTo(node1, node2) ;
+            }
+          else if (document.getSelection)
+          {
+              console.log("doc.getsel");
+              txt = window.getSelection().toString();
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
+             
+                  }
+          else if (document.selection)
+          {
+              console.log("doc.sel");
+              txt = window.getSelection().toString();
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
+             
+                  }
+          else return;
+        console.log(txt, node1,node2);
+        
+        document.annform.anntext.value =  txt;
+        document.annform.pos.value = node1
+        document.annform.pos2.value = node2
+        console.log(document.annform.anntext.value);
+        
+        
+      };
+      
+    var sel = document.getElementById('atag');
+    sel.onchange=function() {
+        
+            var tweet_id = $("#draggable-tweet").attr('tweet_id').valueOf();
+            console.log("tagtweetid", tweet_id);
+            var val = this.options[this.selectedIndex].value;
+            
+            atag = sel.options[sel.selectedIndex].value;
+            console.log(atag)
+            };
+    
+    submitbtn.click(function()  {
+        var tweet_id = $("#draggable-tweet").attr('tweet_id');
+        $.get('/save_annotation', {'tweet_id': tweet_id, 'text': document.annform.anntext.value, 'atag': atag , 'pos': document.annform.pos.value, 'pos2': document.annform.pos2.value, 'analysis': {{ analysis.id }} } ).done(
+            function(returnedData) {
+                $('#tuples > span').map(function() {
+                    $(this).css({
+                        "background-color":'hsl('+returnedData[this.id][4]+', '+((returnedData[this.id][3]- 0.50) * 200)+'% , 90%)'
+                    });
+                    console.log(this.id);
+            });
+            // window.clearSelection()
+if (window.getSelection) {
+  if (window.getSelection().empty) {  // Chrome
+    window.getSelection().empty();
+  } else if (window.getSelection().removeAllRanges) {  // Firefox
+    window.getSelection().removeAllRanges();
+  }
+} else if (document.selection) {  // IE?
+  document.selection.empty();
+}
+            });
+
+            $("#annform").trigger("reset");
+            sel.selectedIndex = "Tag your annotation";
+            sel.options[sel.selectedIndex].value = 0
+            console.log(sel.selectedIndex)
+
+    });
+
+    cancelbtn.click(function()  {
+        $("#annform").trigger("reset");
+        $('#atag').trigger("reset");
+        $("#add-annotation").attr('style',"display: none;");
+
+    });
+
+    function clearSelection() {
+        if (window.getSelection) {
+            window.getSelection().removeAllRange();
+        } else if (document.selection) {
+            document.selection.empty();
+        }
+    }
+
+
+
+</script>
+
+

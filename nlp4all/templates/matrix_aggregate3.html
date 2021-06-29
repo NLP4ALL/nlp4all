@@ -41,7 +41,7 @@
                 myrow = $( '<tr />' );
                 mx.append( myrow );
             for(var j=0; j<returnedData[4][i].length; j++){
-                mycell = $('<td style="background-color: hsl('+returnedData[4][i][j][2][0]+', '+returnedData[4][i][j][2][1]+'%, '+returnedData[4][i][j][2][2]+'%, 0.7);">'+returnedData[4][i][j][0]+'</td>')
+                mycell = $('<td style="background-color: hsl('+returnedData[4][i][j][2][0]+', '+returnedData[4][i][j][2][1]+'%, '+returnedData[4][i][j][2][2]+'%, '+returnedData[4][i][j][3]+');">'+returnedData[4][i][j][0]+'</td>')
                 myrow.append( mycell );
             }
             }
