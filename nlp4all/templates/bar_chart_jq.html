@@ -1,0 +1,73 @@
+<canvas id="jqChart" width="300" height="300"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+var ctx_jq = document.getElementById('jqChart').getContext('2d');
+
+
+// add event listener i.e. observer
+const observer = new MutationObserver( list => {
+  const evt = new CustomEvent('dom-changed', {detail: list});
+  document.getElementById("tuples").dispatchEvent(evt)
+});
+observer.observe(document.getElementById("tuples"), {attributes: true, childList: true, subtree: true});
+
+// update the chart
+document.getElementById("tuples").addEventListener('dom-changed', function() {
+
+    var t_id = $("#draggable-tweet").attr('tweet_id');
+    console.log(t_id,'"from bar"');
+    $.get('/get_bar_chart_data', {'analysis_id': {{ analysis.id }}, 'tweet_id': t_id }).done(
+        function(returnedData) {
+            var bar_chart_data = returnedData.chart_data
+            console.log(bar_chart_data.data_points)
+            var data = {
+            datasets: []
+             
+            };
+
+            for(var i=0; i<bar_chart_data.data_points.length; i++){
+                    data.datasets.push(
+                        {
+                            data: [bar_chart_data.data_points[i]['estimate']],
+                            backgroundColor: [bar_chart_data.data_points[i]['bg_color']],
+                            label: bar_chart_data.data_points[i]['label']
+                        }
+                    )
+                   
+                }
+                         
+            console.log('here ' +data.datasets)
+            var mytitle = bar_chart_data.title
+
+    var jqChart = new Chart(ctx_jq, {
+            type: 'bar',
+            data: {
+                datasets:  data.datasets
+                
+            },
+            options: {
+                responsive : true,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: mytitle
+                }
+            } 
+            
+            });
+
+           
+    });
+}); 
+
+</script>
