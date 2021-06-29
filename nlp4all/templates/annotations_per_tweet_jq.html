@@ -1,0 +1,95 @@
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='simplePagination.css') }}"/>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.simplePagination.js') }}"></script>
+    
+
+
+<script>
+    var tagged_tweets = [] ;
+    var a_tag = $("#tag").attr('value');
+    var span ;
+    $('[tweet_id]').each(function( ) {
+        var a_tweet_id= ($(this).attr('tweet_id'));
+        console.log(a_tweet_id)
+        tagged_tweets.push(a_tweet_id) 
+        });
+
+    tagged_tweets.forEach(function(a_tweet_id) {
+        var element = document.getElementById(a_tweet_id);
+        $.get('/jq_highlight_tweet', {'tweet_id': a_tweet_id, 'the_tag' : a_tag }).done(
+            function(returnedData) {  
+                console.log(returnedData.length)
+                for(var i=0; i<returnedData.length; i++){
+                    
+                    span = $('<span class='+returnedData[i][1]+returnedData[i][4]+' title="'+returnedData[i][0]+': '+returnedData[i][5]+' tags" >'+returnedData[i][0]+' </span>')
+                    span.css("background-color", 'hsl(60,'+returnedData[i][2]+'%,'+returnedData[i][3]+'%,'+returnedData[i][4]+')');
+                    element.append( span[0] );
+                    
+                };
+            });   
+    });
+
+    
+    $(document).ready(function() {
+        
+        //Build your CSS.
+        var body_tag_css = {
+            "background-color": "#ddd",
+            "font-weight": "",
+            "color": "#000"
+        }
+        //Apply your CSS to the body tag.  You can enter any tag here, as
+        //well as ID's and Classes.
+    $("#tweet-text").css(body_tag_css);
+        });
+
+        function tagFunction() {
+        var newtag = document.getElementById("sel-cat").value;
+        var cat_btn = $("#cat-btn");
+        var catid = newtag
+        cat_btn.attr('value',catid);
+        
+        }
+
+</script>
+
+
+
+<script>
+
+jQuery(function($) {
+    // Grab whatever we need to paginate
+    var pageParts = $(".paginate");
+
+    // How many parts do we have?
+    var numPages = pageParts.length;
+    console.log(numPages)
+    // How many parts do we want per page?
+    var perPage = 7;
+
+    // When the document loads we're on page 1
+    // So to start with... hide everything else
+    pageParts.slice(perPage).hide();
+    // Apply simplePagination to our placeholder
+    $("#atag-tweet-table").pagination({
+        items: numPages,
+        itemsOnPage: perPage,
+        cssStyle: "compact-theme",
+        // We implement the actual pagination
+        //   in this next function. It runs on
+        //   the event that a user changes page
+        onPageClick: function(pageNum) {
+            // Which page parts do we show?
+            var start = perPage * (pageNum - 1);
+            var end = start + perPage;
+
+            // First hide all page parts
+            // Then show those just for our page
+            pageParts.hide()
+                     .slice(start, end).show();
+        }
+    });
+});
+
+</script>

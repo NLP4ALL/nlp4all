@@ -14,6 +14,7 @@ def load_user(user_id):
 
 class BayesianRobot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(25))
     parent = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
     child = db.Column(db.Integer, db.ForeignKey('bayesian_robot.id'), default=None)
@@ -29,6 +30,7 @@ class BayesianRobot(db.Model):
         new_robot.analysis = self.analysis
         new_robot.features = self.features
         new_robot.parent = self.id
+        new_robot.user = self.user
         return(new_robot)
     
 
@@ -187,7 +189,9 @@ class BayesianRobot(db.Model):
             feat_dict['category_prediction'] = "N/A"
             feat_dict['accuracy'] = feature_info[f]['accuracy']
             feat_dict['tweets_targeted'] = feature_info[f]['tweets_targeted']
-            feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+            score = feat_dict['accuracy'] * feat_dict['tweets_targeted'] - ((1 - feat_dict['accuracy']) * feat_dict['tweets_targeted'])
+            print(score)
+            feat_dict['score'] = round(score, 2)
             # calculate the most often predicted category. This isn't trivial - should it be by total tweets in test set, or just the most common
             # category across its words? Well, it's obvious. Boo. It needs to be weighted by how many tweets there are.
             # NO  NO NO! I thought about that wrong. We just want the average of each of the category prediction for each word.
@@ -200,7 +204,9 @@ class BayesianRobot(db.Model):
                 feat_dict['category_prediction'] = word_category_predictions[word]['category_prediction']
                 feat_dict['accuracy'] = feature_info[f]['words'][word]['accuracy']
                 feat_dict['tweets_targeted'] = feature_info[f]['words'][word]['tweets_targeted']
-                feat_dict['score'] = round(feat_dict['accuracy'] * feat_dict['tweets_targeted'], 2)
+                score = feat_dict['accuracy'] * feat_dict['tweets_targeted'] - ((1 - feat_dict['accuracy']) * feat_dict['tweets_targeted'])
+                print(score)
+                feat_dict['score'] = round(score, 2)
                 table_data.append(feat_dict)
         if len(tweet_predictions) == 0:
             accuracy = 0
@@ -415,10 +421,12 @@ class BayesianAnalysis(db.Model):
     project = db.Column(db.Integer, db.ForeignKey('project.id'))
     robots = db.relationship('BayesianRobot')
     shared = db.Column(db.Boolean, default=False)
+    shared_model = db.Column(db.Boolean, default=False)
     tweets = db.Column(JSON, default=[])
     annotate = db.Column(db.Boolean, default=False)
     annotations = db.relationship('TweetAnnotation')
     annotation_tags = db.Column(JSON)
+    annotate = db.Column(db.Integer, default=1)
 
     def get_project(self):
         return Project.query.get(self.project)
@@ -467,8 +475,11 @@ class BayesianAnalysis(db.Model):
 
         return (preds, {k : round(sum(v.values()) / len(set(words)),2) for k, v in predictions.items()})
 
-    def annotation_counts(self, tweets):
-        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+    def annotation_counts(self, tweets, user_id):
+        if user_id == "all":
+            anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id).all()
+        else:
+            anns = TweetAnnotation.query.filter(TweetAnnotation.analysis==self.id, TweetAnnotation.user==user_id).all()
         a_list = set([a.tweet for a in anns])
         annotated_tweets = list(set([a.tweet for a in anns]))
         ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}

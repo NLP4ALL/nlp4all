@@ -4,21 +4,23 @@
 
 
 <form name="annform" id="annform">
-    <input type="button" value="Get selected words" onmousedown="getSelText()" id="btn" method="post" action ="">
-    <br> 
-    <textarea id="anntext" name="anntext" rows="1" cols="50"></textarea>
+   
+    <textarea id="anntext" name="anntext" rows="2" cols="30"></textarea>
     <br>
     <select name="atag" id="atag" onchange="var val = this.options[this.selectedIndex].value;
-    this.form.color[1].style.display=(val=='others')?'block':'none'"> 
+    this.form.color[1].style.display=(val=='other')?'block':'none'"> 
         <option>Tag your annotation</option>  
-        {% for t in tag_list %}
-        <option value={{ t }}>{{ t }}</option>
+        {% for c in tag_list %}
+        <option value={{ c }}>{{ c }}</option>
         {% endfor %}
-        <option value="others">other</option>
+        <option value="other">other</option>
     </select> 
     <input type="hidden" id="pos" value="">
+    <input type="hidden" id="pos2" value="">
     <input type="button" id="submitbtn" value="Save annotation">
+    <input type="button" id="cancelbtn" value="Cancel">
 </form>
+
 
 <script>
     $("#cat-btn").click(function() {
@@ -33,46 +35,55 @@
     // this requires that the tweet is required in the top template
     var annotation = $("#anntext");
     var submitbtn = $("#submitbtn");
+    var cancelbtn = $("#cancelbtn");
     var tpl = $("#tpl");
+    
+    
     var atag;
     function getSelText()
-    
-      {
+        
+        {
           var txt = '';
-          
+          $("#add-annotation").attr('style',"display: block;");
+
            if (window.getSelection)
           {
               txt = window.getSelection().toString();
-              parent = window.getSelection().anchorNode.parentElement.id;
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
               
                    }
           else if (document.getSelection)
           {
               txt = window.getSelection().toString();
-              parent = window.getSelection().anchorNode.parentElement.id;
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
              
                   }
           else if (document.selection)
           {
               txt = window.getSelection().toString();
-              parent = window.getSelection().anchorNode.parentElement.id;
+              node1 = window.getSelection().anchorNode.parentElement.id;
+              node2 = window.getSelection().focusNode.parentElement.id;
              
                   }
           else return;
-        console.log(txt, parent);
+        console.log(txt, node1, node2);
         
         document.annform.anntext.value =  txt;
-        document.annform.pos.value = parent
-        console.log(document.annform.anntext.value);
-        
+        document.annform.pos.value = node1;
+        document.annform.pos2.value = node2;
+       
         
       };
       
     var sel = document.getElementById('atag');
     sel.onchange=function() {
         
+            var tweet_id = $("#draggable-tweet").attr('tweet_id').valueOf();
+            console.log("tagtweetid", tweet_id);
             var val = this.options[this.selectedIndex].value;
-            if (val == 'others') {
+            if (val == 'other') {
                 var newOption = prompt('Your own tag','');
             if (newOption) {
                 this.options[this.options.length-1].text = newOption;
@@ -80,26 +91,56 @@
                 this.options[this.options.length] = new Option('other','other');
                 }
                 }
-            atag = sel.options[sel.selectedIndex].value
+            atag = sel.options[sel.selectedIndex].value;
+            
             };
+ 
     
     submitbtn.click(function()  {
-        $.get('/save_annotation', {'tweet_id': {{ tweet.id }}, 'text': document.annform.anntext.value, 'atag':atag , 'pos': document.annform.pos.value, 'analysis': {{ analysis.id }}} ).done(
+        var tweet_id = $("#draggable-tweet").attr('tweet_id');
+        $.get('/save_annotation', {'tweet_id': tweet_id, 'text': document.annform.anntext.value, 'atag': atag , 'pos': document.annform.pos.value, 'pos2': document.annform.pos2.value, 'analysis': {{ analysis.id }} } ).done(
             function(returnedData) {
-                console.log(returnedData[1]);
-                
-
+                $('#tuples > span').map(function() {
+                    $(this).css({
+                        "background-color":'hsl('+returnedData[this.id][4]+', '+((returnedData[this.id][3]- 0.50) * 200)+'% , 90%)'
+                    });
+                    //$(this).attr("background-color", 'hsl('+returnedData[i][3]+', '+((returnedData[i][2]- 0.50) * 200)+'% , 90%)');
+                    console.log(this.id);
             });
 
+            });
+            window.clearSelection()
             $("#annform").trigger("reset");
-            sel.selectedIndex = "Tag your annotation";
-            sel.options[sel.selectedIndex].value = 0
-            console.log(sel.selectedIndex)
+            $('#atag').trigger("reset");
+            $("#add-annotation").attr('style',"display: none;");
+            
+            //console.log(mytuples.length)
+            console.log("options are" + sel.options[sel.selectedIndex].value)
+            
 
     });
 
+    
+    cancelbtn.click(function()  {
+        $("#annform").trigger("reset");
+        $('#atag').trigger("reset");
+        $("#add-annotation").attr('style',"display: none;");
 
+    });
 
+    function mypopup() {
+       console.log('mouseup!')
+    }
+
+    function clearSelection() {
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        } else if (document.selection) {
+            document.selection.empty();
+        }
+    }
+
+   
 
 </script>
 

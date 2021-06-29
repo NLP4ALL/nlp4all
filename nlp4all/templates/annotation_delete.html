@@ -1,0 +1,83 @@
+
+
+<script>
+    var del_form = $('#delete-form');
+    var tweet_id = $('#annid').attr('value')
+    var selected = [];
+    var table = $('#del-table');
+
+    function viewAnns(event) {
+        
+        console.log("You've clicked: " + event.target.nodeName + ", id: " + event.target.id + " tweet id: " + tweet_id);
+        $("#del-headline").empty();
+        $("#del-headline").attr('value', event.target.id);
+
+        $.get('/get_annotations', {'tweet_id': tweet_id, 'span_id' : event.target.id, 'analysis_id' : {{ analysis.id }} }).done(
+            function(returnedData) {  
+                if (returnedData != 'no annotations') {
+                console.log(returnedData[1], returnedData[2]);
+                var mainObj = returnedData[0];
+
+                $("#del-headline").append("<span>The following annotations include the word '" + returnedData[1] + "':</span>");
+                var table = $('#del-table');
+                var data = []
+                for(i = 0;i < mainObj.length; i++){
+                    data.push([mainObj[i].text , mainObj[i].tag, '<button onclick=deleteTag(event) value='+mainObj[i].id+'>Delete</button>' ])
+                    }
+                console.log(data)
+                table.DataTable({
+                    "aaData":data,
+                        paging: false,
+                        searching:false,
+                        "ordering": false,
+                        info: false,
+                        destroy: true
+                        }); 
+                del_form.attr('style', "display: block;"); 
+                } else {
+                    del_form.attr('style', "display: none;");
+                }  
+            });
+               
+    };
+
+        
+    function deleteTag(event) {
+
+            var span_id = $("#del-headline").attr('value');
+            console.log('delete soon: '+event.target.value);
+            $.get('/delete_annotation', {'tweet_id': tweet_id, 'ann_id' : event.target.value, 'analysis_id' : {{ analysis.id }}, 'span_id' :span_id }).done(
+                function(returnedData) {  
+                    if (returnedData != 'no annotations') {
+                    
+                    console.log(returnedData[1]);
+                    var mainObj = returnedData[0];
+
+                    //$("#del-headline").append("<span>The following annotations include the word '" + returnedData[1] + "'.</span>");
+                    var table = $('#del-table');
+                    var data = []
+                    for(i = 0;i < mainObj.length; i++){
+                        data.push([mainObj[i].text , mainObj[i].tag, '<button onclick=deleteTag(event) value='+mainObj[i].id+'>Delete</button>' ])
+                        }
+                    console.log(data)
+                    table.DataTable({
+                        "aaData":data,
+                            paging: false,
+                            searching:false,
+                            "ordering": false,
+                            info: false,
+                            destroy: true
+                            }); 
+                    del_form.attr('style', "display: block;"); 
+                    } else {
+                        del_form.attr('style', "display: none;");
+                    }  
+                    location.reload(true);
+            });
+        }
+         
+    function hide() {
+        del_form.attr('style', "display: none;");
+    }
+
+</script>

@@ -58,3 +58,4 @@ fig.html
 init_dbt.py
 telmatweets.json
 *.ipynb
+nlp4all/templates/draft.html
