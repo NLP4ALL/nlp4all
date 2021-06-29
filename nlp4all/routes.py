@@ -386,7 +386,7 @@ def analysis():
     ## finally get the last robot to link, if it is not a shared analysis
     return render_template('analysis.html', analysis=analysis, tag_list=tag_list, tweet = the_tweet, form = form, **data)
 
-@app.route("/naacl", methods=['GET', 'POST'])
+@app.route("/ATU", methods=['GET', 'POST'])
 def imc():
     return redirect(url_for('register_imc'))
 
@@ -400,7 +400,7 @@ def register_imc():
         fake_email = str(fake_id)+"@arthurhjorth.com"
         fake_password = str(fake_id)
         hashed_password = bcrypt.generate_password_hash(fake_password).decode('utf-8')
-        imc_org = Organization.query.filter_by(name="NAACL").all()
+        imc_org = Organization.query.filter_by(name="ATU").all()
         project = imc_org[0].projects[0]
         the_name = form.username.data
         if any(User.query.filter_by(username=the_name)):
