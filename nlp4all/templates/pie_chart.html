@@ -1,0 +1,49 @@
+<canvas id="pieChart" width="300" height="300"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<script>
+var ctx = document.getElementById('pieChart').getContext('2d');
+
+
+data = {
+    datasets: [
+        {
+        data:  [],
+        backgroundColor: [],
+    }
+    ],
+
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels: []
+};
+
+
+console.log(data['datasets'], data.labels)
+{% for d in pie_chart_data.data_points %} 
+data.datasets[0].data.push({{d.pie_data}})
+data.datasets[0].backgroundColor.push('{{ d.bg_color }}')
+data.labels.push('{{ d.label }}')
+console.log(data.datasets[0].data)
+{% endfor %}
+
+var myPieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: data,
+    options:{
+        legend: {
+            reverse: true,
+            position: 'bottom'
+        },
+        onClick: (evt, item) => {
+            myPieChart.update()
+            item[0]._model.outerRadius += 10
+            var activePoints = myPieChart.getElementsAtEvent(evt);
+            var clickedElementindex = activePoints[0]["_index"];
+            $('#dragme').css("background-color", myPieChart.data.datasets[0].backgroundColor[clickedElementindex]);
+            console.log(myPieChart.data.datasets[0].backgroundColor[clickedElementindex])
+        }
+        }
+});
+</script>
+

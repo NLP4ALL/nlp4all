@@ -1,7 +1,7 @@
 import tweepy
 import re
 import json
-from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix
+from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
 from datetime import datetime
 import time
 import operator
@@ -9,6 +9,7 @@ from nlp4all import db
 import random, itertools
 from nlp4all.models import BayesianAnalysis, BayesianRobot
 
+from flask_login import current_user
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
     no_colors = 1 if no_colors == 0 else no_colors
@@ -136,7 +137,11 @@ def add_category(name, description):
 
 
 def  get_user_project_analyses(a_user, a_project):
-        return BayesianAnalysis.query.filter_by(project=a_project.id)
+        analyses= BayesianAnalysis.query.filter_by(project=a_project.id)
+        if current_user.admin:
+            return analyses
+        else:
+            return [a for a in analyses if a.shared or a.shared_model or a.user == current_user.id ]
         # if a_user.admin:
         #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
         # else:
@@ -290,6 +295,23 @@ def create_bar_chart_data(predictions, title=""):
         data['data_points'] = data_points
         return(data)
 
+def create_pie_chart_data(cat_names, title=""):
+        data = {}
+        data['title'] = title
+        colors = generate_n_hsl_colors(len(cat_names))
+        bg_colors = generate_n_hsl_colors(len(cat_names), transparency = .5)
+        data_points = []
+        for tup in zip(list(cat_names), colors, bg_colors):
+                d = {}
+                d['label'] = tup[0] 
+                d['color'] = hsl_color_to_string(tup[1])
+                d['bg_color'] = hsl_color_to_string(tup[2])
+                d['pie_data'] = 100/len(cat_names)
+                data_points.append(d)
+        data['data_points'] = data_points
+        return(data)
+
+
 def hsl_color_to_string(hsltup):
         return(f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)")
 
@@ -309,38 +331,47 @@ def ann_assign_colors(list_of_tags):  #take all tags
 def ann_create_css_info(classifications, text, list_of_categories, ann):
         category_color_dict = ann_assign_colors(list_of_categories)
         word_list =[(v,k) for k,v in ann[0].coordinates['word_locs'].items()]   
-        tups = [(word_list[w][0], "none", 0) for w in range(len(word_list))]
+        #print( category_color_dict)
+        tups = [(word_list[w][0], w,"none", 0) for w in range(len(word_list))]
         for w in range(len(word_list)):
                 word = word_list[w]
                 clean_word = re.sub(r'[^\w\s]','',word[0].lower())
                 if clean_word in classifications and sum(classifications[clean_word].values())>0:
                         relevants=[]
                         for m in ann:
+                            #print(str(w))
                             if str(w) in m.coordinates['txt_coords'].keys(): # if the position is in the tagged area
                                 if m.coordinates['txt_coords'][str(w)] not in relevants:
-                                    relevants.append((m.coordinates['txt_coords'][str(w)][0],w))     
-                        for r in relevants:
-                            key_list=[]
-                            value_list=[]
-                            # @todo: special case 50/50 
-                            for k,v in classifications[clean_word].items():
-                                if v>0:
-                                    key_list.append(k),value_list.append(v)
-                            max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
-                            the_tup = (word[0], max_key, classifications[clean_word][max_key], category_color_dict[max_key], value_list, key_list) #TODO: show all tags
-                            if tups[w][1] == 'none':
-                                tups[w] = the_tup           
+                                    relevants.append((m.coordinates['txt_coords'][str(w)][0],w)) 
+                                taglist=[m.annotation_tag for m in ann if str(w) in m.coordinates['txt_coords'].keys()]
+                                #print(taglist)
+                                key_list=[]
+                                value_list=[]
+                                for t in taglist:
+                                    if t not in key_list:
+                                        key_list.append(t)
+                                        value_list.append(taglist.count(t))
+                                max_key = max(classifications[clean_word].items(), key=operator.itemgetter(1))[0]
+                                #print(classifications[clean_word][max_key], category_color_dict[max_key])
+                                the_tup = (word[0],w, m.annotation_tag, classifications[clean_word][m.annotation_tag], category_color_dict[m.annotation_tag], value_list, key_list) #TODO: show all tags
+                                if tups[w][2] == 'none':
+                                    tups[w] = the_tup        
         return(tups)
 
 def get_tags(analysis, words, a_tweet): #set of tweet words
         # take each word  and  calculate a proportion for each tag
-        ann_tags = list(analysis.annotation_tags.keys())
+        ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
+        for tag in list(analysis.annotation_tags.keys()):
+                if tag not in ann_tags:
+                        ann_tags.append(tag)
         mydict = {word.lower() : {a.lower():0 for a in ann_tags} for word in words}
-        for a in analysis.annotations:
-            if a.text in a_tweet.full_text:
-                for w in a.words:
-                        if w in mydict.keys():
-                                mydict[w][a.annotation_tag] += 1
+        annotations = TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id, TweetAnnotation.analysis==analysis.id).all()
+        for a in annotations:
+                if a.text in a_tweet.full_text:
+                        for w in list(a.coordinates['txt_coords'].keys()):
+                                w_to_tag = a.coordinates['txt_coords'][w][1]
+                                if w_to_tag not in ['hashtag', 'httplink', 'twitter_id']:
+                                        mydict[w_to_tag][a.annotation_tag] += 1
         return mydict
 
          
@@ -350,17 +381,51 @@ def matrix_css_info(index_list):
     matrix_colors = [[0, 100, 50],[120, 100, 25],[0,100,100]] # cell colors
     tups = []
     x =0
+    alpha=0.9
     green_list = [] # these are correct prediction cells
     for i in range(len(index_list)):
         green_list.append((x,x+1))
         x += 1
     for i in index_list:
+        row_sum=sum(i[h][0] for h in range(1,len(i)))
         for j in i:
             if j[-1] in green_list:
                 j.append(matrix_colors[1]) # green
+                j.append(round(((j[0]/row_sum)*alpha),2))
             elif j[-1][1] == 0:
                 j.append(matrix_colors[2]) # white
             else:
                 j.append(matrix_colors[0]) # red
+                j.append(round(((j[0]/row_sum)*alpha),2))
         tups.append(i)
     return(tups)
+
+
+def create_ann_css_info(annotations, pos_dict):
+    max_key = max(pos_dict.items(), key=operator.itemgetter(1))[0]
+    alpha = int(100/pos_dict[max_key])*0.01
+    #print(alpha)
+    tups = []
+    for k,v in annotations[0].coordinates['word_locs'].items(): # w is the word, k positition in the tweet
+        if k in pos_dict.keys():
+            opacity = alpha*pos_dict[k]
+            #print(pos_dict[k])
+            the_tup = (v, k, 100, 60, opacity, pos_dict[k])
+            tups.append(the_tup)
+        else:
+            tups.append((v, k, 0, '',0))
+    return(tups)
+
+def matrix_metrics(cat_names, matrix_classes):
+        metrics = {i: {'category':i, 'recall': 0, 'precision':0} for i in cat_names}
+        for i in cat_names:
+                selected_cat = i
+                tp_key = str("Pred_"+selected_cat+"_Real_"+selected_cat)
+                recall_keys = [str("Pred_"+selected_cat+"_Real_"+i) for i in cat_names]
+                if sum([matrix_classes [x] for x in recall_keys]) >0:
+                        metrics[i]['recall'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in recall_keys]),2)
+                
+                precision_keys = [str("Pred_"+i+"_Real_"+selected_cat) for i in cat_names]
+                if sum([matrix_classes [x] for x in precision_keys]) > 0:
+                        metrics[i]['precision'] = round(matrix_classes[tp_key] / sum([matrix_classes [x] for x in precision_keys]),2)
+        return(metrics)
