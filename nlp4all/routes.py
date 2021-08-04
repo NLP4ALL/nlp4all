@@ -308,7 +308,7 @@ def analysis():
     # if owned == False:
     #     return redirect(url_for('home'))
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
-    tweets = project.tweets
+    # tweets = project.tweets
     the_tweet = None
     uncompleted_counts = 0
     if analysis.shared:
@@ -322,7 +322,7 @@ def analysis():
             flash('Well done! You finished all your tweets, wait for the rest of the group.', 'success')
             the_tweet = Tweet(full_text = "", words = [])
     else:
-        the_tweet = sample(tweets, 1)[0]
+        the_tweet = project.get_random_tweet()
     form = TaggingForm()
     form.choices.choices  = [( str(c.id), c.name ) for c in categories]
     number_of_tagged = len(analysis.tags)
@@ -1479,7 +1479,7 @@ def draggable():
 
     # show a new tweet
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
-    tweets = project.tweets
+    # tweets = project.tweets # AH: this is where we need to do something faster
     the_tweet = None
     if analysis.shared:
         completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
@@ -1493,7 +1493,7 @@ def draggable():
             the_tweet = Tweet(full_text = "", words = [])
             return jsonify("the end")
     else:
-        the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
+        the_tweet = project.get_random_tweet()# so the same tweet might come again? # AH: this is where we need to do something faster
 
     number_of_tagged = len(analysis.tags)
     data = {}
@@ -1531,12 +1531,13 @@ def get_bar_chart_data():
 # load a tweet to show
 @app.route('/get_first_tweet', methods=['GET', 'POST'])
 def get_first_tweet():
+    print("get first tweet called")
     args = request.args.to_dict()
     analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
     project = Project.query.get(analysis.project)
     # show a new tweet
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
-    tweets = project.tweets
+    # tweets = project.tweets
     the_tweet = None
     if analysis.shared:
         completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
@@ -1551,7 +1552,7 @@ def get_first_tweet():
             message="You've now been through all tweets. Please wait for the others to finish."
             return jsonify("the end")
     else:
-        the_tweet = sample(tweets, 1)[0] # so the same tweet might come again?
+        the_tweet = project.get_random_tweet() #sample(tweets, 1)[0] # so the same tweet might come again?
     number_of_tagged = len(analysis.tags)
     data = {}
     data['number_of_tagged']  = number_of_tagged
