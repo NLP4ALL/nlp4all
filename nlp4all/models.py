@@ -6,6 +6,8 @@ from sqlalchemy.types import JSON
 import collections
 import collections, functools, operator 
 import statistics
+from sqlalchemy.orm import load_only
+from random import sample
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -372,11 +374,17 @@ class Project(db.Model):
     analyses = db.relationship('BayesianAnalysis')
     categories = db.relationship('TweetTagCategory', secondary='project_categories')
     tf_idf = db.Column(JSON)
-    tweets = db.relationship('Tweet', secondary='tweet_project')
+    tweets = db.relationship('Tweet', secondary='tweet_project', lazy='dynamic')
     training_and_test_sets = db.Column(JSON)
 
     def get_tweets(self):
         return [t for cat in categories for t in cat.tweets]
+    
+    def get_random_tweet(self):
+        tweet_ids = self.tweets.options(load_only('id')).all()
+        the_tweet_id = sample(tweet_ids, 1)[0]
+        return Tweet.query.get(the_tweet_id.id)
+
 
 
 class TweetTagCategory(db.Model):
