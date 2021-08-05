@@ -54,53 +54,52 @@ def clean_word(aword): # added
         return "http://link"
     return aword
 
-data_dir = 'tweet_data/'
-files = [f for f in os.listdir(data_dir) if '_out.json' in f]
+data_file = 'tweet_data/all_parties.json'
 
 existing_tag_names = []
-for f in files:
-    with open(data_dir+f) as inf:
-        print(f)
-        counter = 0
-        for line in inf.readlines(): # choose how many tweets you want from each party file
-            indict = json.loads(line)
-#             add cateogry if it does not already exist
-            if indict['twitter_handle'] not in existing_tag_names:
-                category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
-                if not category:
-                    category = TweetTagCategory(name = indict['twitter_handle'], description = "Tweet from " + indict['twitter_handle'])
-                    db.session.add(category)
-                    db.session.commit()
-                existing_tag_names.append(indict['twitter_handle'])
-            category = TweetTagCategory.query.filter_by(name = indict['twitter_handle']).first()
-            date_str = indict['time']
-            date_rep = '%a %b %d %H:%M:%S %z %Y'
-            unix_time = time.mktime(datetime.strptime(date_str, date_rep).timetuple())
-            timestamp = datetime.fromtimestamp(unix_time)
-            t = indict['full_text']
-            t.replace(".", " ")
-            t.replace("!", " ")
-            t.replace("?", " ")
-            t.replace(":", " ")
-            t.replace("-", " ")
-            t.replace("-", " ")
-            t.replace(",", " ")
-            t.replace("\(", " ")
-            t.replace("\)", " ")
-            a_tweet = Tweet(
-                time_posted = timestamp,
-                category = category.id,
-                text = indict['full_text'],
-                handle = indict['twitter_handle'],
-                full_text= " ".join([clean_word(word) for word in t.split()]), # changed
-                words = [re.sub(r'[^\w\s]','',w) for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
-                links = [w for w in t.split() if "http" in w],
-                hashtags = [w for w in t.split() if "#" in w],
-                mentions = [w for w in t.split() if "@" in w],
-                url = "https://twitter.com/"+indict['twitter_handle']+"/"+str(indict['id'])
-                )
-            
-            db.session.add(a_tweet)
+with open(data_file) as inf:
+    counter = 0
+    for line in inf.readlines(): # choose how many tweets you want from each party file
+        if counter % 1000 == 0:
+            print(counter)
+        indict = json.loads(line)
+          #add cateogry if it does not already exist
+        if indict['twitter_id'] not in existing_tag_names:
+            category = TweetTagCategory.query.filter_by(name = indict['twitter_id']).first()
+            if not category:
+                category = TweetTagCategory(name = indict['twitter_id'], description = "Tweet from " + indict['twitter_id'])
+                db.session.add(category)
+                db.session.commit()
+            existing_tag_names.append(indict['twitter_id'])
+        category = TweetTagCategory.query.filter_by(name = indict['twitter_id']).first()
+        date_str = indict['created_at']
+        date_rep = '%Y-%m-%dT%H:%M:%S.%fZ'
+        unix_time = time.mktime(datetime.strptime(date_str, date_rep).timetuple())
+        timestamp = datetime.fromtimestamp(unix_time)
+        t = indict['full_text']
+        t.replace(".", " ")
+        t.replace("!", " ")
+        t.replace("?", " ")
+        t.replace(":", " ")
+        t.replace("-", " ")
+        t.replace("-", " ")
+        t.replace(",", " ")
+        t.replace("\(", " ")
+        t.replace("\)", " ")
+        a_tweet = Tweet(
+            time_posted = timestamp,
+            category = category.id,
+            text = indict['full_text'],
+            handle = indict['twitter_id'],
+            full_text= " ".join([clean_word(word) for word in t.split()]), # changed
+            words = [re.sub(r'[^\w\s]','',w) for w in t.lower().split() if "#" not in w and "http" not in w and "@" not in w],
+            links = [w for w in t.split() if "http" in w],
+            hashtags = [w for w in t.split() if "#" in w],
+            mentions = [w for w in t.split() if "@" in w],
+            url = "https://twitter.com/"+indict['twitter_id']+"/"+str(indict['id'])
+            )
+        db.session.add(a_tweet)
+        counter = counter + 1
 
 
 db.session.commit()
