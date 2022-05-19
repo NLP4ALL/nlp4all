@@ -1457,12 +1457,15 @@ def save_annotation():
 @app.route('/save_draggable_tweet', methods=['GET', 'POST'])
 def draggable():
     args = request.args.to_dict()
+    print(args)
     t_id = int(args['tweet_id'])
     this_tweet = Tweet.query.get(t_id)
     analysis =  BayesianAnalysis.query.get(int(args['analysis_id']))
     project = Project.query.get(analysis.project)
     cat= str(args['category'])
     category = TweetTagCategory.query.filter(TweetTagCategory.name==cat).first()
+
+    print("hep1")
 
     ## save the prediction
     analysis.data = analysis.updated_data(this_tweet, category)
@@ -1473,6 +1476,7 @@ def draggable():
     db.session.merge(analysis)
     db.session.flush()
     db.session.commit()
+    print("hep2")
     tag = TweetTag (category = category.id, analysis = analysis.id, tweet=this_tweet.id, user = current_user.id)
     db.session.add(tag)
     db.session.commit()
@@ -1481,9 +1485,11 @@ def draggable():
     categories = TweetTagCategory.query.filter(TweetTagCategory.id.in_([p.id for p in project.categories])).all() # TODO: pretty sure we can just get project.categories
     # tweets = project.tweets # AH: this is where we need to do something faster
     the_tweet = None
+    print(the_tweet)
     if analysis.shared:
         completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
         uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        print(the_tweet.full_text)
         if(len(uncompleted_tweets) > 0):
             the_tweet_id = uncompleted_tweets[0]
             the_tweet = Tweet.query.get(the_tweet_id)
@@ -1493,8 +1499,12 @@ def draggable():
             the_tweet = Tweet(full_text = "", words = [])
             return jsonify("the end")
     else:
+        print("trying to get a random tweet")
         the_tweet = project.get_random_tweet()# so the same tweet might come again? # AH: this is where we need to do something faster
+        print(the_tweet.full_text)
+        print("id", the_tweet.id)
 
+    print(the_tweet.full_text)
     number_of_tagged = len(analysis.tags)
     data = {}
     data['number_of_tagged']  = number_of_tagged
@@ -1506,6 +1516,12 @@ def draggable():
     data['analysis_data'] = analysis.data
     
     return jsonify(data, the_tweet.id, the_tweet.time_posted)
+
+
+@app.route('/tweet/<int:id>', methods=['GET'])
+def tweet(id):
+    t = Tweet.query.get(id)
+    return jsonify(t.full_text)
 
 # update the bar chart
 @app.route('/get_bar_chart_data', methods=['GET', 'POST'])
