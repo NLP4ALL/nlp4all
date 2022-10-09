@@ -22,6 +22,7 @@ jobs:
       run: |
         pylint $(git ls-files '*.py')
   failure_notification:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: Sniddl/discord-commits@v1.5
@@ -31,6 +32,7 @@ jobs:
           embed: '{ "title": "{{ commit.title }}", "description": "{{ commit.description }}", "url": "{{ commit.url }}", "author": { "name": "{{ commit.author.name }} ({{ commit.author.username }})", "icon_url": "https://avatars.io/gravatar/{{ commit.author.email }}"} }'
     if: failure()
   success_notification:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: Sniddl/discord-commits@v1.5
