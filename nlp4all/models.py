@@ -1,5 +1,5 @@
 from datetime import datetime
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer #TODO apparently itsdangerous has troubles with python 3.10
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer #apparently itsdangerous has troubles with python 3.10
 from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
