@@ -10,7 +10,8 @@ import functools
 import operator
 from random import sample
 from datetime import datetime
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired
+import jwt
+from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import load_only
@@ -321,21 +322,17 @@ class User(db.Model, UserMixin):
     analyses = db.relationship("BayesianAnalysis")
 
     def get_reset_token(self, expires_sec=1800):
-        """Get a reset token."""
-        jws = Serializer(app.config["SECRET_KEY"], expires_sec)
-        return jws.dumps({"user_id": self.id}).decode("utf-8")
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_sec},
+            app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
 
     @staticmethod
     def verify_reset_token(token):
-        """Verify a reset token."""
-        jws = Serializer(app.config["SECRET_KEY"])
         try:
-            user_id = jws.loads(token)["user_id"]
-        except SignatureExpired:
-            return None
-        except ValueError:
-            return None
-        return User.query.get(user_id)
+            id = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])['reset_password']
+        except:
+            return
+        return User.query.get(id)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
