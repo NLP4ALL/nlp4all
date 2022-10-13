@@ -9,3 +9,4 @@ venv/
 *.db
 *.csv
 .ipynb_checkpoints
+.mypy_cache
