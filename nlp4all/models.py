@@ -15,7 +15,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, Signatur
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import load_only
-from nlp4all import db, login_manager, app, utils
+from nlp4all import db, login_manager, app
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -607,10 +607,18 @@ class ConfusionMatrix(db.Model):
             self.train_data[category.name]["words"][word] = val + 1
         return self.train_data
 
+    def create_n_split_tnt_sets(self, n, split, dict_of_tweets_and_cats):
+        return_list = []
+        # half = int(len(dict_of_tweets_and_cats) / 2)
+        for n in range(n):
+            d1, d2 = n_split_dict(dict_of_tweets_and_cats, split)
+            return_list.append((d1, d2))
+        return return_list
+
     def update_tnt_set(self):
         """Update the training and test sets."""
         tweet_id_and_cat = {t.id: t.category for t in self.tweets}
-        self.training_and_test_sets = utils.create_n_split_tnt_sets(
+        self.training_and_test_sets = self.create_n_split_tnt_sets(
             30, self.ratio, tweet_id_and_cat
         )
         return self.training_and_test_sets
