@@ -1,23 +1,16 @@
-from nlp4all import db, bcrypt
-from nlp4all.utils import (
-    add_project,
-    tf_idf_from_tweets_and_cats_objs,
-    create_n_train_and_test_sets,
-)
-from nlp4all.models import User, Role, Organization, Project
-from nlp4all.models import TweetTagCategory, Tweet, User, Organization, Project, BayesianAnalysis
-from nlp4all import db, bcrypt
+"""
+Set up database and user
+"""
+
 import json
-import os
 from datetime import datetime
 import time
-import json
 import re
-
-# import utils  # potentially used, but see if it's unnecessary
+from nlp4all import db, bcrypt
+from nlp4all.utils import add_project
+from nlp4all.models import User, Role, Organization, TweetTagCategory, Tweet
 
 db.drop_all()
-
 
 db.create_all()
 db.session.commit()
@@ -72,6 +65,15 @@ db.session.commit()
 
 
 def clean_word(aword):  # added
+    """remove twitter handles, hashtags, and urls
+
+    Args:
+        aword (str): the word to clean
+
+    Returns:
+        _type_: the unmodified word, or a generic word if the word was a handle, hashtag, or url
+    """
+
     if "@" in aword:
         return "@twitter_ID"
     if "#" in aword:
@@ -81,11 +83,12 @@ def clean_word(aword):  # added
     return aword
 
 
-data_file = "tweet_data/all_parties.json"
+DATA_FILE = "tweet_data/all_parties.json"
 
 existing_tag_names = []
-with open(data_file) as inf:
-    counter = 0
+with open(DATA_FILE, encoding="utf8") as inf:
+    DATE_REP = "%Y-%m-%dT%H:%M:%S.%fZ"
+    counter = 0 #pylint: disable=invalid-name
     for line in inf.readlines():  # choose how many tweets you want from each party file
         if counter % 1000 == 0:
             print(counter)
@@ -102,8 +105,7 @@ with open(data_file) as inf:
             existing_tag_names.append(indict["twitter_id"])
         category = TweetTagCategory.query.filter_by(name=indict["twitter_id"]).first()
         date_str = indict["created_at"]
-        date_rep = "%Y-%m-%dT%H:%M:%S.%fZ"
-        unix_time = time.mktime(datetime.strptime(date_str, date_rep).timetuple())
+        unix_time = time.mktime(datetime.strptime(date_str, DATE_REP).timetuple())
         timestamp = datetime.fromtimestamp(unix_time)
         t = indict["full_text"]
         t.replace(".", " ")
@@ -132,40 +134,11 @@ with open(data_file) as inf:
             url="https://twitter.com/" + indict["twitter_id"] + "/" + str(indict["id"]),
         )
         db.session.add(a_tweet)
-        counter = counter + 1
+        counter = counter + 1 #pylint: disable=invalid-name
 
 
 db.session.commit()
 db.session.close()
-
-# org = Organization.query.last()
-# all_cats = TweetTagCategory.query.all()
-# cats = [all_cats[1], all_cats[7]]
-# cat_ids = [all_cats[1].id, all_cats[7].id]
-
-# Telma added
-# tweets1 = Tweet.query.filter_by(category=2).all() # this should be done in a better way..
-# tweets2 = Tweet.query.filter_by(category=8).all()
-
-# mytweets = tweets1 +tweets2
-
-# tf_idf = {}
-# tf_idf['cat_counts'] = { cat.id : 0 for cat in cats}
-# tf_idf['words'] = {}
-# all_words = sorted(list(set([word for t in mytweets for word in t.words])))
-
-# for tweet in mytweets:
-#     tf_idf['cat_counts'][tweet.category] = tf_idf['cat_counts'][tweet.category] + 1
-#     for word  in tweet.words:
-#             the_list = tf_idf['words'].get(word, [])
-#             the_list.append((tweet.id, tweet.category))
-#             tf_idf['words'][word] = the_list
-
-# cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all()
-# tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-# tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-# tweet_id_and_cat = { t.id : t.category for t in tweet_objs }
-# training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
 
 org = Organization.query.filter_by(name="IMC Seminar Group").first()
 biden = TweetTagCategory.query.filter_by(name="JoeBiden.json").first()
@@ -179,8 +152,5 @@ project = add_project(
     org=org.id,
     cat_ids=cats,
 )
-# project = Project(name = 'name', description = 'description', organization = org.id, categories = cats_objs, tweets = tweet_objs, tf_idf = tf_idf, training_and_test_sets = training_and_test_sets)
-# db.session.add(project)
-
 
 db.session.commit()

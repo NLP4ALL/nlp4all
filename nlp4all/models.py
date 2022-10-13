@@ -1,22 +1,38 @@
-from datetime import datetime
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from nlp4all import db, login_manager, app, utils
-from flask_login import UserMixin
-from sqlalchemy.types import JSON
-import collections
+"""models.py, sqlalchemy model definitions
+
+This file contains the model definitions for the database tables used by the
+application. The models are defined using the SQLAlchemy ORM. The models are
+then used by the application to create the database tables and to interact with
+the database.
+"""
+
 import collections
 import functools
 import operator
-from sqlalchemy.orm import load_only
 from random import sample
-
+from datetime import datetime
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired
+from flask_login import UserMixin
+from sqlalchemy.types import JSON
+from sqlalchemy.orm import load_only
+from nlp4all import db, login_manager, app, utils
 
 @login_manager.user_loader
 def load_user(user_id):
+    """Loads a user from the database.
+
+    Args:
+        user_id (int): The id of the user to load.
+
+    Returns:
+       User: User object.
+    """
     return User.query.get(int(user_id))
 
 
 class BayesianRobot(db.Model):
+    """BayesianRobot model."""
+
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     name = db.Column(db.String(25))
@@ -29,6 +45,11 @@ class BayesianRobot(db.Model):
     time_retired = db.Column(db.DateTime)
 
     def clone(self):
+        """Clones a BayesianRobot object.
+
+        Returns:
+            BayesianRobot: A new BayesianRobot object.
+        """
         new_robot = BayesianRobot()
         new_robot.name = self.name
         new_robot.analysis = self.analysis
@@ -37,14 +58,25 @@ class BayesianRobot(db.Model):
         new_robot.user = self.user
         return new_robot
 
-    # def run_analysis(self):
+    def get_analysis(self):
+        """Gets the BayesianAnalysis object associated with the robot.
 
-    def get_analysis():
+        Returns:
+            BayesianAnalysis: The BayesianAnalysis object associated with the robot.
+        """
         return BayesianAnalysis.query.get(self.analysis)
 
     def word_in_features(self, word):
-        for f in self.features.keys():
-            feature_string = f.lower()
+        """Checks if a word is in the features of the robot.
+
+        Args:
+            word (str): The word to check.
+
+        Returns:
+            bool: True if the word is in the features of the robot, False otherwise.
+        """
+        for feature in self.features.keys():
+            feature_string = feature.lower()
             if feature_string.startswith("*") and feature_string.endswith("*"):
                 if feature_string[1:-1] in word:
                     return True
@@ -59,43 +91,16 @@ class BayesianRobot(db.Model):
                     return True
         return False
 
-    def accuracy_for_tnt_set(words, tweets_with_word, words_by_tweet, tnt_sets):
-        accuracy_dict = {}
-        accuracy = 0
-        # find de relevante tweets
-        total_predictions_by_word = {}
-        for tnt_set in tnt_sets:
-            word_predictions = {}
-            for word in words:
-                categories_with_word_in_training = [
-                    n[1] for n in tnt_set[0].items() if n[0] in str(tweets_with_word[word])
-                ]
-                predictions = {
-                    n: categories_with_word_in_training.count(n)
-                    / len(categories_with_word_in_training)
-                    for n in set(categories_with_word_in_training)
-                }
-                word_predictions[word] = predictions
-            train_set = tnt_set[1]
-            for t in train_set:
-                if int(t) in words_by_tweet.keys():
-                    category_predictions = collections.Counter({})
-                    for word in words_by_tweet[int(t)]:
-                        category_predictions = category_predictions + collections.Counter(
-                            word_predictions[word]
-                        )
-                    # predicted_category = max(category_predictions, key = lambda  k: category_predictions[k])
-                    real_cat = Tweet.query.get(int(t)).category
-                else:
-                    accuracy_dict["uncategorized"] = []
-        return accuracy_dict
+    def calculate_accuracy(self): # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+        """Calculates the accuracy of the robot.
 
-    def calculate_accuracy(self):
+        Returns:
+            dict: A dictionary containing the accuracy of the robot.
+        """
+        # @TODO: This function is too long and needs to be refactored.
         analysis_obj = BayesianAnalysis.query.get(self.analysis)
         proj_obj = Project.query.get(analysis_obj.project)
         tf_idf = proj_obj.tf_idf
-        # skriv det her om så accuraacy bregnes per feature, og ikke per ord.
-        # relevant_words = [word for  word in tf_idf.get('words') if BayesianRobot.word_in_features(self, word)]
         feature_words = {}
         for feature in self.features:
             feature_words[feature] = [
@@ -113,18 +118,18 @@ class BayesianRobot(db.Model):
         word_category_predictions = {}
         cat_names = {cat.id: cat.name for cat in Project.query.get(analysis_obj.project).categories}
 
-        for feature in feature_words:
+        for feature in feature_words.keys(): # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             predictions_by_feature[feature] = {}
             for word in feature_words[feature]:
                 for dataset in proj_obj.training_and_test_sets[:1]:
                     train_set = dataset[0]
                     tweets = tf_idf.get("words").get(word)
                     train_set_tweets = []
-                    for t in tweets:
-                        if str(t[0]) in train_set.keys():
-                            train_set_tweets.append(t)
+                    for tweet in tweets:
+                        if str(tweet[0]) in train_set.keys():
+                            train_set_tweets.append(tweet)
                         else:
-                            test_set_tweets.add(t[0])
+                            test_set_tweets.add(tweet[0])
                     categories_in_dataset = [
                         dataset[0].get(str(tweet[0])) for tweet in train_set_tweets
                     ]
@@ -164,17 +169,16 @@ class BayesianRobot(db.Model):
                     tweet_predictions[tweet[0]] = preds
         # now finally evaluate how well we did, in general and by word
         word_accuracy = {}
-        for tweet_key in tweet_predictions:
+        for tweet_key in tweet_predictions.keys():  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             prediction_dict = tweet_predictions[tweet_key].copy()
-            # for d in prediction_dict['predictions']:
-            #     if 'category_prediction' in d.keys():
-            #         del d['category_prediction']
+
             summed_prediction = dict(
                 functools.reduce(
                     operator.add, map(collections.Counter, prediction_dict["predictions"])
                 )
             )
-            # the old code that makes summed_prediction also includes the newly added "category_prediction". Since we don't want to
+            # the old code that makes summed_prediction also includes the newly
+            # added "category_prediction". Since we don't want to
             # sum that, we remove it first
             # it can happen that we evaluate a word that we have no information
             # on. In that
@@ -187,7 +191,7 @@ class BayesianRobot(db.Model):
                 word_accuracy[word] = acc
         # and then build a nice dict full of info
         feature_info = {}
-        for feature in feature_words:
+        for feature in feature_words.keys(): # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             feature_info[feature] = {}
             feature_info[feature]["words"] = {}
             for word in feature_words[feature]:
@@ -218,33 +222,34 @@ class BayesianRobot(db.Model):
                 feature_info[feature]["tweets_targeted"] = 0
         tweets_targeted = 0
         table_data = []
-        for f in feature_info:
-            tweets_targeted = tweets_targeted + feature_info[f]["tweets_targeted"]
+        for feature in feature_info.keys(): # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+            tweets_targeted = tweets_targeted + feature_info[feature]["tweets_targeted"]
             feat_dict = {}
-            feat_dict["word"] = f
+            feat_dict["word"] = feature
             feat_dict["category_prediction"] = "N/A"
-            feat_dict["accuracy"] = feature_info[f]["accuracy"]
-            feat_dict["tweets_targeted"] = feature_info[f]["tweets_targeted"]
+            feat_dict["accuracy"] = feature_info[feature]["accuracy"]
+            feat_dict["tweets_targeted"] = feature_info[feature]["tweets_targeted"]
             score = feat_dict["accuracy"] * feat_dict["tweets_targeted"] - (
                 (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"]
             )
             print(score)
             feat_dict["score"] = round(score, 2)
-            # calculate the most often predicted category. This isn't trivial - should it be by total tweets in test set, or just the most common
-            # category across its words? Well, it's obvious. Boo. It needs to be weighted by how many tweets there are.
+            # calculate the most often predicted category. This isn't trivial -
+            # should it be by total tweets in test set, or just the most common
+            # category across its words? Well, it's obvious. Boo. It needs to be
+            # weighted by how many tweets there are.
             # NO  NO NO! I thought about that wrong. We just want the average
             # of each of the category prediction for each word.
-            ca_tid_scores = {cat_id: 0 for cat_id in cat_names}
             print(feat_dict)
             table_data.append(feat_dict)
-            for word in feature_info[f]["words"]:
+            for word in feature_info[feature]["words"]:
                 feat_dict = {}
                 feat_dict["word"] = word
                 feat_dict["category_prediction"] = word_category_predictions[word][
                     "category_prediction"
                 ]
-                feat_dict["accuracy"] = feature_info[f]["words"][word]["accuracy"]
-                feat_dict["tweets_targeted"] = feature_info[f]["words"][word]["tweets_targeted"]
+                feat_dict["accuracy"] = feature_info[feature]["words"][word]["accuracy"]
+                feat_dict["tweets_targeted"] = feature_info[feature]["words"][word]["tweets_targeted"] # pylint: disable=line-too-long
                 score = feat_dict["accuracy"] * feat_dict["tweets_targeted"] - (
                     (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"]
                 )
@@ -262,7 +267,9 @@ class BayesianRobot(db.Model):
         accuracy_info["table_data"] = table_data
         return accuracy_info
 
+    @staticmethod
     def matches(aword, afeature):
+        """Check if a word matches a feature."""
         feature_string = afeature.lower()
         if feature_string.startswith("*") and feature_string.endswith("*"):
             if feature_string[1:-1] in aword:
@@ -281,6 +288,7 @@ class BayesianRobot(db.Model):
         return False
 
     def feature_words(self, a_feature, tf_idf):
+        """Return a list of words that match a feature."""
         return_list = []
         words = tf_idf.get("words")
         feature_string = a_feature.lower()
@@ -301,6 +309,7 @@ class BayesianRobot(db.Model):
 
 
 class User(db.Model, UserMixin):
+    """User model."""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -312,15 +321,19 @@ class User(db.Model, UserMixin):
     analyses = db.relationship("BayesianAnalysis")
 
     def get_reset_token(self, expires_sec=1800):
-        s = Serializer(app.config["SECRET_KEY"], expires_sec)
-        return s.dumps({"user_id": self.id}).decode("utf-8")
+        """Get a reset token."""
+        jws = Serializer(app.config["SECRET_KEY"], expires_sec)
+        return jws.dumps({"user_id": self.id}).decode("utf-8")
 
     @staticmethod
     def verify_reset_token(token):
-        s = Serializer(app.config["SECRET_KEY"])
+        """Verify a reset token."""
+        jws = Serializer(app.config["SECRET_KEY"])
         try:
-            user_id = s.loads(token)["user_id"]
-        except BaseException:
+            user_id = jws.loads(token)["user_id"]
+        except SignatureExpired:
+            return None
+        except ValueError:
             return None
         return User.query.get(user_id)
 
@@ -331,14 +344,16 @@ class User(db.Model, UserMixin):
 # Define the Role data-model
 
 
-class Role(db.Model):
+class Role(db.Model): # pylint: disable=too-few-public-methods
+    """Role model."""
     __tablename__ = "role"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(50), unique=True)
 
 
 # Define the ProjectCategories association table
-class ProjectCategories(db.Model):
+class ProjectCategories(db.Model): # pylint: disable=too-few-public-methods
+    """ProjectCategories model."""
     __tablename__ = "project_categories"
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey("project.id", ondelete="CASCADE"))
@@ -348,7 +363,8 @@ class ProjectCategories(db.Model):
 # Define the UserOrgs association table
 
 
-class UserOrgs(db.Model):
+class UserOrgs(db.Model): # pylint: disable=too-few-public-methods
+    """UserOrgs model."""
     __tablename__ = "user_orgs"
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
@@ -356,7 +372,8 @@ class UserOrgs(db.Model):
 
 
 # Define the Tweet-Project association table
-class TweetProject(db.Model):
+class TweetProject(db.Model): # pylint: disable=too-few-public-methods
+    """TweetProject model."""
     __tablename__ = "tweet_project"
     id = db.Column(db.Integer(), primary_key=True)
     tweet = db.Column(db.Integer(), db.ForeignKey("tweet.id", ondelete="CASCADE"))
@@ -366,7 +383,8 @@ class TweetProject(db.Model):
 # Define the UserRoles association table
 
 
-class UserRoles(db.Model):
+class UserRoles(db.Model): # pylint: disable=too-few-public-methods
+    """UserRoles model."""
     __tablename__ = "user_roles"
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
@@ -376,7 +394,8 @@ class UserRoles(db.Model):
 # Define the Matrix-Categories association table
 
 
-class MatrixCategories(db.Model):
+class MatrixCategories(db.Model): # pylint: disable=too-few-public-methods
+    """MatrixCategories model."""
     __tablename__ = "confusionmatrix_categories"
     id = db.Column(db.Integer(), primary_key=True)
     matrix_id = db.Column(db.Integer(), db.ForeignKey("confusion_matrix.id", ondelete="CASCADE"))
@@ -386,41 +405,15 @@ class MatrixCategories(db.Model):
 
 
 # Define the Tweet-Matrix association table
-
-
-class TweetMatrix(db.Model):
+class TweetMatrix(db.Model): # pylint: disable=too-few-public-methods
+    """TweetMatrix model."""
     __tablename__ = "tweet_confusionmatrix"
     id = db.Column(db.Integer(), primary_key=True)
     tweet = db.Column(db.Integer(), db.ForeignKey("tweet.id", ondelete="CASCADE"))
     matrix = db.Column(db.Integer(), db.ForeignKey("confusion_matrix.id", ondelete="CASCADE"))
 
-
-# Define the Annotation-Category association table
-# class AnnotationCategories(db.Model):
-#    __tablename__ = 'annotation_category'
-#    id = db.Column(db.Integer(), primary_key=True)
-#    annotation_id = db.Column(db.Integer(), db.ForeignKey('tweet_annotation.id', ondelete='CASCADE'))
-#    category_id = db.Column(db.Integer(), db.ForeignKey('tweet_tag_category.id', ondelete='CASCADE'))
-
-# Define the Tweet-Matrix association table
-# class TweetMatrix(db.Model):
-#    __tablename__ = 'tweet_confusionmatrix'
-#    id = db.Column(db.Integer(), primary_key=True)
-#    tweet = db.Column(db.Integer(), db.ForeignKey('tweet.id', ondelete='CASCADE'))
-#    matrix = db.Column(db.Integer(), db.ForeignKey('confusion_matrix.id', ondelete='CASCADE'))
-
-# class Post(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     title = db.Column(db.String(100), nullable=False)
-#     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-#     content = db.Column(db.Text, nullable=False)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-#     def __repr__(self):
-#         return f"Post('{self.title}', '{self.date_posted}')"
-
-
-class Organization(db.Model):
+class Organization(db.Model): # pylint: disable=too-few-public-methods
+    """Organization model."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     users = db.relationship("User", secondary="user_orgs")
@@ -428,6 +421,7 @@ class Organization(db.Model):
 
 
 class Project(db.Model):
+    """Project model."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     description = db.Column(db.String)
@@ -439,15 +433,18 @@ class Project(db.Model):
     training_and_test_sets = db.Column(JSON)
 
     def get_tweets(self):
-        return [t for cat in categories for t in cat.tweets]
+        """Get tweets."""
+        return [t for cat in self.categories for t in cat.tweets] # pylint: disable=not-an-iterable
 
     def get_random_tweet(self):
-        tweet_ids = self.tweets.options(load_only("id")).all()
+        """Get a random tweet."""
+        tweet_ids = self.tweets.options(load_only("id")).all() # pylint: disable=no-member
         the_tweet_id = sample(tweet_ids, 1)[0]
         return Tweet.query.get(the_tweet_id.id)
 
 
-class TweetTagCategory(db.Model):
+class TweetTagCategory(db.Model): # pylint: disable=too-few-public-methods
+    """TweetTagCategory model."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     description = db.Column(db.String(100))
@@ -457,7 +454,8 @@ class TweetTagCategory(db.Model):
     # matrices = db.relationship('ConfusionMatrix', secondary='matrix_categories')
 
 
-class Tweet(db.Model):
+class Tweet(db.Model): # pylint: disable=too-few-public-methods
+    """Tweet model."""
     id = db.Column(db.Integer, primary_key=True)
     time_posted = db.Column(db.DateTime)
     category = db.Column(db.Integer, db.ForeignKey("tweet_tag_category.id"))
@@ -474,7 +472,8 @@ class Tweet(db.Model):
     annotations = db.relationship("TweetAnnotation")
 
 
-class TweetTag(db.Model):
+class TweetTag(db.Model): # pylint: disable=too-few-public-methods
+    """TweetTag model."""
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     category = db.Column(db.Integer, db.ForeignKey("tweet_tag_category.id"))
@@ -484,6 +483,7 @@ class TweetTag(db.Model):
 
 
 class BayesianAnalysis(db.Model):
+    """BayesianAnalysis model."""
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     name = db.Column(db.String(50))
@@ -500,107 +500,70 @@ class BayesianAnalysis(db.Model):
     annotate = db.Column(db.Integer, default=1)
 
     def get_project(self):
+        """Get project."""
         return Project.query.get(self.project)
 
+    # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
     def updated_data(self, tweet, category):
+        """Update data."""
         self.data["counts"] = self.data["counts"] + 1
-        if category.name not in self.data.keys():
+        if category.name not in self.data.keys(): # pylint: disable=no-member
             self.data[category.name] = {"counts": 0, "words": {}}
         self.data[category.name]["counts"] = (self.data[category.name].get("counts", 0)) + 1
-        for w in set(tweet.words):
-            val = self.data[category.name]["words"].get(w, 0)
-            self.data[category.name]["words"][w] = val + 1
+        for word in set(tweet.words):
+            val = self.data[category.name]["words"].get(word, 0)
+            self.data[category.name]["words"][word] = val + 1
         return self.data
+    # pylint: enable=unsupported-assignment-operation, unsubscriptable-object
 
+    # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
     def updated_a_tags(self, atag, tweet):
-        if atag not in self.annotation_tags.keys():
+        """Update annotation tags."""
+        if atag not in self.annotation_tags.keys(): # pylint: disable=no-member
             self.annotation_tags[atag] = {"counts": 0, "category": tweet.handle, "tweets": []}
         self.annotation_tags[atag]["counts"] = self.annotation_tags[atag]["counts"] + 1
         if tweet.id not in self.annotation_tags[atag]["tweets"]:
             self.annotation_tags[atag]["tweets"].append(tweet.id)
         return self.annotation_tags
+    # pylint: enable=unsupported-assignment-operation, unsubscriptable-object
 
+    # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
     def get_predictions_and_words(self, words):
+        """Get predictions and words."""
         # take each word  and  calculate a probabilty for each category
         categories = Project.query.get(self.project).categories
-        category_names = [c.name for c in categories if c.name in self.data.keys()]
+        category_names = [c.name for c in categories if c.name in self.data.keys()] # pylint: disable=no-member
         preds = {}
         predictions = {}
         if self.data["counts"] == 0:
             predictions = {c: {w: 0} for w in words for c in category_names}
             # predictions = {word : {category : 0 for category in category_names} for word in words}
         else:
-            for w in words:  # only categorize each word once
-                preds[w] = {c: 0 for c in category_names}
+            for word in words:  # only categorize each word once
+                preds[word] = {c: 0 for c in category_names}
                 for cat in category_names:
                     predictions[cat] = predictions.get(cat, {})
-                    prob_ba = self.data[cat]["words"].get(w, 0) / self.data[cat]["counts"]
+                    prob_ba = self.data[cat]["words"].get(word, 0) / self.data[cat]["counts"]
                     prob_a = self.data[cat]["counts"] / self.data["counts"]
                     prob_b = (
-                        sum([self.data[c]["words"].get(w, 0) for c in category_names])
+                        sum([self.data[c]["words"].get(word, 0) for c in category_names]) # pylint: disable=consider-using-generator
                         / self.data["counts"]
                     )
                     if prob_b == 0:
-                        preds[w][cat] = 0
-                        predictions[cat][w] = 0
+                        preds[word][cat] = 0
+                        predictions[cat][word] = 0
                     else:
-                        preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
-                        predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
+                        preds[word][cat] = round(prob_ba * prob_a / prob_b, 2)
+                        predictions[cat][word] = round(prob_ba * prob_a / prob_b, 2)
 
         return (
             preds,
             {k: round(sum(v.values()) / len(set(words)), 2) for k, v in predictions.items()},
         )
-
-    def annotation_counts(self, tweets, user_id):
-        if user_id == "all":
-            anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == self.id).all()
-        else:
-            anns = TweetAnnotation.query.filter(
-                TweetAnnotation.analysis == self.id, TweetAnnotation.user == user_id
-            ).all()
-        a_list = set([a.tweet for a in anns])
-        annotated_tweets = list(set([a.tweet for a in anns]))
-        ann_table = {
-            t.id: {
-                "annotation": t.text,
-                "tag": t.annotation_tag,
-                "tweet_id": t.tweet,
-                "tag_counts": 1,
-            }
-            for t in anns
-        }
-        a_list = []
-        for tweet in annotated_tweets:
-            a_list.append(
-                sorted(
-                    [t for t in ann_table.items() if t[1]["tweet_id"] == tweet],
-                    key=lambda x: x[1]["tweet_id"],
-                    reverse=True,
-                )
-            )
-        new_list = []
-        for l in a_list:
-            li = [t[1] for t in l]
-            new_list.append(li)
-        keys = [i[0].get("tweet_id") for i in new_list]
-        values = [
-            [{"tag": j.get("tag"), "annotation": j.get("annotation")} for j in i] for i in new_list
-        ]
-        countlist = [[] for _ in range(len(values))]
-        for x in range(len(values)):
-            for i in values[x]:
-                n = values[x].count(i)
-                c = i.copy()
-                c.update({"count": n})
-                if c not in countlist[x]:
-                    countlist[x].append(c)
-        n_dict = {key: value for key, value in zip(keys, countlist)}
-        return n_dict
-
+    # pylint: enable=unsupported-assignment-operation, unsubscriptable-object
 
 class ConfusionMatrix(db.Model):
-
+    """Confusion matrix."""
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     categories = db.relationship("TweetTagCategory", secondary="confusionmatrix_categories")
@@ -618,6 +581,7 @@ class ConfusionMatrix(db.Model):
     child = db.Column(db.Integer, db.ForeignKey("confusion_matrix.id"), default=None)
 
     def clone(self):
+        """Clone confusion matrix."""
         new_matrix = ConfusionMatrix()
         new_matrix.parent = self.id
         new_matrix.categories = self.categories
@@ -629,20 +593,22 @@ class ConfusionMatrix(db.Model):
         return new_matrix
 
     def updated_data(self, tweet, category):
+        """Update data."""
         # update the train_data when you change tnt set, this is mostly copied
         # from a Bayesian analysis function above
         self.train_data["counts"] = self.train_data["counts"] + 1
-        if category.name not in self.train_data.keys():
+        if category.name not in self.train_data:
             self.train_data[category.name] = {"counts": 0, "words": {}}
         self.train_data[category.name]["counts"] = (
             self.train_data[category.name].get("counts", 0)
         ) + 1
-        for w in set(tweet.words):
-            val = self.train_data[category.name]["words"].get(w, 0)
-            self.train_data[category.name]["words"][w] = val + 1
+        for word in set(tweet.words):
+            val = self.train_data[category.name]["words"].get(word, 0)
+            self.train_data[category.name]["words"][word] = val + 1
         return self.train_data
 
     def update_tnt_set(self):
+        """Update the training and test sets."""
         tweet_id_and_cat = {t.id: t.category for t in self.tweets}
         self.training_and_test_sets = utils.create_n_split_tnt_sets(
             30, self.ratio, tweet_id_and_cat
@@ -650,6 +616,7 @@ class ConfusionMatrix(db.Model):
         return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):
+        """Get predictions and words."""
         # works the same way as for bayesian analysis
         categories = self.categories
         category_names = [c.name for c in categories]
@@ -659,24 +626,24 @@ class ConfusionMatrix(db.Model):
             predictions = {c: {w: 0} for w in words for c in category_names}
             # predictions = {word : {category : 0 for category in category_names} for word in words}
         else:
-            for w in words:  # only categorize each word once
-                preds[w] = {c: 0 for c in category_names}
+            for word in words:  # only categorize each word once
+                preds[word] = {c: 0 for c in category_names}
                 for cat in category_names:
                     predictions[cat] = predictions.get(cat, {})
                     prob_ba = (
-                        self.train_data[cat]["words"].get(w, 0) / self.train_data[cat]["counts"]
+                        self.train_data[cat]["words"].get(word, 0) / self.train_data[cat]["counts"]
                     )
                     prob_a = self.train_data[cat]["counts"] / self.train_data["counts"]
                     prob_b = (
-                        sum([self.train_data[c]["words"].get(w, 0) for c in category_names])
+                        sum([self.train_data[c]["words"].get(word, 0) for c in category_names]) # pylint: disable=consider-using-generator
                         / self.train_data["counts"]
                     )
                     if prob_b == 0:
-                        preds[w][cat] = 0
-                        predictions[cat][w] = 0
+                        preds[word][cat] = 0
+                        predictions[cat][word] = 0
                     else:
-                        preds[w][cat] = round(prob_ba * prob_a / prob_b, 2)
-                        predictions[cat][w] = round(prob_ba * prob_a / prob_b, 2)
+                        preds[word][cat] = round(prob_ba * prob_a / prob_b, 2)
+                        predictions[cat][word] = round(prob_ba * prob_a / prob_b, 2)
 
         return (
             preds,
@@ -684,6 +651,7 @@ class ConfusionMatrix(db.Model):
         )
 
     def train_model(self, train_tweet_ids):
+        """Train model."""
         # reinitialize the training data
         self.train_data = {"counts": 0, "words": {}}
         # trains the model with the training data tweets
@@ -694,7 +662,8 @@ class ConfusionMatrix(db.Model):
             train_data = self.updated_data(tweet, category)
         return train_data
 
-    def make_matrix_data(self, test_tweets, cat_names):
+    def make_matrix_data(self, test_tweets, cat_names): # pylint: disable=unused-argument
+        """Make matrix data."""
         # classifies the tweets according to the calculated prediction
         # probabilities
         matrix_data = {
@@ -709,7 +678,7 @@ class ConfusionMatrix(db.Model):
                 matrix_data[a_tweet.id]["predictions"],
             ) = self.get_predictions_and_words(set(a_tweet.words))
             # if no data
-            if bool(matrix_data[a_tweet.id]["predictions"]) == False:
+            if bool(matrix_data[a_tweet.id]["predictions"]) is False:
                 matrix_data[a_tweet.id]["pred_cat"] = "none"
             # if all prob == 0
             elif sum(matrix_data.get(a_tweet.id)["predictions"].values()) == 0:
@@ -734,44 +703,45 @@ class ConfusionMatrix(db.Model):
             matrix_data[a_tweet.id]["real_cat"] = a_tweet.handle
 
         matrix_data = sorted(
-            [t for t in matrix_data.items()], key=lambda x: x[1]["probability"], reverse=True
+            list(matrix_data.items()), key=lambda x: x[1]["probability"], reverse=True
         )  # add matrix classes/quadrants
-        for t in matrix_data:  # this is just for indexing tweets
-            for c in self.categories:
+        for tweet in matrix_data:  # this is just for indexing tweets
+            for cat in self.categories:
                 # if correct prediction
-                if t[1]["pred_cat"] == t[1]["real_cat"] and t[1]["pred_cat"] == c.name:
-                    t[1]["class"] = "Pred_" + str(c.name) + "_Real_" + t[1]["real_cat"]
+                if tweet[1]["pred_cat"] == tweet[1]["real_cat"] and tweet[1]["pred_cat"] == cat.name: # pylint: disable=line-too-long
+                    tweet[1]["class"] = "Pred_" + str(cat.name) + "_Real_" + tweet[1]["real_cat"]
                 # if uncorrect prediction
-                elif t[1]["pred_cat"] != t[1]["real_cat"] and t[1]["pred_cat"] == c.name:
+                elif tweet[1]["pred_cat"] != tweet[1]["real_cat"] and tweet[1]["pred_cat"] == cat.name: # pylint: disable=line-too-long
                     # predicted 'no', although was 'yes'
-                    t[1]["class"] = "Pred_" + str(c.name) + "_Real_" + t[1]["real_cat"]
+                    tweet[1]["class"] = "Pred_" + str(cat.name) + "_Real_" + tweet[1]["real_cat"]
                 # if no prediction
-                elif t[1]["pred_cat"] == "none":
-                    t[1]["class"] = "undefined"
+                elif tweet[1]["pred_cat"] == "none":
+                    tweet[1]["class"] = "undefined"
         return matrix_data
 
     def make_table_data(self, cat_names):
+        """Make table data."""
         # this function is a manual way to create confusion matrix data rows
-        currentDataClass = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()]
-        predictedClass = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()]
+        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()] # pylint: disable=unsubscriptable-object, no-member
+        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()] # pylint: disable=unsubscriptable-object, no-member
         number_list = list(range(len(cat_names)))
         # change cat names to numbers 1,2,...
         for i in number_list:
-            for o in range(len(currentDataClass)):
-                if currentDataClass[o] == cat_names[i]:
-                    currentDataClass[o] = i + 1
+            for j in range(len(current_data_class)): # pylint: disable=consider-using-enumerate
+                if current_data_class[j] == cat_names[i]:
+                    current_data_class[j] = i + 1
         for i in number_list:
-            for p in range(len(predictedClass)):
-                if predictedClass[p] == cat_names[i]:
-                    predictedClass[p] = i + 1
+            for j in range(len(predicted_class)): # pylint: disable=consider-using-enumerate
+                if predicted_class[j] == cat_names[i]:
+                    predicted_class[j] = i + 1
         # find number of classes
-        classes = int(max(currentDataClass) - min(currentDataClass)) + 1
+        classes = int(max(current_data_class) - min(current_data_class)) + 1
         counts = [
             [
-                sum(
+                sum( # pylint: disable=consider-using-generator
                     [
-                        (currentDataClass[i] == true_class) and (predictedClass[i] == pred_class)
-                        for i in range(len(currentDataClass))
+                        (current_data_class[i] == true_class) and (predicted_class[i] == pred_class)
+                        for i in range(len(current_data_class))
                     ]
                 )
                 for pred_class in range(1, classes + 1)
@@ -782,7 +752,8 @@ class ConfusionMatrix(db.Model):
         return counts
 
 
-class TweetAnnotation(db.Model):
+class TweetAnnotation(db.Model): # pylint: disable=too-few-public-methods
+    """Tweet annotation."""
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     # category = db.Column(db.Integer, db.ForeignKey('tweet_tag_category.id'))
