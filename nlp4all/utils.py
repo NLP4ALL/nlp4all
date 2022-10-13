@@ -8,7 +8,6 @@ import operator
 from nlp4all import db
 import random
 import itertools
-from nlp4all.models import BayesianAnalysis, BayesianRobot
 
 from flask_login import current_user
 
@@ -76,6 +75,14 @@ def create_css_info(classifications, text, list_of_categories):
 
 
 def clean_word(aword):
+    """remove twitter handles, hashtags, and urls
+
+    Args:
+        aword (str): the word to clean
+
+    Returns:
+        _type_: the unmodified word, or a generic word if the word was a handle, hashtag, or url
+    """
     if "@" in aword:
         return "@twitter_ID"
     if "#" in aword:
@@ -152,22 +159,6 @@ def add_category(name, description):
     category = TweetTagCategory(name=name, description=description)
     db.session.add(category)
     db.session.commit()
-
-
-def get_user_project_analyses(a_user, a_project):
-    analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
-    if current_user.admin:
-        return analyses
-    else:
-        return [a for a in analyses if a.shared or a.shared_model or a.user == current_user.id]
-    # if a_user.admin:
-    #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
-    # else:
-    #         analyses = []
-    #         all_project_analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
-    # return [a for a in all_project_analyses if a.shared or a.user ==
-    # a_user.id]
-
 
 def get_user_projects(a_user):
     # people have access to projects iif they are part of the organizatioin of those

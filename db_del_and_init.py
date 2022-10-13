@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 import re
 from nlp4all import db, bcrypt
-from nlp4all.utils import add_project
+from nlp4all.utils import add_project, clean_word
 from nlp4all.models import User, Role, Organization, TweetTagCategory, Tweet
 
 db.drop_all()
@@ -62,26 +62,6 @@ user.roles = [
 ]
 db.session.add(user)
 db.session.commit()
-
-
-def clean_word(aword):  # added
-    """remove twitter handles, hashtags, and urls
-
-    Args:
-        aword (str): the word to clean
-
-    Returns:
-        _type_: the unmodified word, or a generic word if the word was a handle, hashtag, or url
-    """
-
-    if "@" in aword:
-        return "@twitter_ID"
-    if "#" in aword:
-        return "#hashtag"
-    if "http" in aword:
-        return "http://link"
-    return aword
-
 
 DATA_FILE = "tweet_data/all_parties.json"
 
