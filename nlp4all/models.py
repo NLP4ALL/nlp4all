@@ -608,7 +608,7 @@ class ConfusionMatrix(db.Model): # pylint: disable=too-many-instance-attributes
             self.train_data[category.name]["words"][word] = val + 1
         return self.train_data
 
-    def create_n_split_tnt_sets(self, n, split, dict_of_tweets_and_cats): # pylint: disable=invalid_name
+    def create_n_split_tnt_sets(self, n, split, dict_of_tweets_and_cats): # pylint: disable=invalid-name
         """Create n splits of test and train sets."""
         return_list = []
         # half = int(len(dict_of_tweets_and_cats) / 2)
