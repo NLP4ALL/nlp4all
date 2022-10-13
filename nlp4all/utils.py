@@ -1,3 +1,7 @@
+"""General utility functions."""
+
+# @TODO: refactor and fix dependencies
+
 import tweepy
 import re
 import json
@@ -6,10 +10,7 @@ from datetime import datetime
 import time
 import operator
 from nlp4all import db
-import random
-import itertools
-
-from flask_login import current_user
+from nlp4all.datasets import *
 
 
 def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
@@ -142,7 +143,7 @@ def add_tweets_from_account(twitter_handle):
             # outf.write("\n")
             outdict = {}
             indict = status
-            outdict["twitter_handle"] = handle
+            outdict["twitter_handle"] = twitter_handle
             outdict["time"] = indict["created_at"]
             outdict["id"] = indict["id"]
             outdict["id_str"] = indict["id_str"]
@@ -218,42 +219,9 @@ def add_matrix(cat_ids, ratio, userid):
     return matrix
 
 
-def create_n_train_and_test_sets(n, dict_of_tweets_and_cats):
-    # takes a list of tups each containing a tweet_id and tweet_category
-    return_list = []
-    half = int(len(dict_of_tweets_and_cats) / 2)
-    for n in range(n):
-        d1, d2 = split_dict(dict_of_tweets_and_cats)
-        return_list.append((d1, d2))
-    return return_list
-
-
-def split_dict(adict):
-    keys = list(adict.keys())
-    n = len(keys) // 2
-    random.shuffle(keys)
-    return ({k: adict[k] for k in keys[:n]}, {k: adict[k] for k in keys[n:]})
 
 
 # new split to training and testing - with changing the relative sizes
-
-
-def n_split_dict(adict, split):
-    keys = list(adict.keys())
-    n = int(len(keys) * split)
-    random.shuffle(keys)
-    # TODO: equally distributed categories in both sets
-    return ({k: adict[k] for k in keys[:n]}, {k: adict[k] for k in keys[n:]})
-
-
-def create_n_split_tnt_sets(n, split, dict_of_tweets_and_cats):
-    return_list = []
-    # half = int(len(dict_of_tweets_and_cats) / 2)
-    for n in range(n):
-        d1, d2 = n_split_dict(dict_of_tweets_and_cats, split)
-        return_list.append((d1, d2))
-    return return_list
-
 
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
     tf_idf = {}

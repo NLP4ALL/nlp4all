@@ -16,6 +16,7 @@ from flask_login import UserMixin
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import load_only
 from nlp4all import db, login_manager, app
+from nlp4all.datasets import n_split_dict
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -562,7 +563,7 @@ class BayesianAnalysis(db.Model):
         )
     # pylint: enable=unsupported-assignment-operation, unsubscriptable-object
 
-class ConfusionMatrix(db.Model):
+class ConfusionMatrix(db.Model): # pylint: disable=too-many-instance-attributes
     """Confusion matrix."""
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -608,11 +609,12 @@ class ConfusionMatrix(db.Model):
         return self.train_data
 
     def create_n_split_tnt_sets(self, n, split, dict_of_tweets_and_cats):
+        """Create n splits of test and train sets."""
         return_list = []
         # half = int(len(dict_of_tweets_and_cats) / 2)
-        for n in range(n):
-            d1, d2 = n_split_dict(dict_of_tweets_and_cats, split)
-            return_list.append((d1, d2))
+        for _ in range(n):
+            split_l, split_r = n_split_dict(dict_of_tweets_and_cats, split)
+            return_list.append((split_l, split_r))
         return return_list
 
     def update_tnt_set(self):
