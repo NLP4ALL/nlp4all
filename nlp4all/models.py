@@ -1,10 +1,5 @@
 from datetime import datetime
-#from itsdangerous import TimedJSONWebSignatureSerializer as Serializer #TODO apparently itsdangerous is deprecated
-#an alternative to itsdangerous is flask-jwt-extended
-#the following is a workaround for the above
-#TimedJSONWebSignatureSerializer is a class that is used to generate a token
-#that expires after a certain amount of time
-#from flask_jwt_extended import create_access_token
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer #TODO apparently itsdangerous has troubles with python 3.10
 from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
@@ -275,7 +270,7 @@ class User(db.Model, UserMixin):
     roles = db.relationship('Role', secondary='user_roles')
     analyses = db.relationship('BayesianAnalysis')
 
-    """    def get_reset_token(self, expires_sec=1800):
+    def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
         return s.dumps({'user_id': self.id}).decode('utf-8')
 
@@ -287,7 +282,7 @@ class User(db.Model, UserMixin):
         except:
             return None
         return User.query.get(user_id)
-    """
+
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
 
