@@ -42,10 +42,6 @@ from nlp4all.models import (
     TweetAnnotation,
 )
 
-# from nlp4all.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, RequestResetForm, ResetPasswordForm, AddOrgForm, AddBayesianAnalysisForm, AddProjectForm, TaggingForm, AddTweetCategoryForm, AddTweetCategoryForm, AddBayesianRobotForm, TagButton, AddBayesianRobotFeatureForm, BayesianRobotForms, AnnotationForm, AnnotationForms
-# from nlp4all.models import User, Organization, Project,
-# BayesianAnalysis, TweetTagCategory, TweetTag, BayesianRobot, Tweet,
-# TweetAnnotation#, TweetAnnotationCategory
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
@@ -86,8 +82,10 @@ def data_table():
 def add_project():
     form = AddProjectForm()
     # find forst alle mulige organizations
-    form.organization.choices = [(str(o.id), o.name) for o in Organization.query.all()]
-    form.categories.choices = [(str(s.id), s.name) for s in TweetTagCategory.query.all()]
+    form.organization.choices = [(str(o.id), o.name)
+                                 for o in Organization.query.all()]
+    form.categories.choices = [(str(s.id), s.name)
+                               for s in TweetTagCategory.query.all()]
     if form.validate_on_submit():
         # orgs = [int(n) for n in form.organization.data]
         # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
@@ -107,10 +105,12 @@ def project():
     project = Project.query.get(project_id)
     form = AddBayesianAnalysisForm()
     analyses = (
-        BayesianAnalysis.query.filter_by(user=current_user.id).filter_by(project=project_id).all()
+        BayesianAnalysis.query.filter_by(
+            user=current_user.id).filter_by(project=project_id).all()
     )
     analyses = nlp4all.utils.get_user_project_analyses(current_user, project)
-    form.annotate.choices = [(1, "No Annotations"), (2, "Category names"), (3, "add own tags")]
+    form.annotate.choices = [(1, "No Annotations"),
+                             (2, "Category names"), (3, "add own tags")]
     if form.validate_on_submit():
         userid = current_user.id
         name = form.name.data
@@ -144,7 +144,8 @@ def project():
         # everyone tags the same tweets
         org = Organization.query.get(project.organization)
         for user in org.users:
-            robot = BayesianRobot(name=current_user.username + "s robot", analysis=analysis.id)
+            robot = BayesianRobot(
+                name=current_user.username + "s robot", analysis=analysis.id)
             db.session.add(robot)
             db.session.flush()
             db.session.commit()
@@ -300,9 +301,11 @@ def shared_analysis_view():
         # if not analysis.shared:
         #     return(redirect(url_for('home')))
         if analysis.shared:
-            tweet_info = {t: {"correct": 0, "incorrect": 0, "%": 0} for t in analysis.tweets}
+            tweet_info = {t: {"correct": 0, "incorrect": 0, "%": 0}
+                          for t in analysis.tweets}
         else:
-            tweet_info = {t.tweet: {"correct": 0, "incorrect": 0, "%": 0} for t in analysis.tags}
+            tweet_info = {t.tweet: {"correct": 0, "incorrect": 0, "%": 0}
+                          for t in analysis.tags}
         # for tag in analysis.tags:
         non_empty_tags = [t for t in analysis.tags if t.tweet is not None]
         for tag in non_empty_tags:
@@ -310,7 +313,8 @@ def shared_analysis_view():
             tweet = Tweet.query.get(tag.tweet)
             all_words.extend(tweet.words)
             tweet_info[tweet.id]["full_text"] = tweet.full_text
-            tweet_info[tweet.id]["category"] = TweetTagCategory.query.get(tweet.category).name
+            tweet_info[tweet.id]["category"] = TweetTagCategory.query.get(
+                tweet.category).name
             if tweet.category == tag.category:
                 tweet_info[tweet.id]["correct"] = tweet_info[tweet.id]["correct"] + 1
             else:
@@ -329,7 +333,8 @@ def shared_analysis_view():
                         * 100
                     }
                 )
-    tweet_info = sorted([t for t in tweet_info.items()], key=lambda x: x[1]["%"], reverse=True)
+    tweet_info = sorted([t for t in tweet_info.items()],
+                        key=lambda x: x[1]["%"], reverse=True)
     data = {}
     percent_values = [d[1]["%"] for d in tweet_info]
     percent_counts = [
@@ -339,11 +344,13 @@ def shared_analysis_view():
     for d in percent_counts:
         color = float(d["label"]) / 100 * 120
         color = int(color)
-        d.update({"color": f"hsl({color}, 50%, 70%)", "bg_color": f"hsl({color}, 50%, 70%)"})
+        d.update({"color": f"hsl({color}, 50%, 70%)",
+                 "bg_color": f"hsl({color}, 50%, 70%)"})
     chart_data = {"title": "Antal korrekte", "data_points": percent_counts}
     data["chart_data"] = chart_data
     # words = [word for x in tweet_info for word in x[1]["words"]]
-    pred_by_word, data["predictions"] = analysis.get_predictions_and_words(all_words)
+    pred_by_word, data["predictions"] = analysis.get_predictions_and_words(
+        all_words)
     # word_info = {word : {'predictions' : pred_by_word[word], 'counts' : words.count(word)} for word in set(words)}
     word_info = []
     for word in set(all_words):
@@ -424,8 +431,10 @@ def analysis():
     the_tweet = None
     uncompleted_counts = 0
     if analysis.shared:
-        completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
-        uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        completed_tweets = [
+            t.tweet for t in analysis.tags if t.user == current_user.id]
+        uncompleted_tweets = [
+            t for t in analysis.tweets if t not in completed_tweets]
         uncompleted_counts = len(uncompleted_tweets)
         if len(uncompleted_tweets) > 0:
             the_tweet_id = uncompleted_tweets[0]
@@ -443,7 +452,8 @@ def analysis():
     number_of_tagged = len(analysis.tags)
     data = {}
     data["number_of_tagged"] = number_of_tagged
-    data["words"], data["predictions"] = analysis.get_predictions_and_words(set(the_tweet.words))
+    data["words"], data["predictions"] = analysis.get_predictions_and_words(
+        set(the_tweet.words))
     data["word_tuples"] = nlp4all.utils.create_css_info(
         data["words"], the_tweet.full_text, categories
     )
@@ -537,7 +547,8 @@ def register_imc():
         fake_id = randint(0, 99999999999)
         fake_email = str(fake_id) + "@arthurhjorth.com"
         fake_password = str(fake_id)
-        hashed_password = bcrypt.generate_password_hash(fake_password).decode("utf-8")
+        hashed_password = bcrypt.generate_password_hash(
+            fake_password).decode("utf-8")
         imc_org = Organization.query.filter_by(name="ATU").all()
         project = imc_org[0].projects[0]
         the_name = form.username.data
@@ -572,9 +583,11 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
     form = RegistrationForm()
-    form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+    form.organizations.choices = [(str(o.id), o.name)
+                                  for o in Organization.query.all()]
     if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode("utf-8")
+        hashed_password = bcrypt.generate_password_hash(
+            form.password.data).decode("utf-8")
         org = Organization.query.get(int(form.organizations.data))
         user = User(
             username=form.username.data,
@@ -622,7 +635,8 @@ def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
-    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+    picture_path = os.path.join(
+        app.root_path, "static/profile_pics", picture_fn)
 
     output_size = (125, 125)
     i = Image.open(form_picture)
@@ -648,7 +662,8 @@ def account():
     elif request.method == "GET":
         form.username.data = current_user.username
         form.email.data = current_user.email
-    image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
+    image_file = url_for(
+        "static", filename="profile_pics/" + current_user.image_file)
     return render_template("account.html", title="Account", image_file=image_file, form=form)
 
 
@@ -683,7 +698,8 @@ def add_org():
 def new_post():
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user)
+        post = Post(title=form.title.data,
+                    content=form.content.data, author=current_user)
         db.session.add(post)
         db.session.commit()
         flash("Your post has been created!", "success")
@@ -740,7 +756,8 @@ def delete_post(post_id):
 
 def send_reset_email(user):
     token = user.get_reset_token()
-    msg = Message("Password Reset Request", sender="noreply@demo.com", recipients=[user.email])
+    msg = Message("Password Reset Request",
+                  sender="noreply@demo.com", recipients=[user.email])
     msg.body = f"""To reset your password, visit the following link:
 {url_for('reset_token', token=token, _external=True)}
 
@@ -772,7 +789,8 @@ def reset_token(token):
         return redirect(url_for("reset_request"))
     form = ResetPasswordForm()
     if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode("utf-8")
+        hashed_password = bcrypt.generate_password_hash(
+            form.password.data).decode("utf-8")
         user.password = hashed_password
         db.session.commit()
         flash("Your password has been updated! You are now able to log in", "success")
@@ -805,7 +823,8 @@ def matrix(matrix_id):
 
     train_tweet_ids = a_tnt_set[0].keys()
     train_set_size = len(a_tnt_set[0].keys())
-    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+    test_tweets = [Tweet.query.get(tweet_id)
+                   for tweet_id in a_tnt_set[1].keys()]
 
     # threshold and ratio accuracy
     if form.validate_on_submit():
@@ -826,7 +845,8 @@ def matrix(matrix_id):
             a_tnt_set = tnt_sets[tnt_nr]  # tnt_set id
             train_tweet_ids = a_tnt_set[0].keys()
             train_set_size = len(a_tnt_set[0].keys())
-            test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+            test_tweets = [Tweet.query.get(tweet_id)
+                           for tweet_id in a_tnt_set[1].keys()]
 
             # train on the training set:
             matrix.train_data = matrix.train_model(train_tweet_ids)
@@ -865,17 +885,21 @@ def matrix(matrix_id):
             class_list_all = []
             for c in cat_names:
                 for cat in cat_names:
-                    class_list_all.append(str("Pred_" + str(c) + "_Real_" + str(cat)))
-                    class_list_all.append(str("Pred_" + str(cat) + "_Real_" + str(c)))
+                    class_list_all.append(
+                        str("Pred_" + str(c) + "_Real_" + str(cat)))
+                    class_list_all.append(
+                        str("Pred_" + str(cat) + "_Real_" + str(c)))
             class_list_all = list(set(class_list_all))
             matrix_classes = {c: 0 for c in class_list_all}
             for i in set(class_list):
                 matrix_classes[i] = class_list.count(i)
 
             true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
-            True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
+            True_dict = dict(
+                filter(lambda item: item[0] in true_keys, matrix_classes.items()))
 
-            accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+            accuracy = round((sum(True_dict.values()) /
+                             sum(matrix_classes.values())), 3)
 
             # precision and recall
             metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
@@ -932,17 +956,21 @@ def matrix(matrix_id):
         class_list_all = []
         for c in cat_names:
             for cat in cat_names:
-                class_list_all.append(str("Pred_" + str(c) + "_Real_" + str(cat)))
-                class_list_all.append(str("Pred_" + str(cat) + "_Real_" + str(c)))
+                class_list_all.append(
+                    str("Pred_" + str(c) + "_Real_" + str(cat)))
+                class_list_all.append(
+                    str("Pred_" + str(cat) + "_Real_" + str(c)))
         matrix_classes = {c: 0 for c in class_list_all}
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
         true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
-        True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
+        True_dict = dict(
+            filter(lambda item: item[0] in true_keys, matrix_classes.items()))
 
         # accuracy = sum(correct predictions)/sum(all matrix points)
-        accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+        accuracy = round((sum(True_dict.values()) /
+                         sum(matrix_classes.values())), 3)
         # precision and recall
         metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
 
@@ -970,11 +998,13 @@ def matrix(matrix_id):
     index_list = []
     for i in range(len(counts)):
         p = cat_names[i]
-        t = [str("Pred_" + counts[i][0] + "_Real_" + p) for i in range(len(counts))]
+        t = [str("Pred_" + counts[i][0] + "_Real_" + p)
+             for i in range(len(counts))]
         index_list.append(t)
     [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
     index_list = [
-        [[counts[j][i], index_list[j][i], (j, i)] for i in range(0, len(counts[j]))]
+        [[counts[j][i], index_list[j][i], (j, i)]
+         for i in range(0, len(counts[j]))]
         for j in range(len(counts))
     ]
     index_list = nlp4all.utils.matrix_css_info(index_list)
@@ -1010,11 +1040,13 @@ def precision_recall():
     index_list = []
     for i in range(len(counts)):
         p = cat_names[i]
-        t = [str("Pred_" + counts[i][0] + "_Real_" + p) for i in range(len(counts))]
+        t = [str("Pred_" + counts[i][0] + "_Real_" + p)
+             for i in range(len(counts))]
         index_list.append(t)
     [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
     index_list = [
-        [[counts[j][i], index_list[j][i], (j, i)] for i in range(0, len(counts[j]))]
+        [[counts[j][i], index_list[j][i], (j, i)]
+         for i in range(0, len(counts[j]))]
         for j in range(len(counts))
     ]
     index_list = nlp4all.utils.matrix_css_info(index_list)
@@ -1070,7 +1102,8 @@ def matrix_tweets(matrix_id):
         }
         for t in tweets
     }
-    cm_info = sorted([t for t in cm_info.items()], key=lambda x: x[1]["probability"], reverse=True)
+    cm_info = sorted([t for t in cm_info.items()],
+                     key=lambda x: x[1]["probability"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template("matrix_tweets.html", cm_info=cm_info, matrix=matrix, title=title)
 
@@ -1082,10 +1115,12 @@ def matrix_tweets(matrix_id):
 @login_required
 def my_matrices():
     userid = current_user.id
-    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user == userid).all()
+    matrices = ConfusionMatrix.query.filter(
+        ConfusionMatrix.user == userid).all()
 
     form = CreateMatrixForm()
-    form.categories.choices = [(str(s.id), s.name) for s in TweetTagCategory.query.all()]
+    form.categories.choices = [(str(s.id), s.name)
+                               for s in TweetTagCategory.query.all()]
 
     # create a new matrix
     if form.validate_on_submit():
@@ -1093,7 +1128,8 @@ def my_matrices():
         cats = [int(n) for n in form.categories.data]
         tweets = Tweet.query.filter(Tweet.category.in_(cats)).all()
         ratio = form.ratio.data * 0.01  # convert back to decimals
-        matrix = nlp4all.utils.add_matrix(cat_ids=cats, ratio=ratio, userid=userid)
+        matrix = nlp4all.utils.add_matrix(
+            cat_ids=cats, ratio=ratio, userid=userid)
         db.session.add(matrix)
         db.session.merge(matrix)
         db.session.flush()
@@ -1103,7 +1139,8 @@ def my_matrices():
         a_tnt_set = matrix.training_and_test_sets[0]  # as a default
         train_tweet_ids = a_tnt_set[0].keys()
         train_set_size = len(a_tnt_set[0].keys())
-        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+        test_tweets = [Tweet.query.get(tweet_id)
+                       for tweet_id in a_tnt_set[1].keys()]
 
         # train on the training set:
         matrix.train_data = matrix.train_model(train_tweet_ids)
@@ -1140,18 +1177,22 @@ def my_matrices():
         class_list_all = []
         for c in cat_names:
             for cat in cat_names:
-                class_list_all.append(str("Pred_" + str(c) + "_Real_" + str(cat)))
-                class_list_all.append(str("Pred_" + str(cat) + "_Real_" + str(c)))
+                class_list_all.append(
+                    str("Pred_" + str(c) + "_Real_" + str(cat)))
+                class_list_all.append(
+                    str("Pred_" + str(cat) + "_Real_" + str(c)))
         class_list_all = list(set(class_list_all))
         matrix_classes = {c: 0 for c in class_list_all}
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
         true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
-        True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
+        True_dict = dict(
+            filter(lambda item: item[0] in true_keys, matrix_classes.items()))
 
         # accuracy = sum(correct predictions)/sum(all matrix points)
-        accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+        accuracy = round((sum(True_dict.values()) /
+                         sum(matrix_classes.values())), 3)
         # precision and recall
         metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
 
@@ -1210,7 +1251,8 @@ def included_tweets(matrix_id):
         for t in tweets
     }
 
-    cm_info = sorted([t for t in cm_info.items()], key=lambda x: x[1]["probability"], reverse=True)
+    cm_info = sorted([t for t in cm_info.items()],
+                     key=lambda x: x[1]["probability"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template("matrix_tweets.html", cm_info=cm_info, matrix=matrix, title=title)
 
@@ -1247,7 +1289,8 @@ def excluded_tweets(matrix_id):
         for t in tweets
     }
 
-    cm_info = sorted([t for t in cm_info.items()], key=lambda x: x[1]["probability"], reverse=True)
+    cm_info = sorted([t for t in cm_info.items()],
+                     key=lambda x: x[1]["probability"], reverse=True)
     cm_info = [t[1] for t in cm_info]
     return render_template("matrix_tweets.html", cm_info=cm_info, matrix=matrix, title=title)
 
@@ -1256,7 +1299,8 @@ def excluded_tweets(matrix_id):
 @login_required
 def matrix_overview():
     userid = current_user.id  # get matrices for the user
-    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user == userid).all()
+    matrices = ConfusionMatrix.query.filter(
+        ConfusionMatrix.user == userid).all()
     all_cats = TweetTagCategory.query.all()
 
     matrix_info = {
@@ -1336,7 +1380,8 @@ def aggregate_matrix():
         a_tnt_set = tnt_sets[tnt_nr]
         train_tweet_ids = a_tnt_set[0].keys()
         train_set_size = len(a_tnt_set[0].keys())
-        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+        test_tweets = [Tweet.query.get(tweet_id)
+                       for tweet_id in a_tnt_set[1].keys()]
 
         # train on the training set:
         new_mx.train_data = new_mx.train_model(train_tweet_ids)
@@ -1379,18 +1424,22 @@ def aggregate_matrix():
         class_list_all = []
         for c in cat_names:
             for cat in cat_names:
-                class_list_all.append(str("Pred_" + str(c) + "_Real_" + str(cat)))
-                class_list_all.append(str("Pred_" + str(cat) + "_Real_" + str(c)))
+                class_list_all.append(
+                    str("Pred_" + str(c) + "_Real_" + str(cat)))
+                class_list_all.append(
+                    str("Pred_" + str(cat) + "_Real_" + str(c)))
         class_list_all = list(set(class_list_all))
         matrix_classes = {c: 0 for c in class_list_all}
         for i in set(class_list):
             matrix_classes[i] = class_list.count(i)
 
         true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
-        True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
+        True_dict = dict(
+            filter(lambda item: item[0] in true_keys, matrix_classes.items()))
 
         # accuracy = sum(correct predictions)/sum(all matrix points)
-        accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+        accuracy = round((sum(True_dict.values()) /
+                         sum(matrix_classes.values())), 3)
         accuracy_list.append(accuracy)
         # precision and recall
         metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
@@ -1421,7 +1470,8 @@ def aggregate_matrix():
         currentDataClass = [
             new_mx.matrix_data[i].get("real_cat") for i in new_mx.matrix_data.keys()
         ]
-        predictedClass = [new_mx.matrix_data[i].get("pred_cat") for i in new_mx.matrix_data.keys()]
+        predictedClass = [new_mx.matrix_data[i].get(
+            "pred_cat") for i in new_mx.matrix_data.keys()]
         number_list = list(range(len(cat_names)))
 
         for i in number_list:
@@ -1438,7 +1488,8 @@ def aggregate_matrix():
             [
                 sum(
                     [
-                        (currentDataClass[i] == true_class) and (predictedClass[i] == pred_class)
+                        (currentDataClass[i] == true_class) and (
+                            predictedClass[i] == pred_class)
                         for i in range(len(currentDataClass))
                     ]
                 )
@@ -1457,13 +1508,17 @@ def aggregate_matrix():
     avg_metrix = [
         [
             metrics_list[0][0]["category"],
-            round(sum(i[0]["recall"] for i in metrics_list) / len(metrics_list), 3),
-            round(sum(i[0]["precision"] for i in metrics_list) / len(metrics_list), 3),
+            round(sum(i[0]["recall"]
+                  for i in metrics_list) / len(metrics_list), 3),
+            round(sum(i[0]["precision"]
+                  for i in metrics_list) / len(metrics_list), 3),
         ],
         [
             metrics_list[0][1]["category"],
-            round(sum(i[1]["recall"] for i in metrics_list) / len(metrics_list), 3),
-            round(sum(i[1]["precision"] for i in metrics_list) / len(metrics_list), 3),
+            round(sum(i[1]["recall"]
+                  for i in metrics_list) / len(metrics_list), 3),
+            round(sum(i[1]["precision"]
+                  for i in metrics_list) / len(metrics_list), 3),
         ],
     ]
     # quadrants
@@ -1477,19 +1532,23 @@ def aggregate_matrix():
                 avg_quadrants[key] = value
     avg_quadrants = [round(m / n, 3) for m in avg_quadrants.values()]
     # get info from each iteration to show how it varies
-    loop_table = [[i + 1, accuracy_list[i], list_included[i], list_excluded[i]] for i in range(n)]
+    loop_table = [[i + 1, accuracy_list[i], list_included[i],
+                   list_excluded[i]] for i in range(n)]
     count_sum = [
         [
-            [counts_list[j][l][i] + counts_list[j][l][i] for i in range(len(counts_list[0]))]
+            [counts_list[j][l][i] + counts_list[j][l][i]
+                for i in range(len(counts_list[0]))]
             for l in range(len(counts_list[0]))
         ]
         for j in range(len(counts_list))
     ][0]
     matrix_values = [
-        [round(count_sum[i][j] / len(counts_list), 2) for j in range(len(count_sum[i]))]
+        [round(count_sum[i][j] / len(counts_list), 2)
+         for j in range(len(count_sum[i]))]
         for i in range(len(count_sum))
     ]
-    [matrix_values[i].insert(0, cat_names[i]) for i in range(len(matrix_values))]
+    [matrix_values[i].insert(0, cat_names[i])
+     for i in range(len(matrix_values))]
     # add cell indices
     for i in range(len(matrix_values)):
         t = 0
@@ -1543,7 +1602,8 @@ def get_compare_matrix_data():
     a_tnt_set = tnt_sets[tnt_nr]
     train_tweet_ids = a_tnt_set[0].keys()
     train_set_size = len(a_tnt_set[0].keys())
-    test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+    test_tweets = [Tweet.query.get(tweet_id)
+                   for tweet_id in a_tnt_set[1].keys()]
 
     # train on the training set:
     matrix2.train_data = matrix2.train_model(train_tweet_ids)
@@ -1589,10 +1649,12 @@ def get_compare_matrix_data():
         matrix_classes[i] = class_list.count(i)
 
     true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
-    True_dict = dict(filter(lambda item: item[0] in true_keys, matrix_classes.items()))
+    True_dict = dict(
+        filter(lambda item: item[0] in true_keys, matrix_classes.items()))
 
     # accuracy = sum(correct predictions)/sum(all matrix points)
-    accuracy = round((sum(True_dict.values()) / sum(matrix_classes.values())), 3)
+    accuracy = round((sum(True_dict.values()) /
+                     sum(matrix_classes.values())), 3)
     # precision and recall
     metrics = nlp4all.utils.matrix_metrics(cat_names, matrix_classes)
 
@@ -1654,7 +1716,8 @@ def compare_matrices():
     # there you can try out the comparison templates
     userid = current_user.id
     all_cats = TweetTagCategory.query.all()
-    matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user == userid).all()
+    matrices = ConfusionMatrix.query.filter(
+        ConfusionMatrix.user == userid).all()
     cat_names = [c.name for c in all_cats]
 
     return render_template(
@@ -1738,21 +1801,24 @@ def annotation_summary(analysis_id):
     tag_table = {t: {"tweet": t} for t in tagged_tweets}
     for t in tagged_tweets:
         t_anns = (
-            TweetAnnotation.query.filter(TweetAnnotation.annotation_tag == a_tag.lower())
+            TweetAnnotation.query.filter(
+                TweetAnnotation.annotation_tag == a_tag.lower())
             .filter(TweetAnnotation.tweet == t)
             .all()
         )
         users = len(set([i.user for i in t_anns]))
         tag_table[t]["tag_count"] = len(t_anns)
         tag_table[t]["users"] = users
-    tag_table = sorted([t for t in tag_table.items()], key=lambda x: x[1]["tweet"], reverse=True)
+    tag_table = sorted([t for t in tag_table.items()],
+                       key=lambda x: x[1]["tweet"], reverse=True)
     tag_table = [t[1] for t in tag_table]
 
     # do the same for all tags:
     tagdict = {t: {"tag": t} for t in all_tags}
 
     for tag in all_tags:
-        tag_anns = TweetAnnotation.query.filter(TweetAnnotation.annotation_tag == tag.lower()).all()
+        tag_anns = TweetAnnotation.query.filter(
+            TweetAnnotation.annotation_tag == tag.lower()).all()
         tagdict[tag]["tag_count"] = len(tag_anns)
         tagdict[tag]["users"] = len(set([an.user for an in tag_anns]))
         tagged_tweets = list(set([t.tweet for t in tag_anns]))
@@ -1774,7 +1840,8 @@ def annotation_summary(analysis_id):
     tweets = tags[a_tag]["tweets"]
 
     # all annotations in the analysis, third tab
-    all_tag_anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == analysis_id).all()
+    all_tag_anns = TweetAnnotation.query.filter(
+        TweetAnnotation.analysis == analysis_id).all()
     a_list = set([a.tweet for a in all_tag_anns])
     # list(set([t.tweet for t in all_tag_anns]))
     all_tagged_tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
@@ -1809,7 +1876,8 @@ def annotations():
     project = Project.query.get(analysis.project)
     anns = []
     if shared:
-        anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == analysis_id).all()
+        anns = TweetAnnotation.query.filter(
+            TweetAnnotation.analysis == analysis_id).all()
     else:
         anns = TweetAnnotation.query.filter(
             TweetAnnotation.analysis == analysis_id, TweetAnnotation.user == current_user.id
@@ -1817,7 +1885,8 @@ def annotations():
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
 
-    ann_info = {a.id: {"annotation": a.text, "tag": a.annotation_tag, "user": a.user} for a in anns}
+    ann_info = {a.id: {"annotation": a.text,
+                       "tag": a.annotation_tag, "user": a.user} for a in anns}
     print(ann_info)
 
     # ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
@@ -1833,8 +1902,10 @@ def annotations():
         if tag not in ann_tags:
             ann_tags.append(tag)
     for a_tweet in tweets:
-        mytagcounts = nlp4all.utils.get_tags(analysis, set(a_tweet.words), a_tweet)
-        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet == a_tweet.id).all()
+        mytagcounts = nlp4all.utils.get_tags(
+            analysis, set(a_tweet.words), a_tweet)
+        myanns = TweetAnnotation.query.filter(
+            TweetAnnotation.tweet == a_tweet.id).all()
         my_tuples = nlp4all.utils.ann_create_css_info(
             mytagcounts, a_tweet.full_text, ann_tags, myanns
         )
@@ -1888,7 +1959,8 @@ def tweet_annotations():
     a_list = set([a.tweet for a in anns])
     tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()
 
-    ann_info = {a.id: {"annotation": a.text, "tag": a.annotation_tag} for a in anns}
+    ann_info = {a.id: {"annotation": a.text, "tag": a.annotation_tag}
+                for a in anns}
     # ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
 
     ann_dict = analysis.annotation_counts(tweets, "all")
@@ -1903,7 +1975,8 @@ def tweet_annotations():
     mytagcounts = nlp4all.utils.get_tags(analysis, set(a_tweet.words), a_tweet)
     # TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
     myanns = anns
-    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text, ann_tags, myanns)
+    my_tuples = nlp4all.utils.ann_create_css_info(
+        mytagcounts, a_tweet.full_text, ann_tags, myanns)
     # word_tuples.append(my_tuples)
     tweet_ids.append(a_tweet.id)
 
@@ -2009,7 +2082,8 @@ def draggable():
     analysis = BayesianAnalysis.query.get(int(args["analysis_id"]))
     project = Project.query.get(analysis.project)
     cat = str(args["category"])
-    category = TweetTagCategory.query.filter(TweetTagCategory.name == cat).first()
+    category = TweetTagCategory.query.filter(
+        TweetTagCategory.name == cat).first()
 
     print("hep1")
 
@@ -2038,8 +2112,10 @@ def draggable():
     the_tweet = None
     print(the_tweet)
     if analysis.shared:
-        completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
-        uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        completed_tweets = [
+            t.tweet for t in analysis.tags if t.user == current_user.id]
+        uncompleted_tweets = [
+            t for t in analysis.tweets if t not in completed_tweets]
         print(the_tweet.full_text)
         if len(uncompleted_tweets) > 0:
             the_tweet_id = uncompleted_tweets[0]
@@ -2061,7 +2137,8 @@ def draggable():
     number_of_tagged = len(analysis.tags)
     data = {}
     data["number_of_tagged"] = number_of_tagged
-    data["words"], data["predictions"] = analysis.get_predictions_and_words(set(the_tweet.words))
+    data["words"], data["predictions"] = analysis.get_predictions_and_words(
+        set(the_tweet.words))
     data["word_tuples"] = nlp4all.utils.create_css_info(
         data["words"], the_tweet.full_text, categories
     )
@@ -2098,7 +2175,8 @@ def get_bar_chart_data():
     number_of_tagged = len(analysis.tags)
     data = {}
     data["number_of_tagged"] = number_of_tagged
-    data["words"], data["predictions"] = analysis.get_predictions_and_words(set(this_tweet.words))
+    data["words"], data["predictions"] = analysis.get_predictions_and_words(
+        set(this_tweet.words))
     data["word_tuples"] = nlp4all.utils.create_css_info(
         data["words"], this_tweet.full_text, categories
     )
@@ -2127,8 +2205,10 @@ def get_first_tweet():
     # tweets = project.tweets
     the_tweet = None
     if analysis.shared:
-        completed_tweets = [t.tweet for t in analysis.tags if t.user == current_user.id]
-        uncompleted_tweets = [t for t in analysis.tweets if t not in completed_tweets]
+        completed_tweets = [
+            t.tweet for t in analysis.tags if t.user == current_user.id]
+        uncompleted_tweets = [
+            t for t in analysis.tweets if t not in completed_tweets]
         if len(uncompleted_tweets) > 0:
             the_tweet_id = uncompleted_tweets[0]
             the_tweet = Tweet.query.get(the_tweet_id)
@@ -2144,7 +2224,8 @@ def get_first_tweet():
     number_of_tagged = len(analysis.tags)
     data = {}
     data["number_of_tagged"] = number_of_tagged
-    data["words"], data["predictions"] = analysis.get_predictions_and_words(set(the_tweet.words))
+    data["words"], data["predictions"] = analysis.get_predictions_and_words(
+        set(the_tweet.words))
     data["word_tuples"] = nlp4all.utils.create_css_info(
         data["words"], the_tweet.full_text, categories
     )
@@ -2155,7 +2236,8 @@ def get_first_tweet():
     # data['robots'] = sorted(robots, key= lambda r: r.name)
     # data['analysis_data'] = analysis.data
     ann_tags = list(analysis.annotation_tags.keys())
-    mytagcounts = nlp4all.utils.get_tags(analysis, set(the_tweet.words), the_tweet)
+    mytagcounts = nlp4all.utils.get_tags(
+        analysis, set(the_tweet.words), the_tweet)
     myanns = TweetAnnotation.query.filter(
         TweetAnnotation.tweet == the_tweet.id, TweetAnnotation.user == current_user.id
     ).all()
@@ -2212,11 +2294,13 @@ def show_highlights():
     t_id = int(args["tweet_id"])
     analysis_id = int(args["analysis_id"])
     analysis = BayesianAnalysis.query.get(analysis_id)
-    anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == analysis_id).all()
+    anns = TweetAnnotation.query.filter(
+        TweetAnnotation.analysis == analysis_id).all()
     a_list = set([a.tweet for a in anns])
     a_tweet = Tweet.query.get(t_id)
 
-    ann_info = {a.id: {"annotation": a.text, "tag": a.annotation_tag} for a in anns}
+    ann_info = {a.id: {"annotation": a.text, "tag": a.annotation_tag}
+                for a in anns}
     # ann_table =  {t.id : {'annotation': t.text,'tag':t.annotation_tag , "tweet_id": t.tweet, 'tag_counts':1}for t in anns}
 
     ann_dict = analysis.annotation_counts(tweets)
@@ -2224,8 +2308,10 @@ def show_highlights():
     ann_tags = list(analysis.annotation_tags.keys())
 
     mytagcounts = nlp4all.utils.get_tags(analysis, set(a_tweet.words), a_tweet)
-    myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet == a_tweet.id).all()
-    my_tuples = nlp4all.utils.ann_create_css_info(mytagcounts, a_tweet.full_text, ann_tags, myanns)
+    myanns = TweetAnnotation.query.filter(
+        TweetAnnotation.tweet == a_tweet.id).all()
+    my_tuples = nlp4all.utils.ann_create_css_info(
+        mytagcounts, a_tweet.full_text, ann_tags, myanns)
 
     return jsonify(my_tuples)
 
@@ -2247,13 +2333,15 @@ def get_annotations():
     ).all()
     # if the key matches
 
-    ann_list = [a for a in myanns if span_id in a.coordinates["txt_coords"].keys()]
+    ann_list = [
+        a for a in myanns if span_id in a.coordinates["txt_coords"].keys()]
     if len(ann_list) > 0:
         the_word = the_tweet.full_text.split()[int(span_id)]
         tagdict = {
             a.id: {"tag": a.annotation_tag, "text": " ".join(a.words), "id": a.id} for a in ann_list
         }
-        alltag_table = sorted([t for t in tagdict.items()], key=lambda x: x[1]["tag"], reverse=True)
+        alltag_table = sorted([t for t in tagdict.items()],
+                              key=lambda x: x[1]["tag"], reverse=True)
         alltag_table = [t[1] for t in alltag_table]
     else:
         return jsonify("no annotations")
@@ -2321,13 +2409,15 @@ def delete_annotation():
         TweetAnnotation.analysis == analysis.id,
     ).all()
     # if the key matches
-    ann_list = [a for a in myanns if span_id in a.coordinates["txt_coords"].keys()]
+    ann_list = [
+        a for a in myanns if span_id in a.coordinates["txt_coords"].keys()]
     if len(ann_list) > 0:
         the_word = the_tweet.full_text.split()[int(span_id)]
         tagdict = {
             a.id: {"tag": a.annotation_tag, "text": " ".join(a.words), "id": a.id} for a in ann_list
         }
-        alltag_table = sorted([t for t in tagdict.items()], key=lambda x: x[1]["tag"], reverse=True)
+        alltag_table = sorted([t for t in tagdict.items()],
+                              key=lambda x: x[1]["tag"], reverse=True)
         alltag_table = [t[1] for t in alltag_table]
     else:
         return jsonify("no annotations")
