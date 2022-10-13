@@ -45,11 +45,9 @@ from nlp4all.models import (
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import datetime
-import json
 import ast
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all.utils import get_user_projects
-import operator
 import re
 
 # @TODO: refactor this, i moved this function here
@@ -71,6 +69,7 @@ def get_user_project_analyses(a_user, a_project):
 @app.route("/")
 @app.route("/home")
 @app.route("/home/", methods=["GET", "POST"])
+
 @login_required
 def home():
     my_projects = get_user_projects(current_user)
