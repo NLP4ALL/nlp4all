@@ -20,6 +20,8 @@ nlp4all/site.db
 flaskblog/.DS_Store
 nlp4all/.DS_Store
 nlp4all/.DS_Store
+*.DS_Store
+*.db
 *.db
 *.ipynb
 *.xlsx
