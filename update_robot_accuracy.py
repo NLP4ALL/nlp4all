@@ -1,7 +1,6 @@
 """
 Updates the robot accuracy in the database.
 """
-
 from sqlalchemy.orm.attributes import flag_modified
 from nlp4all import db
 from nlp4all.models import BayesianAnalysis, BayesianRobot

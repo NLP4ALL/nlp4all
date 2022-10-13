@@ -5,7 +5,6 @@ application. The models are defined using the SQLAlchemy ORM. The models are
 then used by the application to create the database tables and to interact with
 the database.
 """
-
 import collections
 import functools
 import operator
@@ -16,7 +15,7 @@ from flask_login import UserMixin
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import load_only
 from nlp4all import db, login_manager, app
-from nlp4all.datasets import n_split_dict
+from nlp4all.datasets import create_n_split_tnt_sets
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -608,19 +607,10 @@ class ConfusionMatrix(db.Model): # pylint: disable=too-many-instance-attributes
             self.train_data[category.name]["words"][word] = val + 1
         return self.train_data
 
-    def create_n_split_tnt_sets(self, n, split, dict_of_tweets_and_cats): # pylint: disable=invalid-name
-        """Create n splits of test and train sets."""
-        return_list = []
-        # half = int(len(dict_of_tweets_and_cats) / 2)
-        for _ in range(n):
-            split_l, split_r = n_split_dict(dict_of_tweets_and_cats, split)
-            return_list.append((split_l, split_r))
-        return return_list
-
     def update_tnt_set(self):
         """Update the training and test sets."""
         tweet_id_and_cat = {t.id: t.category for t in self.tweets}
-        self.training_and_test_sets = self.create_n_split_tnt_sets(
+        self.training_and_test_sets = create_n_split_tnt_sets(
             30, self.ratio, tweet_id_and_cat
         )
         return self.training_and_test_sets
