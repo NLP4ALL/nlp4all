@@ -12,5 +12,3 @@ for r in robots:
     db.session.merge(r)
     db.session.flush()
     db.session.commit()
-    
-    
