@@ -401,7 +401,7 @@ def register_imc():
         fake_password = str(fake_id)
         hashed_password = bcrypt.generate_password_hash(fake_password).decode('utf-8')
         imc_org = Organization.query.filter_by(name="ATU").all()
-        project = imc_org[0].projects[0]
+        project = imc_org[0].projects[0] #error when no project. out of range TODO
         the_name = form.username.data
         if any(User.query.filter_by(username=the_name)):
             the_name = the_name + str(fake_id)
