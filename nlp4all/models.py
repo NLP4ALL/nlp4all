@@ -9,9 +9,8 @@ import collections
 import functools
 import operator
 from random import sample
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import jwt
-from nlp4all import db, login_manager, app, utils
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import load_only
@@ -322,17 +321,33 @@ class User(db.Model, UserMixin):
     analyses = db.relationship("BayesianAnalysis")
 
     def get_reset_token(self, expires_sec=1800):
-        return jwt.encode(
-            {'reset_password': self.id, 'exp': time() + expires_sec},
-            app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+        """Get a reset token."""
+        reset_token = jwt.encode(
+            {
+                "user_id": self.id,
+                "exp": datetime.now(tz=timezone.utc)
+                        + timedelta(seconds=expires_sec)
+            },
+            app.config['SECRET_KEY'],
+            algorithm="HS256"
+        )
+        return reset_token
 
     @staticmethod
     def verify_reset_token(token):
         try:
-            id = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])['reset_password']
+            data = jwt.decode(
+                token,
+                app.config['SECRET_KEY'],
+                leeway=timedelta(seconds=10),
+                algorithms=["HS256"]
+                )
+
+            user_id = data['user_id']
+
         except:
-            return
-        return User.query.get(id)
+            return None
+        return User.query.get(user_id)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
