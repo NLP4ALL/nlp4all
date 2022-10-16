@@ -5,3 +5,4 @@ pylint==2.15.3
 pylint-flask==0.6
 pylint-flask-sqlalchemy==0.2.0
 pylint-plugin-utils==0.7
+pre-commit==2.20.0
