@@ -11,3 +11,6 @@ markers = [
     "functional: marks tests as functional tests (deselect with '-m \"not functional\"')",
     "data: marks tests as data-related tests (deselect with '-m \"not data\"')"
 ]
+
+[tool.pylint.main]
+init-hook = "import sys; sys.path.insert(0, '.')"

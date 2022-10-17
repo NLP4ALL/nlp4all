@@ -6,6 +6,7 @@ from nlp4all import app
 # @TODO: this needs refactoring, * import is not needed
 from nlp4all.routes import *  # pylint: disable=unused-wildcard-import, wildcard-import
 
+
 @pytest.mark.api
 def test_home():
     """Test home page."""
