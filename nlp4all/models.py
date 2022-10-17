@@ -9,8 +9,8 @@ import collections
 import functools
 import operator
 from random import sample
-from datetime import datetime
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired
+from datetime import datetime, timezone, timedelta
+import jwt
 from flask_login import UserMixin
 from sqlalchemy.types import JSON
 from sqlalchemy.orm import load_only
@@ -320,30 +320,55 @@ class User(db.Model, UserMixin):
     roles = db.relationship("Role", secondary="user_roles")
     analyses = db.relationship("BayesianAnalysis")
 
-    def get_reset_token(self, expires_sec=1800):
-        """Get a reset token."""
-        jws = Serializer(app.config["SECRET_KEY"], expires_sec)
-        return jws.dumps({"user_id": self.id}).decode("utf-8")
+    def get_reset_token(self, expires_sec: int = 1800) -> str:
+        """Get a reset token.
+        Parameters:
+            expires_sec (int): Number of seconds the token remains valid
+        returns:
+            reset_token (str): The token needed to reset the password"""
+        reset_token = jwt.encode(
+            {
+                "user_id": self.id,
+                "exp": datetime.now(tz=timezone.utc)
+                        + timedelta(seconds=expires_sec)
+            },
+            app.config['SECRET_KEY'],
+            algorithm="HS256"
+        )
+        return reset_token
 
     @staticmethod
-    def verify_reset_token(token):
-        """Verify a reset token."""
-        jws = Serializer(app.config["SECRET_KEY"])
+    def verify_reset_token(token: str) -> 'User':
+        """decodes the token
+
+        Returns:
+            None (None): if the token is invalid
+            or
+            User.query.get(user_id) ('User') : if the token is valid"""
+
         try:
-            user_id = jws.loads(token)["user_id"]
-        except SignatureExpired:
-            return None
-        except ValueError:
-            return None
+            data = jwt.decode(
+                token,
+                app.config['SECRET_KEY'],
+                leeway=timedelta(seconds=10),
+                algorithms=["HS256"]
+                )
+
+            user_id = data['user_id']
+
+        except jwt.ExpiredSignatureError:
+            return "Expired"
+        except jwt.InvalidTokenError:
+            return "Invalid"
         return User.query.get(user_id)
 
     def __repr__(self):
+        """represents the user object
+        without it print(User.query.get(user_id)) returns <user.id>"""
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
 
 
 # Define the Role data-model
-
-
 class Role(db.Model): # pylint: disable=too-few-public-methods
     """Role model."""
     __tablename__ = "role"
