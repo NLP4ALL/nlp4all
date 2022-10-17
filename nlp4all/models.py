@@ -321,8 +321,7 @@ class User(db.Model, UserMixin):
     analyses = db.relationship("BayesianAnalysis")
 
     def get_reset_token(self, expires_sec: int = 1800) -> str:
-        """
-    Get a reset token.
+        """Get a reset token.
         
         Parameters:
             expires_sec (int): Number of seconds the token remains valid
@@ -359,8 +358,10 @@ class User(db.Model, UserMixin):
 
             user_id = data['user_id']
 
-        except:
-            return None
+        except jwt.ExpiredSignatureError:
+            return "Expired"
+        except jwt.InvalidTokenError:
+            return "Invalid"
         return User.query.get(user_id)
 
     def __repr__(self):
