@@ -320,8 +320,15 @@ class User(db.Model, UserMixin):
     roles = db.relationship("Role", secondary="user_roles")
     analyses = db.relationship("BayesianAnalysis")
 
-    def get_reset_token(self, expires_sec=1800):
-        """Get a reset token."""
+    def get_reset_token(self, expires_sec: int = 1800) -> str:
+        """
+    Get a reset token.
+        
+        Parameters:
+            expires_sec (int): Number of seconds the token remains valid
+        returns:
+            reset_token (str): The token needed to reset the password
+        """
         reset_token = jwt.encode(
             {
                 "user_id": self.id,
@@ -334,7 +341,14 @@ class User(db.Model, UserMixin):
         return reset_token
 
     @staticmethod
-    def verify_reset_token(token):
+    def verify_reset_token(token: str) -> 'User':
+        """decodes the token
+
+        Returns:
+            None (None): if the token is invalid
+            or
+            User.query.get(user_id) ('User') : if the token is valid"""
+
         try:
             data = jwt.decode(
                 token,
@@ -350,12 +364,12 @@ class User(db.Model, UserMixin):
         return User.query.get(user_id)
 
     def __repr__(self):
+        """represents the user object
+        without it print(User.query.get(user_id)) returns <user.id>"""
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
 
 
 # Define the Role data-model
-
-
 class Role(db.Model): # pylint: disable=too-few-public-methods
     """Role model."""
     __tablename__ = "role"
