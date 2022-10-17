@@ -182,14 +182,6 @@ def project(): # pylint: disable=too-many-locals
         user=current_user,
     )
 
-
-@app.route("/test", methods=["GET", "POST"])
-def test():
-    """Test page"""
-    print("test called")
-    return render_template("test.html", title="Test", buttons=[])
-
-
 @app.route("/_add_numbers")
 def add_numbers():
     """Add numbers page"""
