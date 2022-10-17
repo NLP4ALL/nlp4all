@@ -579,7 +579,7 @@ def register_imc():
         hashed_password = bcrypt.generate_password_hash(
             fake_password).decode("utf-8")
         imc_org = Organization.query.filter_by(name="ATU").all()
-        a_project = imc_org[0].projects[0]
+        a_project = imc_org[0].projects[0] #error when no project. out of range TODO
         the_name = form.username.data
         if any(User.query.filter_by(username=the_name)):
             the_name = the_name + str(fake_id)
@@ -760,8 +760,8 @@ def reset_token(token):
     if current_user.is_authenticated:
         return redirect(url_for("home"))
     user = User.verify_reset_token(token)
-    if user is None:
-        flash("That is an invalid or expired token", "warning")
+    if user in ('Expired', 'Invalid'):
+        flash(f"That is an {user} token", "warning")
         return redirect(url_for("reset_request"))
     form = ResetPasswordForm()
     if form.validate_on_submit():
