@@ -322,12 +322,10 @@ class User(db.Model, UserMixin):
 
     def get_reset_token(self, expires_sec: int = 1800) -> str:
         """Get a reset token.
-        
         Parameters:
             expires_sec (int): Number of seconds the token remains valid
         returns:
-            reset_token (str): The token needed to reset the password
-        """
+            reset_token (str): The token needed to reset the password"""
         reset_token = jwt.encode(
             {
                 "user_id": self.id,
