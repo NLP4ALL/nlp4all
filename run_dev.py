@@ -6,4 +6,4 @@ from nlp4all import app
 from nlp4all.routes import *  # pylint: disable=unused-wildcard-import, wildcard-import
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)

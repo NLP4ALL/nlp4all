@@ -1,0 +1,16 @@
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "serial",
+    "api: marks tests as API tests (deselect with '-m \"not api\"')",
+    "unit: marks tests as unit tests (deselect with '-m \"not unit\"')",
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "functional: marks tests as functional tests (deselect with '-m \"not functional\"')",
+    "data: marks tests as data-related tests (deselect with '-m \"not data\"')"
+]
+
+[tool.pylint.main]
+init-hook = "import sys; sys.path.insert(0, '.')"
