@@ -5,7 +5,7 @@ from flask_login import UserMixin
 from sqlalchemy.types import JSON
 import collections
 import collections, functools, operator 
-import statistics
+import statistics #We using this? 
 from sqlalchemy.orm import load_only
 from random import sample
 
