@@ -6,10 +6,12 @@ import json
 from datetime import datetime
 import time
 import re
-from nlp4all import db, bcrypt
+from nlp4all import app, db, bcrypt
 from nlp4all.utils import add_project, clean_word
 from nlp4all.models import User, Role, Organization, TweetTagCategory, Tweet
 
+# app context part of update of flask -
+# with app.app_context():
 db.drop_all()
 
 db.create_all()
@@ -24,7 +26,12 @@ db.session.add(admin_role)
 db.session.commit()
 
 hp = bcrypt.generate_password_hash("1234")
-user = User(username="arthurhjorth", email="arthur.hjorth@stx.oxon.org", password=hp, admin=True)
+user = User(
+    username="arthurhjorth",
+    email="arthur.hjorth@stx.oxon.org",
+    password=hp,
+    admin=True,
+)
 user.roles = [
     admin_role,
 ]
@@ -68,17 +75,20 @@ DATA_FILE = "tweet_data/all_parties.json"
 existing_tag_names = []
 with open(DATA_FILE, encoding="utf8") as inf:
     DATE_REP = "%Y-%m-%dT%H:%M:%S.%fZ"
-    counter = 0 #pylint: disable=invalid-name
+    counter = 0  # pylint: disable=invalid-name
     for line in inf.readlines():  # choose how many tweets you want from each party file
         if counter % 1000 == 0:
             print(counter)
         indict = json.loads(line)
         # add cateogry if it does not already exist
         if indict["twitter_id"] not in existing_tag_names:
-            category = TweetTagCategory.query.filter_by(name=indict["twitter_id"]).first()
+            category = TweetTagCategory.query.filter_by(
+                name=indict["twitter_id"]
+            ).first()
             if not category:
                 category = TweetTagCategory(
-                    name=indict["twitter_id"], description="Tweet from " + indict["twitter_id"]
+                    name=indict["twitter_id"],
+                    description="Tweet from " + indict["twitter_id"],
                 )
                 db.session.add(category)
                 db.session.commit()
@@ -114,7 +124,7 @@ with open(DATA_FILE, encoding="utf8") as inf:
             url="https://twitter.com/" + indict["twitter_id"] + "/" + str(indict["id"]),
         )
         db.session.add(a_tweet)
-        counter = counter + 1 #pylint: disable=invalid-name
+        counter = counter + 1  # pylint: disable=invalid-name
 
 
 db.session.commit()
