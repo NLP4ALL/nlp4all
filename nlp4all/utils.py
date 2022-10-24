@@ -16,29 +16,6 @@ from nlp4all.datasets import create_n_split_tnt_sets, create_n_train_and_test_se
 from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
 
 
-
-
-
-def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
-    """generate a list of n hsl colors"""
-    no_colors = 1 if no_colors == 0 else no_colors
-    hsl_span = int(255 / no_colors)
-    return [(hsl_span * n + offset, 50, 100 * transparency) for n in range(no_colors)]
-
-
-# takes a list of TweetTagCategory objects, returns
-# a dict with the name of a category and its corresponding
-# color
-def assign_colors(list_of_categories):
-    """assign colors to categories"""
-    category_color_dict = {}
-    no_colors = len(list_of_categories)
-    hsl_span = int(255 / no_colors)
-    for i in range(no_colors):
-        category_color_dict[list_of_categories[i].name] = (i * hsl_span) + (hsl_span / 10)
-    return category_color_dict
-
-
 # because some tokens need to be split, we donøt know how many we will return per chunk, so we
 # make a generator. Additionally, this needs to return both the original version of the token and a
 # lowered and cleaned version that we can use to look up its current classification
