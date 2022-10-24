@@ -14,3 +14,8 @@ markers = [
 
 [tool.pylint.main]
 init-hook = "import sys; sys.path.insert(0, '.')"
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+  "no-member"
+]
