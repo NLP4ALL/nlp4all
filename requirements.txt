@@ -48,3 +48,4 @@ Werkzeug==1.0.1
 wincertstore==0.2
 WTForms==3.0.1
 zipp==3.9.0
+PyJWT==2.5.0
