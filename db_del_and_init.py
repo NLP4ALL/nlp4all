@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 import time
 import re
-from nlp4all import app, db, bcrypt
+from nlp4all import db, bcrypt
 from nlp4all.utils import add_project, clean_word
 from nlp4all.models import User, Role, Organization, TweetTagCategory, Tweet
 
