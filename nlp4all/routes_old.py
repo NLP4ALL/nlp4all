@@ -39,13 +39,13 @@ from nlp4all.forms import (
     ThresholdForm,
 )
 from nlp4all.models import (
+    BayesianRobot,
     User,
     Organization,
     Project,
     BayesianAnalysis,
     TweetTagCategory,
     TweetTag,
-    BayesianRobot,
     Tweet,
     ConfusionMatrix,
     TweetAnnotation,
