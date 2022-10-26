@@ -40,3 +40,7 @@ login_manager.login_message_category = "info"
 
 
 # mail = Mail(app)
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()

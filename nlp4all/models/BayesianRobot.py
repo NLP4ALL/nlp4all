@@ -3,7 +3,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Boolean
 
 from .database import Base
-from . import BayesianAnalysis
+from . import BayesianAnalysis, Project
 
 class BayesianRobot(Base):
     """BayesianRobot model."""
