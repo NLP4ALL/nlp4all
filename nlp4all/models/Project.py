@@ -9,6 +9,7 @@ from . import Tweet
 
 class Project(Base):
     """Project model."""
+    __tablename__ = "project"
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
     description = Column(String)

@@ -9,13 +9,14 @@ from . import Project
 
 class BayesianAnalysis(Base):
     """BayesianAnalysis model."""
+    __tablename__ = "bayesian_analysis"
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))
     name = Column(String(50))
     tags = relationship("TweetTag")  # this also tells us which tweets
     data = Column(JSON)
     project = Column(Integer, ForeignKey("project.id"))
-    robots = relationship("BayesianRobot", back_populates="analysis")
+    robots = relationship("BayesianRobot")
     shared = Column(Boolean, default=False)
     shared_model = Column(Boolean, default=False)
     tweets = Column(JSON, default=[])

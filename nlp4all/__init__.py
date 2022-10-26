@@ -2,18 +2,24 @@
 nlp4all module
 """
 import secrets
+import os
 from pathlib import Path
 from flask import Flask
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_cors import CORS
-from .models.database import db_session
-from .routes import routes
-
-
+from .config import Config
 # from flask_mail import Mail
 
 app = Flask(__name__, template_folder="views")
+
+os.environ.setdefault("SQLALCHEMY_DATABASE_URI", Config.SQLALCHEMY_DATABASE_URI)
+app.config.from_object(Config)
+
+from .models.database import db_session
+from .models import User
+from .routes import Router
+
 
 # Load secret key from file, generate if not present
 SECRET_FILE_PATH = Path(".flask_secret")
@@ -26,16 +32,28 @@ except FileNotFoundError:
         app.secret_key = secrets.token_hex(32)
         secret_file.write(app.secret_key)
 
-app.session = db_session
+app.session = db_session  # type: ignore
 
-app.register_blueprint(routes)
+Router.run(app)
 
 CORS(app)
 
 # db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
+# bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
-# login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Loads a user from the database.
+
+    Args:
+        user_id (int): The id of the user to load.
+
+    Returns:
+       User: User object.
+    """
+    return User.query.get(int(user_id))
+
 login_manager.login_message_category = "info"
 
 

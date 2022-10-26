@@ -5,6 +5,7 @@ from .database import Base
 
 class TweetTagCategory(Base): # pylint: disable=too-few-public-methods
     """TweetTagCategory model."""
+    __tablename__ = "tweet_tag_category"
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
     description = Column(String(100))

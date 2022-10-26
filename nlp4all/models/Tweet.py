@@ -7,6 +7,7 @@ from .database import Base
 
 class Tweet(Base): # pylint: disable=too-few-public-methods
     """Tweet model."""
+    __tablename__ = "tweet"
     id = Column(Integer, primary_key=True)
     time_posted = Column(DateTime)
     category = Column(Integer, ForeignKey("tweet_tag_category.id"))
