@@ -54,23 +54,3 @@ from nlp4all.models import (
 from nlp4all.utils import get_user_projects
 
 
-# @TODO: refactor this, i moved this function here
-# because it was in utils, which imported models which imported utils
-def get_user_project_analyses(a_user, a_project): # pylint: disable=unused-argument
-    """Get user project analyses"""
-    analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
-    if current_user.admin:
-        return analyses
-    return [a for a in analyses if a.shared or a.shared_model or a.user == a_user.id]
-    # if a_user.admin:
-    #         return(BayesianAnalysis.query.filter_by(project=a_project.id).all())
-    # else:
-    #         analyses = []
-    #         all_project_analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
-    # return [a for a in all_project_analyses if a.shared or a.user ==
-    # a_user.id]
-
-
-
-
-

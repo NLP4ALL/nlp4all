@@ -233,13 +233,6 @@ def get_role(role_name):
     return Role.query.filter_by(name=role_name).first()
 
 
-# this takes a dictionary with n parties, and the estimate for each of them.
-# the data from this function feeds into bar_chart.html (through analysis), and needs:
-# 1. A list of party names (labels)
-# 2. A list of estimates
-# 3. A list of background colors (the actual color but with an transparency of .2)
-# 4. a list of bar colors
-
 
 def create_bar_chart_data(predictions, title=""):
     """create a dictionary of data for a bar chart"""
