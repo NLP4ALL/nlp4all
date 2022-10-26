@@ -1,7 +1,8 @@
 """Project Model"""
 
+from random import sample
 from sqlalchemy import Column, Integer, String, ForeignKey, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, load_only
 
 from .database import Base
 from . import Tweet

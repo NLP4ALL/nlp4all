@@ -31,11 +31,11 @@ class BayesianAnalysis(Base):
     # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
     def updated_data(self, tweet, category):
         """Update data."""
-        self.data["counts"] = self.data["counts"] + 1
-        if category.name not in self.data.keys(): # pylint: disable=no-member
+        self.data["counts"] = self.data["counts"] + 1  # type: ignore
+        if category.name not in self.data.keys(): # type: ignore # pylint: disable=no-member
             self.data[category.name] = {"counts": 0, "words": {}}
         self.data[category.name]["counts"] = (self.data[category.name].get("counts", 0)) + 1
-        for word in set(tweet.words):
+        for word in set(tweet.words):  # type: ignore
             val = self.data[category.name]["words"].get(word, 0)
             self.data[category.name]["words"][word] = val + 1
         return self.data
@@ -44,7 +44,7 @@ class BayesianAnalysis(Base):
     # pylint: disable=unsupported-assignment-operation, unsubscriptable-object
     def updated_a_tags(self, atag, tweet):
         """Update annotation tags."""
-        if atag not in self.annotation_tags.keys(): # pylint: disable=no-member
+        if atag not in self.annotation_tags.keys(): # type: ignore # pylint: disable=no-member
             self.annotation_tags[atag] = {"counts": 0, "category": tweet.handle, "tweets": []}
         self.annotation_tags[atag]["counts"] = self.annotation_tags[atag]["counts"] + 1
         if tweet.id not in self.annotation_tags[atag]["tweets"]:
@@ -57,10 +57,10 @@ class BayesianAnalysis(Base):
         """Get predictions and words."""
         # take each word  and  calculate a probabilty for each category
         categories = Project.query.get(self.project).categories
-        category_names = [c.name for c in categories if c.name in self.data.keys()] # pylint: disable=no-member
+        category_names = [c.name for c in categories if c.name in self.data.keys()] # type: ignore # pylint: disable=no-member
         preds = {}
         predictions = {}
-        if self.data["counts"] == 0:
+        if self.data["counts"] == 0:  # type: ignore
             predictions = {c: {w: 0} for w in words for c in category_names}
             # predictions = {word : {category : 0 for category in category_names} for word in words}
         else:
@@ -69,10 +69,10 @@ class BayesianAnalysis(Base):
                 for cat in category_names:
                     predictions[cat] = predictions.get(cat, {})
                     prob_ba = self.data[cat]["words"].get(word, 0) / self.data[cat]["counts"]
-                    prob_a = self.data[cat]["counts"] / self.data["counts"]
+                    prob_a = self.data[cat]["counts"] / self.data["counts"]  # type: ignore
                     prob_b = (
                         sum([self.data[c]["words"].get(word, 0) for c in category_names]) # pylint: disable=consider-using-generator
-                        / self.data["counts"]
+                        / self.data["counts"]  # type: ignore
                     )
                     if prob_b == 0:
                         preds[word][cat] = 0

@@ -60,52 +60,6 @@ def create_css_info(classifications, text, list_of_categories):
 #     text_words = text.split()
 
 
-def clean_word(aword):
-    """remove twitter handles, hashtags, and urls
-
-    Args:
-        aword (str): the word to clean
-
-    Returns:
-        _type_: the unmodified word, or a generic word if the word was a handle, hashtag, or url
-    """
-    if "@" in aword:
-        return "@twitter_ID"
-    if "#" in aword:
-        return "#hashtag"
-    if "http" in aword:
-        return "http://link"
-    return aword
-
-
-def remove_hash_links_mentions(text):
-    """remove hashtags, links, and mentions from a tweet"""
-    text = [w for w in text.lower().split() if "#" not in w and "http" not in w and "@" not in w]
-    text = " ".join(text)
-    return text
-
-
-def clean_non_transparencynum(text):
-    """remove non-transparencynum characters from a string"""
-    text = text.replace(".", " ")
-    text = text.replace("!", " ")
-    text = text.replace("”", " ")
-    text = text.replace('"', " ")
-    text = text.replace("'", " ")
-    text = text.replace("“", " ")
-    text = text.replace("?", " ")
-    text = text.replace(":", " ")
-    text = text.replace("'", " ")
-    text = text.replace("-", " ")
-    text = text.replace("/", " ")
-    text = text.replace("-", " ")
-    text = text.replace("–", " ")
-    text = text.replace(",", " ")
-    text = text.replace("(", " ")
-    text = text.replace(")", " ")
-    return text.strip()  # changed this, might not work!
-
-
 # We can get up to 3200 tweets per account at the time we do this.
 # But we can get interrupted if twitter thinks we are being
 # too greedy. I think the best way to ensure the transaction
@@ -113,39 +67,39 @@ def clean_non_transparencynum(text):
 # db, or we don't add any at all. Right? I think so...
 
 
-def add_tweets_from_account(twitter_handle):
-    """add tweets from a twitter account to the database"""
-    # @TODO: I broke this now, but we need to either
-    # use env or a stored key from a database etc.
-    consumer_key = "NONE"
-    consumer_secret = "NONE"
-    access_token = "NONE"
-    access_token_secret = "NONE"
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
-    api = tweepy.API(auth)
-    with open(twitter_handle + "_unicode.json", "w", encoding="utf8") as outf:
-        # we probably still want to save them in case we need to load them later, but
-        # no need to write for each file. Just append each dict to a big list,
-        # then save that.
-        for status in tweepy.Cursor(
-            api.user_timeline, screen_name=twitter_handle, tweet_mode="extended"
-        ).items():
-            # outf.write(json.dumps(status._json, ensure_ascii=False))
-            # outf.write("\n")
-            outdict = {}
-            indict = status
-            outdict["twitter_handle"] = twitter_handle
-            outdict["time"] = indict["created_at"]
-            outdict["id"] = indict["id"]
-            outdict["id_str"] = indict["id_str"]
-            if "retweeted_status" in indict:
-                outdict["full_text"] = indict["retweeted_status"]["full_text"]
-            else:
-                outdict["full_text"] = indict["full_text"]
-            outf.write(json.dumps(outdict, ensure_ascii=False))
-            outf.write("\n")
-            add_tweet_from_dict(outdict)
+# def add_tweets_from_account(twitter_handle):
+#     """add tweets from a twitter account to the database"""
+#     # @TODO: I broke this now, but we need to either
+#     # use env or a stored key from a database etc.
+#     consumer_key = "NONE"
+#     consumer_secret = "NONE"
+#     access_token = "NONE"
+#     access_token_secret = "NONE"
+#     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+#     auth.set_access_token(access_token, access_token_secret)
+#     api = tweepy.API(auth)
+#     with open(twitter_handle + "_unicode.json", "w", encoding="utf8") as outf:
+#         # we probably still want to save them in case we need to load them later, but
+#         # no need to write for each file. Just append each dict to a big list,
+#         # then save that.
+#         for status in tweepy.Cursor(
+#             api.user_timeline, screen_name=twitter_handle, tweet_mode="extended"
+#         ).items():
+#             # outf.write(json.dumps(status._json, ensure_ascii=False))
+#             # outf.write("\n")
+#             outdict = {}
+#             indict = status
+#             outdict["twitter_handle"] = twitter_handle
+#             outdict["time"] = indict["created_at"]
+#             outdict["id"] = indict["id"]
+#             outdict["id_str"] = indict["id_str"]
+#             if "retweeted_status" in indict:
+#                 outdict["full_text"] = indict["retweeted_status"]["full_text"]
+#             else:
+#                 outdict["full_text"] = indict["full_text"]
+#             outf.write(json.dumps(outdict, ensure_ascii=False))
+#             outf.write("\n")
+#             add_tweet_from_dict(outdict)
 
 
 def add_category(name, description):
@@ -322,23 +276,6 @@ def create_pie_chart_data(cat_names, title=""):
     data["data_points"] = data_points
     return data
 
-
-def hsl_color_to_string(hsltup):
-    """convert an hsl color tuple to a string"""
-    return f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)"
-
-
-# takes a list of TweetTagCategory objects, returns
-# a dict with the name of a category and its corresponding
-# color
-def ann_assign_colors(list_of_tags):  # take all tags
-    """assign colors to a list of tags"""
-    category_color_dict = {}
-    no_colors = len(list_of_tags)
-    hsl_span = int(255 / no_colors)
-    for i in range(no_colors):
-        category_color_dict[list_of_tags[i].lower()] = (i * hsl_span) + (hsl_span / 10)
-    return category_color_dict
 
 
 def ann_create_css_info(classifications, text, list_of_categories, ann): #pylint: disable=too-many-locals, unused-argument

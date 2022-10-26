@@ -1,5 +1,6 @@
 """Tweet Annotation model"""
 
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON
 
 from .database import Base
