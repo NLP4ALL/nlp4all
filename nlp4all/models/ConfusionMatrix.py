@@ -12,6 +12,7 @@ from ..helpers.datasets import create_n_split_tnt_sets
 
 class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
     """Confusion matrix."""
+    __tablename__ = "confusion_matrix"
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))
     categories = relationship("TweetTagCategory", secondary="confusionmatrix_categories")

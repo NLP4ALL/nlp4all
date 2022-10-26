@@ -7,6 +7,7 @@ from .database import Base
 
 class TweetAnnotation(Base): # pylint: disable=too-few-public-methods
     """Tweet annotation."""
+    __tablename__ = "tweet_annotation"
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))
     # category = Column(Integer, ForeignKey('tweet_tag_category.id'))
