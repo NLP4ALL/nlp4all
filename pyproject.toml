@@ -19,3 +19,6 @@ init-hook = "import sys; sys.path.insert(0, '.')"
 disable = [
   "no-member"
 ]
+
+[tool.mypy]
+plugins = sqlmypy

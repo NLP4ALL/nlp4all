@@ -18,3 +18,22 @@ def assign_colors(list_of_categories):
     for i in range(no_colors):
         category_color_dict[list_of_categories[i].name] = (i * hsl_span) + (hsl_span / 10)
     return category_color_dict
+
+
+
+def hsl_color_to_string(hsltup):
+    """convert an hsl color tuple to a string"""
+    return f"hsl({hsltup[0]}, {hsltup[1]}%, {hsltup[2]}%)"
+
+
+# takes a list of TweetTagCategory objects, returns
+# a dict with the name of a category and its corresponding
+# color
+def ann_assign_colors(list_of_tags):  # take all tags
+    """assign colors to a list of tags"""
+    category_color_dict = {}
+    no_colors = len(list_of_tags)
+    hsl_span = int(255 / no_colors)
+    for i in range(no_colors):
+        category_color_dict[list_of_tags[i].lower()] = (i * hsl_span) + (hsl_span / 10)
+    return category_color_dict

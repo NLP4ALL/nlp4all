@@ -1,10 +1,11 @@
 """Confusion Matrix model"""
 
+import operator
 from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
 from sqlalchemy.orm import relationship
 
 from .database import Base
-from . import ConfusionMatrix
+from . import ConfusionMatrix, Tweet, TweetTagCategory
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -43,7 +44,7 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
         """Update data."""
         # update the train_data when you change tnt set, this is mostly copied
         # from a Bayesian analysis function above
-        self.train_data["counts"] = self.train_data["counts"] + 1
+        self.train_data["counts"] = self.train_data["counts"] + 1  # type: ignore
         if category.name not in self.train_data:
             self.train_data[category.name] = {"counts": 0, "words": {}}
         self.train_data[category.name]["counts"] = (
@@ -69,7 +70,7 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
         category_names = [c.name for c in categories]
         preds = {}
         predictions = {}
-        if self.train_data["counts"] == 0:
+        if self.train_data["counts"] == 0:  # type: ignore
             predictions = {c: {w: 0} for w in words for c in category_names}
             # predictions = {word : {category : 0 for category in category_names} for word in words}
         else:
@@ -80,10 +81,10 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
                     prob_ba = (
                         self.train_data[cat]["words"].get(word, 0) / self.train_data[cat]["counts"]
                     )
-                    prob_a = self.train_data[cat]["counts"] / self.train_data["counts"]
+                    prob_a = self.train_data[cat]["counts"] / self.train_data["counts"]  # type: ignore
                     prob_b = (
                         sum([self.train_data[c]["words"].get(word, 0) for c in category_names]) # pylint: disable=consider-using-generator
-                        / self.train_data["counts"]
+                        / self.train_data["counts"]  # type: ignore
                     )
                     if prob_b == 0:
                         preds[word][cat] = 0
@@ -101,6 +102,7 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
         """Train model."""
         # reinitialize the training data
         self.train_data = {"counts": 0, "words": {}}
+        train_data = self.train_data
         # trains the model with the training data tweets
         for tweet_id in train_tweet_ids:
             tweet = Tweet.query.get(tweet_id)
@@ -121,14 +123,14 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
 
         for a_tweet in test_tweets:
             (
-                words[a_tweet.id],
+                words[a_tweet.id],  # type: ignore
                 matrix_data[a_tweet.id]["predictions"],
             ) = self.get_predictions_and_words(set(a_tweet.words))
             # if no data
             if bool(matrix_data[a_tweet.id]["predictions"]) is False:
                 matrix_data[a_tweet.id]["pred_cat"] = "none"
             # if all prob == 0
-            elif sum(matrix_data.get(a_tweet.id)["predictions"].values()) == 0:
+            elif sum(matrix_data.get(a_tweet.id)["predictions"].values()) == 0: # type: ignore
                 matrix_data[a_tweet.id]["pred_cat"] = "none"
             # else select the biggest prob
             else:
@@ -169,8 +171,8 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
     def make_table_data(self, cat_names):
         """Make table data."""
         # this function is a manual way to create confusion matrix data rows
-        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()] # pylint: disable=unsubscriptable-object, no-member
-        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()] # pylint: disable=unsubscriptable-object, no-member
+        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()] # type: ignore # pylint: disable=unsubscriptable-object, no-member 
+        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()] # type: ignore # pylint: disable=unsubscriptable-object, no-member
         number_list = list(range(len(cat_names)))
         # change cat names to numbers 1,2,...
         for i in number_list:

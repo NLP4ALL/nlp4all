@@ -1,5 +1,8 @@
 """Bayesian Robot Model"""
 
+import collections
+import functools
+import operator
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Boolean
 
 from .database import Base
@@ -51,7 +54,7 @@ class BayesianRobot(Base):
         Returns:
             bool: True if the word is in the features of the robot, False otherwise.
         """
-        for feature in self.features.keys():
+        for feature in self.features.keys():  # type: ignore
             feature_string = feature.lower()
             if feature_string.startswith("*") and feature_string.endswith("*"):
                 if feature_string[1:-1] in word:

@@ -1,4 +1,4 @@
-"""User / Login related controllers."""
+"""User / Login related controller."""
 
 @login_manager.user_loader
 def load_user(user_id):
