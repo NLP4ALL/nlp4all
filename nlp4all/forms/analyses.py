@@ -1,35 +1,20 @@
-"""
-Flask forms.
-"""
+"""Analyses forms."""
+
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed
-from flask_login import current_user
 from wtforms import (
     StringField,
-    PasswordField,
     SubmitField,
-    BooleanField,
     IntegerField,
-    TextAreaField,
-    SelectMultipleField,
+    BooleanField,
     SelectField,
-    FormField,
+    SelectMultipleField,
     FloatField,
+    FormField,
+    TextAreaField,
     HiddenField,
+    Label
 )
-from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from wtforms.fields.core import Label
-from nlp4all.models import User, Project
-
-
-
-class IMCRegistrationForm(FlaskForm):
-    """
-    IMC Registration form.
-    """
-    username = StringField("Username", validators=[DataRequired(), Length(min=2, max=20)])
-    submit = SubmitField("Sign Up")
-
+from wtforms.validators import DataRequired
 
 
 class TaggingForm(FlaskForm):
@@ -51,40 +36,6 @@ class TagButton(FlaskForm):
         Set name.
         """
         self.submit.label = Label("", new_name)
-
-
-class AddTweetCategoryForm(FlaskForm):
-    """
-    Add tweet category form.
-    """
-    twitter_handle = StringField("Twitter handle", validators=[DataRequired()])
-    submit = SubmitField("Create")
-
-
-
-
-
-class AddProjectForm(FlaskForm):
-    """
-    Add project form.
-    """
-    title = StringField("Title", validators=[DataRequired()])
-    description = StringField("Description", validators=[DataRequired()])
-    categories = SelectMultipleField(
-        "Categories for your students to work with", validators=[DataRequired()]
-    )
-    organization = SelectField(
-        "Which student group should participate?", validators=[DataRequired()]
-    )
-    submit = SubmitField("Create Project")
-
-    def validate_title(self, title):
-        """
-        Validate title.
-        """
-        title = Project.query.filter_by(name=title.data).first()
-        if title:
-            raise ValidationError("That project name is taken. Please choose a different one.")
 
 
 class AddBayesianAnalysisForm(FlaskForm):
@@ -133,6 +84,13 @@ class ThresholdForm(FlaskForm):
     submit = SubmitField("Update")
 
 
+class AddTweetCategoryForm(FlaskForm):
+    """
+    Add tweet category form.
+    """
+    twitter_handle = StringField("Twitter handle", validators=[DataRequired()])
+    submit = SubmitField("Create")
+
 class AnalysisForm(FlaskForm):
     """
     Analysis form.
@@ -162,9 +120,6 @@ class BayesianRobotForms(FlaskForm):
     run_analysis_form = FormField(RunBayesianAnalysisRobot)
 
 
-
-
-
 class PostForm(FlaskForm):
     """
     Post form.
@@ -172,41 +127,6 @@ class PostForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
     submit = SubmitField("Post")
-
-
-class AddOrgForm(FlaskForm):
-    """
-    Add organization form.
-    """
-    name = StringField("Name", validators=[DataRequired()])
-    submit = SubmitField("Add Organization")
-
-
-class RequestResetForm(FlaskForm):
-    """
-    Request reset form.
-    """
-    email = StringField("Email", validators=[DataRequired(), Email()])
-    submit = SubmitField("Request Password Reset")
-
-    def validate_email(self, email):
-        """
-        Validate email.
-        """
-        user = User.query.filter_by(email=email.data).first()
-        if user is None:
-            raise ValidationError("There is no account with that email. You must register first.")
-
-
-class ResetPasswordForm(FlaskForm):
-    """
-    Reset password form.
-    """
-    password = PasswordField("Password", validators=[DataRequired()])
-    confirm_password = PasswordField(
-        "Confirm Password", validators=[DataRequired(), EqualTo("password")]
-    )
-    submit = SubmitField("Reset Password")
 
 
 class AnnotationForm(FlaskForm):
