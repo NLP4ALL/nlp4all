@@ -1,9 +1,10 @@
 .DS_Store
-__pycache__
+__pycache__/
 tweet_data/
-data/
+
 venv/
 .vscode/
+*.pyc
 *.db
 *.xlsx
 *.db
