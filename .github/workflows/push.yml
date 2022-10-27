@@ -20,7 +20,7 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Analysing the code with pylint
       run: |
-        pylint -j 4 --load-plugins pylint_flask_sqlalchemy,pylint_flask $(git ls-files '*.py')
+        pylint -j 4 --load-plugins pylint_sqlalchemy,pylint_flask $(git ls-files '*.py')
     - name: Run tests with pytest
       run: |
         pytest
