@@ -1,20 +1,17 @@
-"""General utility functions."""
-
-# @TODO: refactor and fix dependencies
-
+"""Analyses helper functions"""
 
 import re
-import json
 import time
 import operator
 from datetime import datetime
 
-import tweepy
-
-from nlp4all import db
-from nlp4all.datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
+from nlp4all.models.database import db_session
+from nlp4all.helpers.datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
+from nlp4all.helpers.colors import assign_colors, generate_n_hsl_colors, hsl_color_to_string, ann_assign_colors
+from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
 from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
 
+# @TODO: this file needs to be broken out, some of these functions belong on the **models** not the **helpers**
 
 # because some tokens need to be split, we donøt know how many we will return per chunk, so we
 # make a generator. Additionally, this needs to return both the original version of the token and a
@@ -105,8 +102,8 @@ def create_css_info(classifications, text, list_of_categories):
 def add_category(name, description):
     """add a category to the database"""
     category = TweetTagCategory(name=name, description=description)
-    db.session.add(category)
-    db.session.commit()
+    db_session.add(category)
+    db_session.commit()
 
 def get_user_projects(a_user):
     """get a list of projects for a user"""
@@ -138,8 +135,8 @@ def add_project(name, description, org, cat_ids):
         tf_idf=tf_idf,
         training_and_test_sets=training_and_test_sets,
     )
-    db.session.add(project)
-    db.session.commit()
+    db_session.add(project)
+    db_session.commit()
     return project
 
 
@@ -163,8 +160,8 @@ def add_matrix(cat_ids, ratio, userid):
         ratio=ratio,
         user=userid,
     )
-    db.session.add(matrix)
-    db.session.commit()
+    db_session.add(matrix)
+    db_session.commit()
     return matrix
 
 
@@ -217,15 +214,15 @@ def add_tweet_from_dict(indict, category=None):
         url="https://twitter.com/" + indict["twitter_handle"] + "/" + str(indict["id"]),
         text=" ".join([clean_word(word) for word in text.split()]),
     )
-    db.session.add(a_tweet)
-    db.session.commit()
+    db_session.add(a_tweet)
+    db_session.commit()
 
 
 def add_role(role_name):
     """add a role to the database"""
     role = Role(name=role_name)
-    db.session.add(role)
-    db.session.commit()
+    db_session.add(role)
+    db_session.commit()
 
 
 def get_role(role_name):

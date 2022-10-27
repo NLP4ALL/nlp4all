@@ -8,4 +8,4 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config(object):
   SQLALCHEMY_TRACK_MODIFICATIONS = False
-  SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
+  SQLALCHEMY_DATABASE_URI = "sqlite:///data/site.db"

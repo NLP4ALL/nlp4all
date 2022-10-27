@@ -1,6 +1,6 @@
 """Color related functions."""
 
-def generate_n_hsl_colors(no_colors, transparency=1, offset=0):
+def generate_n_hsl_colors(no_colors, transparency=1.0, offset=0):
     """generate a list of n hsl colors"""
     no_colors = 1 if no_colors == 0 else no_colors
     hsl_span = int(255 / no_colors)
