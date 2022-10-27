@@ -3,7 +3,7 @@ import unittest
 
 import pytest
 
-from nlp4all.datasets import split_dict
+from nlp4all.helpers.datasets import split_dict
 
 
 class DatasetTest(unittest.TestCase):

@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
 from sqlalchemy.orm import relationship
 
 from .database import Base
-from . import ConfusionMatrix, Tweet, TweetTagCategory
+from . import Tweet, TweetTagCategory
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -81,11 +81,13 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
                     prob_ba = (
                         self.train_data[cat]["words"].get(word, 0) / self.train_data[cat]["counts"]
                     )
-                    prob_a = self.train_data[cat]["counts"] / self.train_data["counts"]  # type: ignore
+                    prob_a = (
+                        self.train_data[cat]["counts"] /
+                        self.train_data["counts"]) # type: ignore
                     prob_b = (
-                        sum(
+                        sum( # pylint: disable=consider-using-generator
                             [self.train_data[c]["words"].get(word, 0) for c in category_names]
-                        )  # pylint: disable=consider-using-generator
+                        )
                         / self.train_data["counts"]  # type: ignore
                     )
                     if prob_b == 0:
