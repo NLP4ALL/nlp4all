@@ -75,7 +75,7 @@ class BayesianAnalysis(Base):
                     prob_ba = self.data[cat]["words"].get(word, 0) / self.data[cat]["counts"]
                     prob_a = self.data[cat]["counts"] / self.data["counts"]  # type: ignore
                     prob_b = (
-                        sum(
+                        sum( # pylint: disable=consider-using-generator
                             [self.data[c]["words"].get(word, 0) for c in category_names]
                         )  # pylint: disable=consider-using-generator
                         / self.data["counts"]  # type: ignore

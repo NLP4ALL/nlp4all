@@ -104,7 +104,7 @@ class BayesianRobot(Base):
         for (
             feature
         ) in (
-            feature_words.keys()
+            feature_words
         ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             predictions_by_feature[feature] = {}
             for word in feature_words[feature]:
@@ -159,7 +159,7 @@ class BayesianRobot(Base):
         for (
             tweet_key
         ) in (
-            tweet_predictions.keys()
+            tweet_predictions
         ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             prediction_dict = tweet_predictions[tweet_key].copy()
 
@@ -185,7 +185,7 @@ class BayesianRobot(Base):
         for (
             feature
         ) in (
-            feature_words.keys()
+            feature_words
         ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             feature_info[feature] = {}
             feature_info[feature]["words"] = {}
@@ -220,7 +220,7 @@ class BayesianRobot(Base):
         for (
             feature
         ) in (
-            feature_info.keys()
+            feature_info
         ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             tweets_targeted = tweets_targeted + feature_info[feature]["tweets_targeted"]
             feat_dict = {}

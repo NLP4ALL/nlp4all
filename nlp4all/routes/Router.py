@@ -1,14 +1,15 @@
-"""Router"""
+"""Router""" # pylint: disable=invalid-name
 
 from flask import Flask
 
 
-class Router:
+class Router: # pylint: disable=too-few-public-methods
     """Router"""
 
     @staticmethod
     def run(app: Flask):
         """Add routes to flask app."""
+        # pylint: disable=import-outside-toplevel
 
         from nlp4all.routes.site import SiteRouter
 
@@ -29,3 +30,5 @@ class Router:
         from nlp4all.routes.project import ProjectRouter
 
         app.register_blueprint(ProjectRouter, url_prefix="/project")
+
+        # pylint: enable=import-outside-toplevel

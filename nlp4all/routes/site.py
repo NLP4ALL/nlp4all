@@ -7,7 +7,7 @@ from nlp4all.controllers import SiteController
 SiteRouter = Blueprint("site_controller", __name__)
 
 # AdminController.blueprint = AdminRouter
-# SiteRouter.route('/', methods=["GET", "POST"])(SiteController.manage_categories)
+SiteRouter.route('/', methods=["GET", "POST"])(SiteController.home)
 # SiteRouter.route('/home', methods=["GET", "POST"])(SiteController.manage_categories)
 SiteRouter.route("/about", methods=["GET", "POST"])(SiteController.about)
 

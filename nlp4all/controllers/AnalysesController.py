@@ -1,4 +1,6 @@
-"""Analyses controller""" # pylint: disable=invalid-name
+"""Analyses controller""" # pylint: disable=invalid-name, too-many-lines
+
+# @TODO: this module is way too big.  Break it up into smaller modules.
 
 import ast
 import datetime
@@ -26,6 +28,7 @@ from nlp4all.models import (
 from nlp4all.helpers.analyses import (
     add_matrix,
     ann_create_css_info,
+    create_ann_css_info,
     create_bar_chart_data,
     create_css_info,
     create_pie_chart_data,
@@ -37,7 +40,7 @@ from nlp4all.helpers.analyses import (
 from nlp4all.forms.analyses import BayesianRobotForms, CreateMatrixForm, TaggingForm, ThresholdForm
 
 
-class AnalysesController:
+class AnalysesController: # pylint: disable=too-many-public-methods
     """Analyses Controller"""
 
     # @TODO break out (probably)
@@ -160,7 +163,7 @@ class AnalysesController:
         tweet_info = {}
         all_words = []
         if analysis_id == 0:
-            return
+            raise TypeError("No analysis id provided")
         bayes_analysis: BayesianAnalysis = BayesianAnalysis.query.get(analysis_id)
         # if not analysis.shared:
         #     return(redirect(url_for('home')))
@@ -372,8 +375,8 @@ class AnalysesController:
                 TweetAnnotation.analysis == analysis_id, TweetAnnotation.user == current_user.id
             ).all()
         tag_list = list(
-            set([a.annotation_tag for a in ann_tags])
-        )  # pylint: disable=consider-using-set-comprehension
+            set([a.annotation_tag for a in ann_tags]) # pylint: disable=consider-using-set-comprehension
+        )
         for i in categories:
             if i.name not in tag_list:
                 tag_list.append(i.name)
@@ -608,9 +611,9 @@ class AnalysesController:
         index_list = matrix_css_info(index_list)
 
         metrics = sorted(
-            [t for t in c_matrix.data["metrics"].items()],
+            [t for t in c_matrix.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["recall"],
-            reverse=True,  # pylint: disable=unnecessary-comprehension
+            reverse=True,
         )
         metrics = [t[1] for t in metrics]
         return render_template(
@@ -874,9 +877,9 @@ class AnalysesController:
             for m in matrices
         }
         matrix_info = sorted(
-            [t for t in matrix_info.items()],
+            [t for t in matrix_info.items()], # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["accuracy"],
-            reverse=True,  # pylint: disable=unnecessary-comprehension
+            reverse=True,
         )
         matrix_info = [m[1] for m in matrix_info]
         form = ThresholdForm()
@@ -982,8 +985,8 @@ class AnalysesController:
 
             true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
             true_dict = dict(
-                filter(lambda item: item[0] in true_keys, matrix_classes.items())
-            )  # pylint: disable=cell-var-from-loop
+                filter(lambda item: item[0] in true_keys, matrix_classes.items()) # pylint: disable=cell-var-from-loop
+            )
 
             # accuracy = sum(correct predictions)/sum(all matrix points)
             accuracy = round((sum(true_dict.values()) / sum(matrix_classes.values())), 3)
@@ -1008,9 +1011,9 @@ class AnalysesController:
             db_session.commit()
             metrix = new_mx.data["metrics"].items()
             metrix = sorted(
-                [t for t in new_mx.data["metrics"].items()],
+                [t for t in new_mx.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["recall"],
-                reverse=True,  # pylint: disable=unnecessary-comprehension
+                reverse=True,
             )
             metrix = [t[1] for t in metrix]
             metrics_list.append(metrix)
@@ -1144,9 +1147,9 @@ class AnalysesController:
         tnt_sets = matrix2.training_and_test_sets
 
         # select a new
-        tnt_list = [
+        tnt_list = [ # pylint: disable=unnecessary-comprehension
             x for x in list(range(0, len(matrix2.training_and_test_sets)))
-        ]  # pylint: disable=unnecessary-comprehension
+        ]
         tnt_nr = sample(tnt_list, 1)[0]
         a_tnt_set = tnt_sets[tnt_nr]
         train_tweet_ids = a_tnt_set[0].keys()
@@ -1287,9 +1290,9 @@ class AnalysesController:
                 t.id: {"tweet": t.full_text, "category": t.handle, "id": t.id} for t in tweets
             }
             tweet_table = sorted(
-                [t for t in tweet_table.items()],
+                [t for t in tweet_table.items()], # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["id"],
-                reverse=True,  # pylint: disable=unnecessary-comprehension
+                reverse=True,
             )
             tweet_table = [t[1] for t in tweet_table]
 
@@ -1301,9 +1304,9 @@ class AnalysesController:
                 t.id: {"tweet": t.full_text, "category": t.handle, "id": t.id} for t in tweets
             }
             tweet_table = sorted(
-                [t for t in tweet_table.items()],
+                [t for t in tweet_table.items()], # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["id"],
-                reverse=True,  # pylint: disable=unnecessary-comprehension
+                reverse=True,
             )
             tweet_table = [t[1] for t in tweet_table]
             return redirect(url_for("tweet_annotation", analysis=bayes_analysis.id, cat=cat_id))
@@ -1346,8 +1349,8 @@ class AnalysesController:
             TweetAnnotation.annotation_tag == a_tag, TweetAnnotation.analysis == analysis_id
         ).all()
         tagged_tweets = list(
-            set([t.tweet for t in tag_anns])
-        )  # pylint: disable=consider-using-set-comprehension
+            set([t.tweet for t in tag_anns]) # pylint: disable=consider-using-set-comprehension
+        )
 
         tag_table = {t: {"tweet": t} for t in tagged_tweets}
         for twit in tagged_tweets:
@@ -1357,8 +1360,8 @@ class AnalysesController:
                 .all()
             )
             users = len(
-                set([i.user for i in t_anns])
-            )  # pylint: disable=consider-using-set-comprehension
+                set([i.user for i in t_anns]) # pylint: disable=consider-using-set-comprehension
+            )
             tag_table[twit]["tag_count"] = len(t_anns)
             tag_table[twit]["users"] = users
         tag_table = sorted(
@@ -1377,16 +1380,16 @@ class AnalysesController:
             ).all()
             tagdict[tag]["tag_count"] = len(tag_anns)
             tagdict[tag]["users"] = len(
-                set([an.user for an in tag_anns])
-            )  # pylint: disable=consider-using-set-comprehension
+                set([an.user for an in tag_anns]) # pylint: disable=consider-using-set-comprehension
+            )
             tagged_tweets = list(
-                set([t.tweet for t in tag_anns])
-            )  # pylint: disable=consider-using-set-comprehension
+                set([t.tweet for t in tag_anns]) # pylint: disable=consider-using-set-comprehension
+            )
             tagdict[tag]["nr_tweets"] = len(tagged_tweets)
         alltag_table = sorted(
-            [t for t in tagdict.items()],
+            [t for t in tagdict.items()], # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["nr_tweets"],
-            reverse=True,  # pylint: disable=unnecessary-comprehension
+            reverse=True,
         )
         alltag_table = [t[1] for t in alltag_table]
 
@@ -1403,9 +1406,9 @@ class AnalysesController:
 
         # all annotations in the analysis, third tab
         all_tag_anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == analysis_id).all()
-        a_list = set(
+        a_list = set( # pylint: disable=consider-using-set-comprehension
             [a.tweet for a in all_tag_anns]
-        )  # pylint: disable=consider-using-set-comprehension
+        )
         # list(set([t.tweet for t in all_tag_anns]))
         all_tagged_tweets = Tweet.query.filter(
             Tweet.id.in_(a_list)
@@ -1813,9 +1816,9 @@ class AnalysesController:
         ).all()
         pos_list = []
         for ann in the_tags:
-            pos_list = pos_list + [
+            pos_list = pos_list + [ # pylint: disable=unnecessary-comprehension
                 k for k in ann.coordinates["txt_coords"].keys()
-            ]  # pylint: disable=unnecessary-comprehension
+            ]
         pos_dict = {}
         for pos in pos_list:
             if pos not in pos_dict:
@@ -1955,13 +1958,15 @@ class AnalysesController:
         c_matrix = ConfusionMatrix.query.get(int(m_id))
 
         counts = c_matrix.make_table_data(cat_names)
-        [counts[i].insert(0, cat_names[i]) for i in range(len(counts))]
+        for i in range(len(counts)): # pylint: disable=consider-using-enumerate
+            counts[i].insert(0, cat_names[i])
         index_list = []
         for i in range(len(counts)):
             p = cat_names[i]
             t = [str("Pred_" + counts[i][0] + "_Real_" + p) for i in range(len(counts))]
             index_list.append(t)
-        [index_list[i].insert(0, cat_names[i]) for i in range(len(index_list))]
+        for i in range(len(index_list)):  # pylint: disable=consider-using-enumerate
+            index_list[i].insert(0, cat_names[i])
         index_list = [
             [[counts[j][i], index_list[j][i], (j, i)] for i in range(0, len(counts[j]))]
             for j in range(len(counts))
@@ -1969,7 +1974,7 @@ class AnalysesController:
         index_list = matrix_css_info(index_list)
 
         metrics = sorted(
-            [t for t in c_matrix.data["metrics"].items()],
+            [t for t in c_matrix.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["recall"],
             reverse=True,
         )
