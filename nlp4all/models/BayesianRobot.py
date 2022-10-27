@@ -1,4 +1,4 @@
-"""Bayesian Robot Model"""
+"""Bayesian Robot Model""" # pylint: disable=invalid-name
 
 import collections
 import functools
@@ -8,8 +8,10 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Bool
 from .database import Base
 from . import BayesianAnalysis, Project
 
+
 class BayesianRobot(Base):
     """BayesianRobot model."""
+
     __tablename__ = "bayesian_robot"
 
     id = Column(Integer, primary_key=True)
@@ -70,7 +72,9 @@ class BayesianRobot(Base):
                     return True
         return False
 
-    def calculate_accuracy(self): # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    def calculate_accuracy(
+        self,
+    ):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         """Calculates the accuracy of the robot.
 
         Returns:
@@ -97,7 +101,11 @@ class BayesianRobot(Base):
         word_category_predictions = {}
         cat_names = {cat.id: cat.name for cat in Project.query.get(analysis_obj.project).categories}
 
-        for feature in feature_words.keys(): # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (
+            feature
+        ) in (
+            feature_words.keys()
+        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             predictions_by_feature[feature] = {}
             for word in feature_words[feature]:
                 for dataset in proj_obj.training_and_test_sets[:1]:
@@ -148,7 +156,11 @@ class BayesianRobot(Base):
                     tweet_predictions[tweet[0]] = preds
         # now finally evaluate how well we did, in general and by word
         word_accuracy = {}
-        for tweet_key in tweet_predictions.keys():  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (
+            tweet_key
+        ) in (
+            tweet_predictions.keys()
+        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             prediction_dict = tweet_predictions[tweet_key].copy()
 
             summed_prediction = dict(
@@ -170,7 +182,11 @@ class BayesianRobot(Base):
                 word_accuracy[word] = acc
         # and then build a nice dict full of info
         feature_info = {}
-        for feature in feature_words.keys(): # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (
+            feature
+        ) in (
+            feature_words.keys()
+        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             feature_info[feature] = {}
             feature_info[feature]["words"] = {}
             for word in feature_words[feature]:
@@ -201,7 +217,11 @@ class BayesianRobot(Base):
                 feature_info[feature]["tweets_targeted"] = 0
         tweets_targeted = 0
         table_data = []
-        for feature in feature_info.keys(): # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (
+            feature
+        ) in (
+            feature_info.keys()
+        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             tweets_targeted = tweets_targeted + feature_info[feature]["tweets_targeted"]
             feat_dict = {}
             feat_dict["word"] = feature
@@ -228,7 +248,9 @@ class BayesianRobot(Base):
                     "category_prediction"
                 ]
                 feat_dict["accuracy"] = feature_info[feature]["words"][word]["accuracy"]
-                feat_dict["tweets_targeted"] = feature_info[feature]["words"][word]["tweets_targeted"] # pylint: disable=line-too-long
+                feat_dict["tweets_targeted"] = feature_info[feature]["words"][word][
+                    "tweets_targeted"
+                ]  # pylint: disable=line-too-long
                 score = feat_dict["accuracy"] * feat_dict["tweets_targeted"] - (
                     (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"]
                 )

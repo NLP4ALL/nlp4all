@@ -7,7 +7,12 @@ from datetime import datetime
 
 from nlp4all.models.database import db_session
 from nlp4all.helpers.datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
-from nlp4all.helpers.colors import assign_colors, generate_n_hsl_colors, hsl_color_to_string, ann_assign_colors
+from nlp4all.helpers.colors import (
+    assign_colors,
+    generate_n_hsl_colors,
+    hsl_color_to_string,
+    ann_assign_colors,
+)
 from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
 from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
 
@@ -105,6 +110,7 @@ def add_category(name, description):
     db_session.add(category)
     db_session.commit()
 
+
 def get_user_projects(a_user):
     """get a list of projects for a user"""
     # people have access to projects iif they are part of the organizatioin of those
@@ -114,14 +120,18 @@ def get_user_projects(a_user):
         my_projects = Project.query.all()
     else:
         user_orgs = [org.id for org in a_user.organizations]
-        my_projects = Project.query.filter(Project.organization.in_(user_orgs)).all() # pylint: disable=no-member
+        my_projects = Project.query.filter(
+            Project.organization.in_(user_orgs)
+        ).all()  # pylint: disable=no-member
     return my_projects
 
 
 def add_project(name, description, org, cat_ids):
     """add a project to the database"""
     print(description)
-    cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all() # pylint: disable=no-member
+    cats_objs = TweetTagCategory.query.filter(
+        TweetTagCategory.id.in_(cat_ids)
+    ).all()  # pylint: disable=no-member
     tweet_objs = [t for cat in cats_objs for t in cat.tweets]
     tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
     tweet_id_and_cat = {t.id: t.category for t in tweet_objs}
@@ -143,7 +153,9 @@ def add_project(name, description, org, cat_ids):
 def add_matrix(cat_ids, ratio, userid):
     """add a matrix to the database"""
     ratio = round(ratio, 3)
-    cats_objs = TweetTagCategory.query.filter(TweetTagCategory.id.in_(cat_ids)).all() # pylint: disable=no-member
+    cats_objs = TweetTagCategory.query.filter(
+        TweetTagCategory.id.in_(cat_ids)
+    ).all()  # pylint: disable=no-member
     tweet_objs = [t for cat in cats_objs for t in cat.tweets]
     tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
     tweet_id_and_cat = {t.id: t.category for t in tweet_objs}
@@ -165,9 +177,8 @@ def add_matrix(cat_ids, ratio, userid):
     return matrix
 
 
-
-
 # new split to training and testing - with changing the relative sizes
+
 
 def tf_idf_from_tweets_and_cats_objs(tweets, cats):
     """create a tf_idf dict from a list of tweets and a list of categories"""
@@ -230,7 +241,6 @@ def get_role(role_name):
     return Role.query.filter_by(name=role_name).first()
 
 
-
 def create_bar_chart_data(predictions, title=""):
     """create a dictionary of data for a bar chart"""
     data = {}
@@ -267,14 +277,17 @@ def create_pie_chart_data(cat_names, title=""):
     return data
 
 
-
-def ann_create_css_info(classifications, text, list_of_categories, ann): #pylint: disable=too-many-locals, unused-argument
+def ann_create_css_info(
+    classifications, text, list_of_categories, ann
+):  # pylint: disable=too-many-locals, unused-argument
     """create a dictionary of data for the css info"""
     category_color_dict = ann_assign_colors(list_of_categories)
     word_list = [(v, k) for k, v in ann[0].coordinates["word_locs"].items()]
     # print( category_color_dict)
     tups = [(word_list[w][0], w, "none", 0) for w in range(len(word_list))]
-    for i in range(len(word_list)): #pylint: disable=consider-using-enumerate, too-many-nested-blocks
+    for i in range(
+        len(word_list)
+    ):  # pylint: disable=consider-using-enumerate, too-many-nested-blocks
         word = word_list[i]
         cleaned_word = re.sub(r"[^\w\s]", "", word[0].lower())
         if cleaned_word in classifications and sum(classifications[cleaned_word].values()) > 0:
@@ -309,7 +322,7 @@ def ann_create_css_info(classifications, text, list_of_categories, ann): #pylint
                         key_list,
                     )  # @TODO: show all tags
                     if tups[i][2] == "none":
-                        tups[i] = the_tup # type: ignore
+                        tups[i] = the_tup  # type: ignore
     return tups
 
 
@@ -338,12 +351,12 @@ def matrix_css_info(index_list):
     """create a dictionary of data for the css info for a matrix"""
     matrix_colors = [[0, 100, 50], [120, 100, 25], [0, 100, 100]]  # cell colors
     tups = []
-    x = 0 #pylint: disable=invalid-name
+    x = 0  # pylint: disable=invalid-name
     alpha = 0.9
     green_list = []  # these are correct prediction cells
     for i in range(len(index_list)):
         green_list.append((x, x + 1))
-        x += 1 #pylint: disable=invalid-name
+        x += 1  # pylint: disable=invalid-name
     for i in index_list:
         row_sum = sum(i[h][0] for h in range(1, len(i)))
         for j in i:
@@ -385,14 +398,20 @@ def matrix_metrics(cat_names, matrix_classes):
         selected_cat = i
         tp_key = str("Pred_" + selected_cat + "_Real_" + selected_cat)
         recall_keys = [str("Pred_" + selected_cat + "_Real_" + i) for i in cat_names]
-        if sum([matrix_classes[x] for x in recall_keys]) > 0: #pylint: disable=consider-using-generator
+        if (
+            sum([matrix_classes[x] for x in recall_keys]) > 0
+        ):  # pylint: disable=consider-using-generator
             metrics[i]["recall"] = round(
-                matrix_classes[tp_key] / sum([matrix_classes[x] for x in recall_keys]), 2  #pylint: disable=consider-using-generator
+                matrix_classes[tp_key] / sum([matrix_classes[x] for x in recall_keys]),
+                2,  # pylint: disable=consider-using-generator
             )
 
         precision_keys = [str("Pred_" + i + "_Real_" + selected_cat) for i in cat_names]
-        if sum([matrix_classes[x] for x in precision_keys]) > 0:  #pylint: disable=consider-using-generator
+        if (
+            sum([matrix_classes[x] for x in precision_keys]) > 0
+        ):  # pylint: disable=consider-using-generator
             metrics[i]["precision"] = round(
-                matrix_classes[tp_key] / sum([matrix_classes[x] for x in precision_keys]), 2  #pylint: disable=consider-using-generator
+                matrix_classes[tp_key] / sum([matrix_classes[x] for x in precision_keys]),
+                2,  # pylint: disable=consider-using-generator
             )
     return metrics

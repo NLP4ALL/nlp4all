@@ -1,12 +1,14 @@
-"""Tweet model"""
+"""Tweet model""" # pylint: disable=invalid-name
 
 from sqlalchemy import Column, Integer, String, ForeignKey, JSON, DateTime
 from sqlalchemy.orm import relationship
 
 from .database import Base
 
-class Tweet(Base): # pylint: disable=too-few-public-methods
+
+class Tweet(Base):  # pylint: disable=too-few-public-methods
     """Tweet model."""
+
     __tablename__ = "tweet"
     id = Column(Integer, primary_key=True)
     time_posted = Column(DateTime)

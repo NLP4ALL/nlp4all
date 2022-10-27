@@ -5,8 +5,10 @@ import pytest
 
 from nlp4all.datasets import split_dict
 
+
 class DatasetTest(unittest.TestCase):
     """All tests for nlp4all dataset functions."""
+
     @pytest.mark.data
     def test_split_dict(self):
         """Test split_dict"""

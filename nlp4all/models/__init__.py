@@ -17,5 +17,3 @@ from .TweetTagCategory import TweetTagCategory
 from .User import User
 from .UserOrgs import UserOrgs
 from .UserRoles import UserRoles
-
-

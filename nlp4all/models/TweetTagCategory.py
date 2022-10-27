@@ -1,10 +1,14 @@
+"""Tweet tag category model""" # pylint: disable=invalid-name
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
 from .database import Base
 
-class TweetTagCategory(Base): # pylint: disable=too-few-public-methods
+
+class TweetTagCategory(Base):  # pylint: disable=too-few-public-methods
     """TweetTagCategory model."""
+
     __tablename__ = "tweet_tag_category"
     id = Column(Integer, primary_key=True)
     name = Column(String(50))

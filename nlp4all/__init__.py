@@ -1,14 +1,15 @@
 """
 nlp4all module
 """
+
 import secrets
 import os
 from pathlib import Path
 from flask import Flask
-from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_cors import CORS
 from .config import Config
+
 # from flask_mail import Mail
 
 app = Flask(__name__, template_folder="views")
@@ -16,9 +17,13 @@ app = Flask(__name__, template_folder="views")
 os.environ.setdefault("SQLALCHEMY_DATABASE_URI", Config.SQLALCHEMY_DATABASE_URI)
 app.config.from_object(Config)
 
+# these are imported later so the configuration exists
+# pylint: disable=wrong-import-position
 from .models.database import db_session
 from .models import User
 from .routes import Router
+
+# pylint: enable=wrong-import-position
 
 
 # Load secret key from file, generate if not present
@@ -42,6 +47,7 @@ CORS(app)
 # bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     """Loads a user from the database.
@@ -54,11 +60,14 @@ def load_user(user_id):
     """
     return User.query.get(int(user_id))
 
+
 login_manager.login_message_category = "info"
 
 
 # mail = Mail(app)
 
+
 @app.teardown_appcontext
-def shutdown_session(exception=None):
+def shutdown_session(exception=None): # pylint: disable=unused-argument
+    """Closes the database session at the end of the request."""
     db_session.remove()

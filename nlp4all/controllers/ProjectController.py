@@ -1,4 +1,4 @@
-"""Project controller"""
+"""Project controller""" # pylint: disable=invalid-name
 
 from random import sample, shuffle
 from flask import redirect, render_template, request, url_for
@@ -10,9 +10,11 @@ from nlp4all.models import BayesianAnalysis, Organization, TweetTagCategory, Pro
 from nlp4all.forms.admin import AddProjectForm
 from nlp4all.forms.analyses import AddBayesianAnalysisForm
 
-from nlp4all.helpers.analyses import add_project # @TODO: this add_project CLEARLY belongs on the model, not in helpers
+from nlp4all.helpers.analyses import (
+    add_project,
+)  # @TODO: this add_project CLEARLY belongs on the model, not in helpers
 
-from flask_mail import Message
+# from flask_mail import Message
 
 
 class ProjectController:
@@ -23,10 +25,8 @@ class ProjectController:
         """Add project page"""
         form = AddProjectForm()
         # find forst alle mulige organizations
-        form.organization.choices = [(str(o.id), o.name)
-                                    for o in Organization.query.all()]
-        form.categories.choices = [(str(s.id), s.name)
-                                  for s in TweetTagCategory.query.all()]
+        form.organization.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+        form.categories.choices = [(str(s.id), s.name) for s in TweetTagCategory.query.all()]
         if form.validate_on_submit():
             # orgs = [int(n) for n in form.organization.data]
             # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
@@ -42,27 +42,26 @@ class ProjectController:
     # @TODO: refactor this, i moved this function here
     # because it was in utils, which imported models which imported utils
     @classmethod
-    def get_user_project_analyses(cls, a_user, a_project): # pylint: disable=unused-argument
+    def get_user_project_analyses(cls, a_user, a_project):  # pylint: disable=unused-argument
         """Get user project analyses"""
         analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
         if current_user.admin:
             return analyses
         return [a for a in analyses if a.shared or a.shared_model or a.user == a_user.id]
 
-
     @classmethod
-    def project(cls): # pylint: disable=too-many-locals
+    def project(cls):  # pylint: disable=too-many-locals
         """Project page"""
         project_id = request.args.get("project", None, type=int)
         a_project = Project.query.get(project_id)
         form = AddBayesianAnalysisForm()
         analyses = (
-            BayesianAnalysis.query.filter_by(
-                user=current_user.id).filter_by(project=project_id).all()
+            BayesianAnalysis.query.filter_by(user=current_user.id)
+            .filter_by(project=project_id)
+            .all()
         )
         analyses = cls.get_user_project_analyses(current_user, a_project)
-        form.annotate.choices = [(1, "No Annotations"),
-                                (2, "Category names"), (3, "add own tags")]
+        form.annotate.choices = [(1, "No Annotations"), (2, "Category names"), (3, "add own tags")]
         if form.validate_on_submit():
             userid = current_user.id
             name = form.name.data
@@ -99,7 +98,8 @@ class ProjectController:
             org = Organization.query.get(a_project.organization)
             for _ in org.users:
                 bayes_robot = BayesianRobot(
-                    name=current_user.username + "s robot", analysis=bayes_analysis.id)
+                    name=current_user.username + "s robot", analysis=bayes_analysis.id
+                )
                 db_session.add(bayes_robot)
                 db_session.flush()
                 db_session.commit()
