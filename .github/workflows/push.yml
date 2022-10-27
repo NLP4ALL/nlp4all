@@ -20,7 +20,7 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Analysing the code with pylint
       run: |
-        pylint -v $(git ls-files '*.py')
+        pylint $(git ls-files '*.py')
     - name: Run tests with pytest
       run: |
         pytest
