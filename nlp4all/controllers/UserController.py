@@ -1,20 +1,28 @@
-"""User / Login related controller."""
+"""User / Login related controller.""" # pylint: disable=invalid-name
 
 import os
 from random import randint
 import secrets
 from PIL import Image
-from flask_bcrypt import check_password_hash, generate_password_hash
+
 
 from flask import flash, redirect, render_template, request, url_for, Blueprint
 from flask_login import current_user, login_user, logout_user
+from flask_mail import Message
+from flask_bcrypt import check_password_hash, generate_password_hash
 
 from nlp4all.models.database import db_session
 from nlp4all.models import BayesianAnalysis, Organization, User
 
-from nlp4all.forms.user import LoginForm, UpdateAccountForm, RegistrationForm, RequestResetForm, ResetPasswordForm, IMCRegistrationForm
+from nlp4all.forms.user import (
+    LoginForm,
+    UpdateAccountForm,
+    RegistrationForm,
+    RequestResetForm,
+    ResetPasswordForm,
+    IMCRegistrationForm,
+)
 
-from flask_mail import Message
 
 
 class UserController:
@@ -38,8 +46,7 @@ class UserController:
         if request.method == "GET":
             form.username.data = current_user.username
             form.email.data = current_user.email
-        image_file = url_for(
-            "static", filename="profile_pics/" + current_user.image_file)
+        image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
         return render_template("account.html", title="Account", image_file=image_file, form=form)
 
     @classmethod
@@ -48,8 +55,7 @@ class UserController:
         random_hex = secrets.token_hex(8)
         _, f_ext = os.path.splitext(form_picture.filename)
         picture_fn = random_hex + f_ext
-        picture_path = os.path.join(
-            cls.blueprint.root_path, "static/profile_pics", picture_fn)
+        picture_path = os.path.join(cls.blueprint.root_path, "static/profile_pics", picture_fn)
 
         output_size = (125, 125)
         i = Image.open(form_picture)
@@ -57,7 +63,7 @@ class UserController:
         i.save(picture_path)
 
         return picture_fn
-    
+
     @classmethod
     def login(cls):
         """Login page"""
@@ -85,11 +91,9 @@ class UserController:
         if current_user.is_authenticated:
             return redirect(url_for("home"))
         form = RegistrationForm()
-        form.organizations.choices = [(str(o.id), o.name)
-                                    for o in Organization.query.all()]
+        form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
         if form.validate_on_submit():
-            hashed_password = generate_password_hash(
-                form.password.data).decode("utf-8")
+            hashed_password = generate_password_hash(form.password.data).decode("utf-8")
             org = Organization.query.get(int(form.organizations.data))
             user = User(
                 username=form.username.data,
@@ -122,13 +126,12 @@ class UserController:
         if current_user.is_authenticated:
             return redirect(url_for("home"))
         user = User.verify_reset_token(token, cls.blueprint.secret_key)
-        if user in ('Expired', 'Invalid'):
+        if user in ("Expired", "Invalid"):
             flash(f"That is an {user} token", "warning")
             return redirect(url_for("reset_request"))
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            hashed_password = generate_password_hash(
-                form.password.data).decode("utf-8")
+            hashed_password = generate_password_hash(form.password.data).decode("utf-8")
             user.password = hashed_password
             db_session.commit()
             flash("Your password has been updated! You are now able to log in", "success")
@@ -145,10 +148,9 @@ class UserController:
             fake_id = randint(0, 99999999999)
             fake_email = str(fake_id) + "@arthurhjorth.com"
             fake_password = str(fake_id)
-            hashed_password = generate_password_hash(
-                fake_password).decode("utf-8")
+            hashed_password = generate_password_hash(fake_password).decode("utf-8")
             imc_org = Organization.query.filter_by(name="ATU").all()
-            a_project = imc_org[0].projects[0] #error when no project. out of range TODO
+            a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
             the_name = form.username.data
             if any(User.query.filter_by(username=the_name)):
                 the_name = the_name + str(fake_id)
@@ -169,8 +171,8 @@ class UserController:
                 annotation_tags={},
                 annotate=1,
             )
-            db.session.add(bayes_analysis)
-            db.session.commit()
+            db_session.add(bayes_analysis)
+            db_session.commit()
             return redirect(url_for("home"))
         return render_template("register_imc.html", form=form)
 
@@ -178,8 +180,7 @@ class UserController:
     def send_reset_email(cls, user):
         """Send reset email"""
         token = user.get_reset_token()
-        msg = Message("Password Reset Request",
-                    sender="noreply@demo.com", recipients=[user.email])
+        msg = Message("Password Reset Request", sender="noreply@demo.com", recipients=[user.email])
         msg.body = f"""To reset your password, visit the following link:
 {url_for('reset_token', token=token, _external=True)}
 

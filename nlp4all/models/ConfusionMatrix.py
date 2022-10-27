@@ -1,4 +1,4 @@
-"""Confusion Matrix model"""
+"""Confusion Matrix model""" # pylint: disable=invalid-name
 
 import operator
 from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
@@ -10,8 +10,9 @@ from . import ConfusionMatrix, Tweet, TweetTagCategory
 from ..helpers.datasets import create_n_split_tnt_sets
 
 
-class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
+class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     """Confusion matrix."""
+
     __tablename__ = "confusion_matrix"
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))
@@ -59,9 +60,7 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
     def update_tnt_set(self):
         """Update the training and test sets."""
         tweet_id_and_cat = {t.id: t.category for t in self.tweets}
-        self.training_and_test_sets = create_n_split_tnt_sets(
-            30, self.ratio, tweet_id_and_cat
-        )
+        self.training_and_test_sets = create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)
         return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):
@@ -84,7 +83,9 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
                     )
                     prob_a = self.train_data[cat]["counts"] / self.train_data["counts"]  # type: ignore
                     prob_b = (
-                        sum([self.train_data[c]["words"].get(word, 0) for c in category_names]) # pylint: disable=consider-using-generator
+                        sum(
+                            [self.train_data[c]["words"].get(word, 0) for c in category_names]
+                        )  # pylint: disable=consider-using-generator
                         / self.train_data["counts"]  # type: ignore
                     )
                     if prob_b == 0:
@@ -112,7 +113,7 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
             train_data = self.updated_data(tweet, category)
         return train_data
 
-    def make_matrix_data(self, test_tweets, cat_names): # pylint: disable=unused-argument
+    def make_matrix_data(self, test_tweets, cat_names):  # pylint: disable=unused-argument
         """Make matrix data."""
         # classifies the tweets according to the calculated prediction
         # probabilities
@@ -131,7 +132,7 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
             if bool(matrix_data[a_tweet.id]["predictions"]) is False:
                 matrix_data[a_tweet.id]["pred_cat"] = "none"
             # if all prob == 0
-            elif sum(matrix_data.get(a_tweet.id)["predictions"].values()) == 0: # type: ignore
+            elif sum(matrix_data.get(a_tweet.id)["predictions"].values()) == 0:  # type: ignore
                 matrix_data[a_tweet.id]["pred_cat"] = "none"
             # else select the biggest prob
             else:
@@ -158,10 +159,16 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
         for tweet in matrix_data:  # this is just for indexing tweets
             for cat in self.categories:
                 # if correct prediction
-                if tweet[1]["pred_cat"] == tweet[1]["real_cat"] and tweet[1]["pred_cat"] == cat.name: # pylint: disable=line-too-long
+                if (
+                    tweet[1]["pred_cat"] == tweet[1]["real_cat"]
+                    and tweet[1]["pred_cat"] == cat.name
+                ):  # pylint: disable=line-too-long
                     tweet[1]["class"] = "Pred_" + str(cat.name) + "_Real_" + tweet[1]["real_cat"]
                 # if uncorrect prediction
-                elif tweet[1]["pred_cat"] != tweet[1]["real_cat"] and tweet[1]["pred_cat"] == cat.name: # pylint: disable=line-too-long
+                elif (
+                    tweet[1]["pred_cat"] != tweet[1]["real_cat"]
+                    and tweet[1]["pred_cat"] == cat.name
+                ):  # pylint: disable=line-too-long
                     # predicted 'no', although was 'yes'
                     tweet[1]["class"] = "Pred_" + str(cat.name) + "_Real_" + tweet[1]["real_cat"]
                 # if no prediction
@@ -172,23 +179,23 @@ class ConfusionMatrix(Base): # pylint: disable=too-many-instance-attributes
     def make_table_data(self, cat_names):
         """Make table data."""
         # this function is a manual way to create confusion matrix data rows
-        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()] # type: ignore # pylint: disable=unsubscriptable-object, no-member 
-        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()] # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()]  # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()]  # type: ignore # pylint: disable=unsubscriptable-object, no-member
         number_list = list(range(len(cat_names)))
         # change cat names to numbers 1,2,...
         for i in number_list:
-            for j in range(len(current_data_class)): # pylint: disable=consider-using-enumerate
+            for j in range(len(current_data_class)):  # pylint: disable=consider-using-enumerate
                 if current_data_class[j] == cat_names[i]:
                     current_data_class[j] = i + 1
         for i in number_list:
-            for j in range(len(predicted_class)): # pylint: disable=consider-using-enumerate
+            for j in range(len(predicted_class)):  # pylint: disable=consider-using-enumerate
                 if predicted_class[j] == cat_names[i]:
                     predicted_class[j] = i + 1
         # find number of classes
         classes = int(max(current_data_class) - min(current_data_class)) + 1
         counts = [
             [
-                sum( # pylint: disable=consider-using-generator
+                sum(  # pylint: disable=consider-using-generator
                     [
                         (current_data_class[i] == true_class) and (predicted_class[i] == pred_class)
                         for i in range(len(current_data_class))

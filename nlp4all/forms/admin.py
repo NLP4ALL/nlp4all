@@ -12,19 +12,21 @@ from wtforms import (
 from wtforms.validators import DataRequired, ValidationError
 from nlp4all.models import Project
 
+
 class AddOrgForm(FlaskForm):
     """
     Add organization form.
     """
+
     name = StringField("Name", validators=[DataRequired()])
     submit = SubmitField("Add Organization")
-
 
 
 class AddProjectForm(FlaskForm):
     """
     Add project form.
     """
+
     title = StringField("Title", validators=[DataRequired()])
     description = StringField("Description", validators=[DataRequired()])
     categories = SelectMultipleField(
@@ -42,5 +44,3 @@ class AddProjectForm(FlaskForm):
         title = Project.query.filter_by(name=title.data).first()
         if title:
             raise ValidationError("That project name is taken. Please choose a different one.")
-
-

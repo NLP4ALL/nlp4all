@@ -1,12 +1,14 @@
-"""Tweet Annotation model"""
+"""Tweet Annotation model""" # pylint: disable=invalid-name
 
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON
 
 from .database import Base
 
-class TweetAnnotation(Base): # pylint: disable=too-few-public-methods
+
+class TweetAnnotation(Base):  # pylint: disable=too-few-public-methods
     """Tweet annotation."""
+
     __tablename__ = "tweet_annotation"
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))

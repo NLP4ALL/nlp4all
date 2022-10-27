@@ -1,4 +1,4 @@
-"""User Model"""
+"""User Model""" # pylint: disable=invalid-name
 
 from datetime import datetime, timezone, timedelta
 from typing import Union
@@ -9,8 +9,10 @@ import jwt
 
 from .database import Base
 
+
 class User(Base, UserMixin):
     """User model."""
+
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     username = Column(String(20), unique=True, nullable=False)
@@ -32,16 +34,15 @@ class User(Base, UserMixin):
         reset_token = jwt.encode(
             {
                 "user_id": self.id,
-                "exp": datetime.now(tz=timezone.utc)
-                        + timedelta(seconds=expires_sec)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=expires_sec),
             },
             secret_key,
-            algorithm="HS256"
+            algorithm="HS256",
         )
         return reset_token
 
     @staticmethod
-    def verify_reset_token(token: str, secret_key: str) -> Union['User', None]:
+    def verify_reset_token(token: str, secret_key: str) -> Union["User", None]:
         """decodes the token
         Parameters:
             token (str): The token needed to reset the password
@@ -52,14 +53,9 @@ class User(Base, UserMixin):
             User.query.get(user_id) ('User') : if the token is valid"""
 
         try:
-            data = jwt.decode(
-                token,
-                secret_key,
-                leeway=timedelta(seconds=10),
-                algorithms=["HS256"]
-                )
+            data = jwt.decode(token, secret_key, leeway=timedelta(seconds=10), algorithms=["HS256"])
 
-            user_id = data['user_id']
+            user_id = data["user_id"]
 
         except jwt.ExpiredSignatureError:
             return None

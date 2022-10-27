@@ -1,5 +1,6 @@
 """Color related functions."""
 
+
 def generate_n_hsl_colors(no_colors, transparency=1.0, offset=0):
     """generate a list of n hsl colors"""
     no_colors = 1 if no_colors == 0 else no_colors
@@ -18,7 +19,6 @@ def assign_colors(list_of_categories):
     for i in range(no_colors):
         category_color_dict[list_of_categories[i].name] = (i * hsl_span) + (hsl_span / 10)
     return category_color_dict
-
 
 
 def hsl_color_to_string(hsltup):

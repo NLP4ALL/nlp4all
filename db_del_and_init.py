@@ -2,14 +2,11 @@
 Set up database and user
 """
 
-import json
-from datetime import datetime
-import time
-import re
 from flask_bcrypt import generate_password_hash
 from nlp4all import app, db_session
+
 # from nlp4all.utils import add_project, clean_word
-from nlp4all.models import User, Role, Organization, TweetTagCategory, Tweet, database
+from nlp4all.models import User, Role, Organization, database
 
 # app context part of update of flask -
 with app.app_context():
@@ -71,18 +68,3 @@ with app.app_context():
     db_session.add(user)
     db_session.commit()
     db_session.close()
-
-    # org = Organization.query.filter_by(name="IMC Seminar Group").first()
-    # biden = TweetTagCategory.query.filter_by(name="JoeBiden.json").first()
-    # bernie = TweetTagCategory.query.filter_by(name="BernieSanders.json").first()
-
-    # cats = [biden.id, bernie.id]
-
-    # project = add_project(
-    #     name="Bernie and JoeBiden",
-    #     description="Can you tell the difference between Bernie and Joe Biden, Aug 2019-March 2020?",
-    #     org=org.id,
-    #     cat_ids=cats,
-    # )
-
-    # db_session.commit()

@@ -1,3 +1,4 @@
+"""NLP helpers, a mess at the moment"""
 
 def clean_word(aword):
     """remove twitter handles, hashtags, and urls
@@ -43,4 +44,3 @@ def clean_non_transparencynum(text):
     text = text.replace("(", " ")
     text = text.replace(")", " ")
     return text.strip()  # changed this, might not work!
-
