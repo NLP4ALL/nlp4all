@@ -14,8 +14,15 @@ markers = [
 
 [tool.pylint.main]
 init-hook = "import sys; sys.path.insert(0, '.')"
+load-plugins = [
+  "pylint_flask"
+]
+jobs = 4
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
   "no-member"
 ]
+
+[tool.mypy]
+plugins = "sqlmypy"
