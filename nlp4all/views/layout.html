@@ -29,10 +29,10 @@
               <a class="nav-item nav-link" href="{{ url_for('home') }}">My Projects</a>
                 <a class="nav-item nav-link" href="{{ url_for('my_matrices') }}">My Matrices</a>
                 <a class="nav-item nav-link" href="{{ url_for('account') }}">Account</a>
-                <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
+                <a class="nav-item nav-link" href="{{ url_for('user_controller.logout') }}">Logout</a>
               {% else %}
-                <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
-                <a class="nav-item nav-link" href="{{ url_for('register') }}">Register</a>
+                <a class="nav-item nav-link" href="{{ url_for('user_controller.login') }}">Login</a>
+                <a class="nav-item nav-link" href="{{ url_for('user_controller.register') }}">Register</a>
               {% endif %}
             </div>
           </div>

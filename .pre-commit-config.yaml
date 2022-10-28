@@ -3,5 +3,5 @@ repos:
     rev: pylint-2.6.0
     hooks:
     -   id: pylint
-        args: [--load-plugins, pylint_flask_sqlalchemy]
-        additional_dependencies: [pylint-flask, pylint-flask-sqlalchemy, pytest]
+        args: [--load-plugins, pylint_flask, -j4]
+        additional_dependencies: [pylint-flask, pytest]
