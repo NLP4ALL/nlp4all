@@ -30,8 +30,8 @@
         <p>Trained on {{ matrix.data.nr_train_tweets }} tweets.</p>
         <p>Current certainty threshold: {{ matrix.threshold }}</p>
         <p>Accuracy: {{ matrix.data.accuracy }} </p>
-        <p>Tweets in matrix: <a href="{{ url_for('included_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_incl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
-        <p>Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_excl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
+        <p>Tweets in matrix: <a href="{{ url_for('analyses_controller.included_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_incl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
+        <p>Excluded tweets: <a href="{{ url_for('analyses_controller.excluded_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_excl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
         </ul>
     
 

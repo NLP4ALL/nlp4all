@@ -4,17 +4,17 @@
     <table>
         <tr>
                 <td>
-                    <a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{ analysis.id }}">Tweets</a>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.analysis') }}?analysis={{ analysis.id }}">Tweets</a>
                 </td>
                 <td>
                     <a class="nav-item nav-link">Label &amp; Word Statistics</a>
                 </td>
                 <td>
-                    <a class="nav-item nav-link" href="{{ url_for('annotations') }}?analysis_id={{ analysis.id }}">Annotations</a>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.annotations') }}?analysis_id={{ analysis.id }}">Annotations</a>
                 </td>
                 {% if not analysis.shared %}
                 <td>
-                    <a class="nav-item nav-link" href="{{ url_for('robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
                 </td>
                 {% endif %}
         </tr>

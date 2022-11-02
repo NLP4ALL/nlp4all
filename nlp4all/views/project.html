@@ -10,12 +10,12 @@
 {% for a in analyses %}
 
 <div class="content-section">
-<a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{a.id}}">{{a.name}}</a>
+<a class="nav-item nav-link" href="{{ url_for('analyses_controller.analysis') }}?analysis={{a.id}}">{{a.name}}</a>
 </div>
 {% endfor %}
 </div>
 {% for p in projects %}
-<a class="nav-item nav-link" href="{{ url_for('project') }}?project={{ p.id }}">p.name</a>
+<a class="nav-item nav-link" href="{{ url_for('project_controller.project') }}?project={{ p.id }}">p.name</a>
 {% endfor %}
 </div>
 
