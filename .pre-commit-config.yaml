@@ -1,0 +1,7 @@
+repos:
+  - repo: https://github.com/pycqa/pylint
+    rev: pylint-2.6.0
+    hooks:
+    -   id: pylint
+        args: [--load-plugins, pylint_flask, -j4]
+        additional_dependencies: [pylint-flask, pytest, flask, flask-login]
