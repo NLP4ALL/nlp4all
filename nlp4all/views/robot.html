@@ -4,12 +4,12 @@
 <table class="table"> 
     <tr>
 {%if r.parent != None %}
-<td><a href="{{ url_for('robot') }}?robot={{ r.parent}}">Last results</a></td>
+<td><a href="{{ url_for('analyses_controller.robot') }}?robot={{ r.parent}}">Last results</a></td>
 {% endif %}
-<td><a href="{{ url_for('analysis') }}?analysis={{ r.analysis}}">Tweets</a></td>
-<td><a href="{{ url_for('robot_summary') }}?analysis={{ r.analysis}}">Analyses Overview</a></td>
+<td><a href="{{ url_for('analyses_controller.analysis') }}?analysis={{ r.analysis}}">Tweets</a></td>
+<td><a href="{{ url_for('ranalyses_controller.obot_summary') }}?analysis={{ r.analysis}}">Analyses Overview</a></td>
 {%if r.child != None %}
-<td><a href="{{ url_for('robot') }}?robot={{ r.child}}">Improve your analysis >>>>> </a></td>
+<td><a href="{{ url_for('analyses_controller.robot') }}?robot={{ r.child}}">Improve your analysis >>>>> </a></td>
 {% endif %}
 </table>
 <!-- <h5>{{ r.name }} {% if r.retired %} (Old) {% endif %}</h5> -->

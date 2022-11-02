@@ -9,7 +9,7 @@
   <h1>My Projects</h1>
     <div class="content-section col-md-8">
 {% for p in projects %}
-<a class="nav-item nav-link" href="{{ url_for('project') }}?project={{ p.id }}">{{ p.name }}</a>
+<a class="nav-item nav-link" href="{{ url_for('project_controller.project') }}?project={{ p.id }}">{{ p.name }}</a>
 <p>{{ p.description }} </p>
 {% endfor %}
 </div>

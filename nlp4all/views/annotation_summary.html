@@ -2,7 +2,7 @@
 {% block content %}
 <h1>Annotation overview</h1>
 Here you can see how each tag has been used.
-<a class="nav-item nav-link" href="{{ url_for('analysis') }}?analysis={{ analysis.id }}">Back to analysis</a>
+<a class="nav-item nav-link" href="{{ url_for('analyses_controller.analysis') }}?analysis={{ analysis.id }}">Back to analysis</a>
 <div class="content-section">  
 
     <h4 id="headline">Now showing the tag: {{ tag }} </h4>
