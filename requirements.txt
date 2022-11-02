@@ -64,7 +64,7 @@ terminaltables==3.1.10
 toml==0.10.2
 tomli==2.0.1
 tomlkit==0.11.5
-tweepy==4.10.1
+tweepy==4.12.0
 typing_extensions==4.4.0
 tzdata==2022.4
 urllib3==1.26.12
