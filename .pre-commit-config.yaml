@@ -4,4 +4,4 @@ repos:
     hooks:
     -   id: pylint
         args: [--load-plugins, pylint_flask, -j4]
-        additional_dependencies: [pylint-flask, pytest]
+        additional_dependencies: [pylint-flask, pytest, flask, flask-login]
