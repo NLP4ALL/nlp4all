@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Understand your classification performance!</h2>
+    </br>
+    <p>A confusion matrix is a way of analyzing your classification performance.</p>
+    <p>Below you see a list of your matrices. How are different parties affecting the results?</p>
+    </br>
+  
+  
+  <div class="row">
+    
+    <div class="col-md-8"> 
+      <h3>My Matrices</h3>
+    <p><a href="{{ url_for('analyses_controller.matrix_overview') }}">See your matrix overview</a></p>
+  <div>
+    {% set matrices = matrices %}
+    {% include "matrix_summary.html" %}
+  </div>
+</div>
+<div class="col-md-4"> 
+ 
+    {% include "create_matrix.html" %}
+  </div>
+
+  
+</div>
+{% endblock content %}
+
+
+
+
