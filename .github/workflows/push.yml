@@ -1,4 +1,4 @@
-name: Notify and lint
+name: Lint, test and notify
 
 on: [push]
 
@@ -17,10 +17,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint
+        pip install -r requirements-dev.txt
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
+    - name: Run tests with pytest
+      run: |
+        pytest
   failure_notification:
     needs: build
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
       - uses: Sniddl/discord-commits@v1.5
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_STATUS }} # required
-          message: "❌ Build failed for **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**. Run output:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDiff: {{ github.context.payload.compare }}"
+          message: ":x: Build failed for **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**. Run output:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDiff: {{ github.context.payload.compare }}"
           embed: '{ "title": "{{ commit.title }}", "description": "{{ commit.description }}", "url": "{{ commit.url }}", "author": { "name": "{{ commit.author.name }} ({{ commit.author.username }})", "icon_url": "https://avatars.io/gravatar/{{ commit.author.email }}"} }'
     if: failure()
   success_notification:
@@ -38,6 +41,6 @@ jobs:
       - uses: Sniddl/discord-commits@v1.5
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_STATUS }} # required
-          message: "✔️ Build succeeded for **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**. Run output: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDiff: {{ github.context.payload.compare }}"
+          message: ":white_check_mark: Build succeeded for **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**. Run output: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDiff: {{ github.context.payload.compare }}"
           embed: '{ "title": "{{ commit.title }}", "description": "{{ commit.description }}", "url": "{{ commit.url }}", "author": { "name": "{{ commit.author.name }} ({{ commit.author.username }})", "icon_url": "https://avatars.io/gravatar/{{ commit.author.email }}"} }'
     if: success()
