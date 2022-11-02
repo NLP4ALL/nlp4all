@@ -8,7 +8,7 @@
 {% for m in matrices %}
 <div class="content-section">
 
-<b><a href= {{ url_for('matrix', matrix_id=m.id) }}>Matrix {{ m.id }}</a></b>
+<b><a href= {{ url_for('analyses_controller.matrix', matrix_id=m.id) }}>Matrix {{ m.id }}</a></b>
 </br>
 <tr><td><i><b>Categories: </b></td><td> 
     {% for c in m.categories %}

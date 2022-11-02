@@ -12,6 +12,7 @@ from nlp4all.forms.analyses import AddBayesianAnalysisForm
 
 from nlp4all.helpers.analyses import (
     add_project,
+    get_user_projects,
 )  # @TODO: this add_project CLEARLY belongs on the model, not in helpers
 
 # from flask_mail import Message
@@ -19,6 +20,12 @@ from nlp4all.helpers.analyses import (
 
 class ProjectController:
     """Project controller"""
+
+    @classmethod
+    def home(cls):
+        """Home page"""
+        my_projects = get_user_projects(current_user)
+        return render_template("home.html", projects=my_projects)
 
     @classmethod
     def add_project(cls):

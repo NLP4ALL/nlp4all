@@ -26,9 +26,9 @@
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
               {% if current_user.is_authenticated %}
-              <a class="nav-item nav-link" href="{{ url_for('home') }}">My Projects</a>
-                <a class="nav-item nav-link" href="{{ url_for('my_matrices') }}">My Matrices</a>
-                <a class="nav-item nav-link" href="{{ url_for('account') }}">Account</a>
+              <a class="nav-item nav-link" href="{{ url_for('project_controller.home') }}">My Projects</a>
+                <a class="nav-item nav-link" href="{{ url_for('analyses_controller.my_matrices') }}">My Matrices</a>
+                <a class="nav-item nav-link" href="{{ url_for('user_controller.account') }}">Account</a>
                 <a class="nav-item nav-link" href="{{ url_for('user_controller.logout') }}">Logout</a>
               {% else %}
                 <a class="nav-item nav-link" href="{{ url_for('user_controller.login') }}">Login</a>

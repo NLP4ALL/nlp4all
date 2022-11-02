@@ -21,7 +21,7 @@
             
             <tr>
                 {% for i in l %}
-                <td class='{{ i[1] }}'><a class='link' href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm={{ i[1] }}">{{ i[0] }}</a></td>
+                <td class='{{ i[1] }}'><a class='link' href="{{ url_for('analyses_controller.matrix_tweets', matrix_id=matrix.id) }}?cm={{ i[1] }}">{{ i[0] }}</a></td>
                 {% endfor %}
             </tr>
             
@@ -74,8 +74,8 @@
             <p>Accuracy: {{ matrix.data.accuracy }} </p>
             
 
-            <p>Tweets in matrix: <a href="{{ url_for('included_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_incl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
-            <p>Excluded tweets: <a href="{{ url_for('excluded_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_excl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
+            <p>Tweets in matrix: <a href="{{ url_for('analyses_controller.included_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_incl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
+            <p>Excluded tweets: <a href="{{ url_for('analyses_controller.excluded_tweets', matrix_id=matrix.id) }}">{{ matrix.data['nr_excl_tweets'] }}</a>  / {{ matrix.data['nr_test_tweets'] }}</p>
             </ul>
         </div>
         <div class="content-section">
@@ -127,7 +127,7 @@ $(document).ready( function () {
 
         for(var i=0; i<returnedData[0].length; i++){
                         for(var j=0; j<returnedData[0][i].length; j++){
-                                span = $('<span class="'+returnedData[0][i][j][1]+'" title="'+returnedData[0][i][j][1]+'" value='+returnedData[0][i][j][1]+'><a class='link' href="{{ url_for('matrix_tweets', matrix_id=matrix.id) }}?cm={{ '+returnedData[0][i][j][1]+' }}">{{ '+returnedData[0][i][j][0]+' }}</a>'+'</span>')
+                                span = $('<span class="'+returnedData[0][i][j][1]+'" title="'+returnedData[0][i][j][1]+'" value='+returnedData[0][i][j][1]+'><a class='link' href="{{ url_for('analyses_controller.matrix_tweets', matrix_id=matrix.id) }}?cm={{ '+returnedData[0][i][j][1]+' }}">{{ '+returnedData[0][i][j][0]+' }}</a>'+'</span>')
                                 console.log(span)
                                 span.css("margin-left",  '.05rem');
                                 span.css("background-color", 'hsl('+returnedData[0][i][j][3][0]+', '+returnedData[0][i][j][3][1]+'% , '+returnedData[0][i][j][3][2]+'%)');
