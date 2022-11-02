@@ -40,7 +40,7 @@ MarkupSafe==2.1.1
 matplotlib-inline
 mccabe==0.7.0
 nodeenv==1.7.0
-oauthlib==3.2.1
+oauthlib==3.2.2
 pathspec==0.10.1
 pickleshare
 Pillow==9.2.0
