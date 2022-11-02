@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <table>
+        <tr>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.analysis') }}?analysis={{ analysis.id }}">Tweets</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link">Label &amp; Word Statistics</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.annotations') }}?analysis_id={{ analysis.id }}">Annotations</a>
+                </td>
+                {% if not analysis.shared %}
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.robot') }}?robot={{ analysis.robots[-1].id }}">Gå til seneste Robot</a>
+                </td>
+                {% endif %}
+        </tr>
+    </table>
+</div>
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    <!-- <li class="nav-item">
+        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Hvor mange gættede I rigtigt?</a>
+    </li> -->
+    <li class="nav-item">
+    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Se Tweets</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Se alle ord</a>
+    </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+
+<div class="content-section" id="chartTab">
+    <p>This bar graph shows the amount of correct and wrong categorizations.</p>
+   
+    <div class="content-section bar-chart" id="chart">
+        {% include "bar_chart.html" %}
+    <style>
+        .bar-chart {
+                margin: auto;
+                width: 500px;
+                height: 500px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                                    }
+    </style>
+    </div>
+</div>
+
+    </div>
+    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+{% set table_data = word_info %}
+{% set table_name = "words" %}
+{% include "data_table.html" %}
+    </div>
+    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+{% set table_data = tweets %}
+{% set table_name = "tweets" %}
+{% include "data_table.html" %}
+    </div>
+</div>
+{% endblock content %}
+

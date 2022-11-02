@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <h1>Oversigt over jeres robotter</h1>
+{% for r in robots %}
+<div class="content-section">
+<a href= {{ url_for('analyses_controller.robot') }}?robot={{r.id}}>Se Robotten</a>
+<table class="table">
+<tr><td>Accuracy: </td><td>{{ r.accuracy.accuracy }} </td></tr>
+<tr><td>Tweets ramt: </td><td>{{ r.accuracy.tweets_targeted }} </td></tr>
+<tr><td><b>Score:</b> </td><td><b>{{ r.accuracy.tweets_targeted * r.accuracy.accuracy }}</b> </td></tr>
+<tr><td>Søgetermer</td>
+<td><ul>
+    <table class="tabale">
+    {% for feature in r.features %}
+    <p>Søgeterm: {{ feature }} </p>
+    <p>Rationale: {{r.features[feature]}}</p>
+    <p>Score: {{ r.accuracy.features[feature].accuracy * r.accuracy.features[feature].tweets_targeted}}</p>
+            {% endfor %}</table>
+</ul></td></tr>
+</table>
+</div>
+{% endfor %}
+</div>
+
+{% endblock content %}
