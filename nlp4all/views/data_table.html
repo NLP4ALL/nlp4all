@@ -1,5 +1,6 @@
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.css"/>
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" integrity="sha256-ONYvIHQ2aaj11TF4v1s4BQW/hfl1c2dwXXtTS/JHaM4=" crossorigin="anonymous">
 
 
 <table id="{{ table_name }}" class="display">
@@ -20,8 +21,8 @@
         {% endfor %}
     </tbody>
 </table>
-
-<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/dt-1.10.20/datatables.min.js"></script>
+<!-- Datatables JS -->
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js" integrity="sha256-cyRshFY0hITU37g2CswuxWfAJJcNH/4Te3xGt9+pjZs=" crossorigin="anonymous"></script>
 <script>
 $(document).ready( function () {
     $('#{{table_name}}').DataTable(
