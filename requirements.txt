@@ -48,7 +48,6 @@ pip-upgrader==1.4.15
 platformdirs==2.5.2
 pluggy==1.0.0
 pre-commit==2.20.0
-py==1.11.0
 pycparser==2.21
 PyJWT==2.5.0
 PySocks==1.7.1
