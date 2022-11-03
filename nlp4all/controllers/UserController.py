@@ -6,10 +6,11 @@ import secrets
 from PIL import Image
 
 
-from flask import flash, redirect, render_template, request, url_for, Blueprint
+from flask import flash, redirect, render_template, request, url_for, Blueprint, abort
 from flask_login import current_user, login_user, logout_user
 from flask_mail import Message
 from flask_bcrypt import check_password_hash, generate_password_hash
+from nlp4all.helpers.site import is_safe_url
 
 from nlp4all.models.database import db_session
 from nlp4all.models import BayesianAnalysis, Organization, User
@@ -22,8 +23,6 @@ from nlp4all.forms.user import (
     ResetPasswordForm,
     IMCRegistrationForm,
 )
-
-
 
 class UserController:
     """User Controller"""
@@ -68,28 +67,33 @@ class UserController:
     def login(cls):
         """Login page"""
         if current_user.is_authenticated:
-            return redirect(url_for("home"))
+            return redirect(url_for("project_controller.home"))
         form = LoginForm()
         if form.validate_on_submit():
             user = User.query.filter_by(email=form.email.data).first()
             if user and check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
                 next_page = request.args.get("next")
-                return redirect(next_page) if next_page else redirect(url_for("home"))
+                if next_page:
+                    if not is_safe_url(next_page, request):
+                        return abort(400)
+                    return redirect(next_page)
+                return redirect(url_for("project_controller.home"))
             flash("Login Unsuccessful. Please check email and password", "danger")
         return render_template("login.html", title="Login", form=form)
 
     @classmethod
     def logout(cls):
         """Logout page"""
-        logout_user()
-        return redirect(url_for("home"))
+        if current_user.is_authenticated:
+            logout_user()
+        return redirect(url_for("site_controller.home"))
 
     @classmethod
     def register(cls):
         """Register page"""
         if current_user.is_authenticated:
-            return redirect(url_for("home"))
+            return redirect(url_for("project_controller.home"))
         form = RegistrationForm()
         form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
         if form.validate_on_submit():
@@ -142,7 +146,7 @@ class UserController:
     def register_imc(cls):
         """IMC registration page"""
         if current_user.is_authenticated:
-            return redirect(url_for("home"))
+            return redirect(url_for("project_controller.home"))
         form = IMCRegistrationForm()
         if form.validate_on_submit():
             fake_id = randint(0, 99999999999)
@@ -173,7 +177,7 @@ class UserController:
             )
             db_session.add(bayes_analysis)
             db_session.commit()
-            return redirect(url_for("home"))
+            return redirect(url_for("project_controller.home"))
         return render_template("register_imc.html", form=form)
 
     @classmethod

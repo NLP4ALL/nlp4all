@@ -23,9 +23,9 @@ class ProjectController:
 
     @classmethod
     def home(cls):
-        """Home page"""
+        """Project list page"""
         my_projects = get_user_projects(current_user)
-        return render_template("home.html", projects=my_projects)
+        return render_template("projects.html", projects=my_projects)
 
     @classmethod
     def add_project(cls):
@@ -43,7 +43,7 @@ class ProjectController:
                 name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats
             )
             project_id = a_project.id
-            return redirect(url_for("home", project=project_id))
+            return redirect(url_for("project_controller.home", project=project_id))
         return render_template("add_project.html", title="Add New Project", form=form)
 
     # @TODO: refactor this, i moved this function here
