@@ -6,3 +6,4 @@ from .AdminController import AdminController
 from .SiteController import SiteController
 from .ProjectController import ProjectController
 from .AnalysesController import AnalysesController
+from .DataSourceController import DataSourceController

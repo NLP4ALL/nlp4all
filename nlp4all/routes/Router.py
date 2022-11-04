@@ -31,4 +31,8 @@ class Router: # pylint: disable=too-few-public-methods
 
         app.register_blueprint(ProjectRouter, url_prefix="/project")
 
+        from nlp4all.routes.datasource import DataSourceRouter
+
+        app.register_blueprint(DataSourceRouter, url_prefix="/datasource")
+
         # pylint: enable=import-outside-toplevel
