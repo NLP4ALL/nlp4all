@@ -43,6 +43,8 @@ with app.app_context():
     db_session.commit()
 
     user = User(
+        first_name="Arthur",
+        last_name="Hjorth",
         username="arthurhjorth_teacher",
         email="arthur.hjorth@u.northwestern.edu",
         password=hp,
@@ -55,6 +57,8 @@ with app.app_context():
     ]
     db_session.add(user)
     user = User(
+        first_name="Arthur",
+        last_name="Hjorth",
         username="arthur_student",
         email="arthur@mgmt.au.dk",
         password=hp,
