@@ -82,16 +82,16 @@
             <h3> Modify parameters </h3>
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
-                <fieldset class="form-group">
-                    <div class="form-group">
-                        {{ form.threshold.label(class="form-control-label")}}<br>
+                <fieldset class="mb-3">
+                    <div class="mb-3">
+                        {{ form.threshold.label(class="form-label")}}<br>
                         {{ form.threshold(class="form-control form-control-lg")}}
                         {% for error in form.threshold.errors %}
                             <span style="color :red;">[{{ error }}]</span>
                         {% endfor %}
                     </div>
-                    <div class="form-group">
-                        {{ form.ratio.label(class="form-control-label")}}<br>
+                    <div class="mb-3">
+                        {{ form.ratio.label(class="form-label")}}<br>
                         {% if form.ratio.errors %}
                         {{ form.ratio(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
@@ -108,7 +108,7 @@
                         {{ form.shuffle.label(class="form-check-label") }}
                     </div>
                 </fieldset>
-                <div class="form-group">
+                <div class="mb-3">
                     {{ form.submit(class="btn btn-outline-info") }}
                 </div>
             </form>

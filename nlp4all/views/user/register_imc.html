@@ -4,10 +4,10 @@
     <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
-            <fieldset class="form-group">
+            <fieldset class="mb-3">
                 <legend class="border-bottom mb-4">Join Today</legend>
-                <div class="form-group">
-                    {{ form.username.label(class="form-control-label") }}
+                <div class="mb-3">
+                    {{ form.username.label(class="form-label") }}
                     {% if form.username.errors %}
                         {{ form.username(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
@@ -20,14 +20,14 @@
                     {% endif %}
                 </div>
             </fieldset>
-            <div class="form-group">
+            <div class="mb-3">
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
     </div>
     <div class="border-top pt-3">
         <small class="text-muted">
-            Already Have An Account? <a class="ml-2" href="{{ url_for('user_controller.login') }}">Sign In</a>
+            Already Have An Account? <a class="ms-2" href="{{ url_for('user_controller.login') }}">Sign In</a>
         </small>
     </div>
 {% endblock content %}
