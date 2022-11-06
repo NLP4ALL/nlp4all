@@ -9,17 +9,22 @@
                 <div class="row">
                     <div class="col">
                         {{ form.first_name.label(class="form-label") }}
-                        {% for error in form.first_name.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                        <input type="text" class="form-control" placeholder="First name" aria-label="First name">
+                        <div class="invalid-feedback">
+                            {% for error in form.first_name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <!-- <input type="text" class="form-control" placeholder="First name" aria-label="First name"> -->
                     </div>
                     <div class="col">
+                        <!-- <input type="text" class="form-control" placeholder="First name" aria-label="First name"> -->
+
                         {{ form.last_name.label(class="form-label") }}
-                        {% for error in form.last_name.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                        <input type="text" class="form-control" placeholder="Last name" aria-label="Last name">
+                        <div class="invalid-feedback">
+                            {% for error in form.last_name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
 
