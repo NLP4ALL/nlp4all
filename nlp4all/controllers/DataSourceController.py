@@ -10,18 +10,21 @@ class DataSourceController: # pylint: disable=too-few-public-methods
     @classmethod
     def home(cls):
         """List of prepared data source"""
-        return render_template("data_source_list.html", title="My Data Sources")
+        return render_template("datasource/data_source_list.html", title="My Data Sources")
 
     @classmethod
     def create(cls):
         """Upload / create page"""
-        return render_template("create_data_source.html", title="New Data Source")
+        return render_template("datasource/create_data_source.html", title="New Data Source")
     @classmethod
     def configure(cls):
         """Specify data fields"""
-        return render_template("configure_data_source.html", title="Configure Data Source")
+        return render_template(
+            "datasource/configure_data_source.html",
+            title="Configure Data Source"
+        )
 
     @classmethod
     def save(cls):
         """Save data source"""
-        return redirect(url_for("data_source_controller.home"))
+        return redirect(url_for("datasource/data_source_controller.home"))

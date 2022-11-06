@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>My Projects</h1>
+<div class="content-section col-md-8">
+{% for d in datasources %}
+<a class="nav-item nav-link" href="#">{{ d.name }}</a>
+<p>{{ d.description }} </p>
+{% endfor %}
+</div>
+{% endblock content %}

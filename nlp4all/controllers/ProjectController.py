@@ -25,7 +25,7 @@ class ProjectController:
     def home(cls):
         """Project list page"""
         my_projects = get_user_projects(current_user)
-        return render_template("projects.html", projects=my_projects)
+        return render_template("project/projects.html", projects=my_projects)
 
     @classmethod
     def add_project(cls):
@@ -44,7 +44,7 @@ class ProjectController:
             )
             project_id = a_project.id
             return redirect(url_for("project_controller.home", project=project_id))
-        return render_template("add_project.html", title="Add New Project", form=form)
+        return render_template("project/add_project.html", title="Add New Project", form=form)
 
     # @TODO: refactor this, i moved this function here
     # because it was in utils, which imported models which imported utils
@@ -112,7 +112,7 @@ class ProjectController:
                 db_session.commit()
             # return(redirect(url_for('project', project=project_id)))
         return render_template(
-            "project.html",
+            "project/project.html",
             title="About",
             project=a_project,
             analyses=analyses,

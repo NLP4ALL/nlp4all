@@ -21,7 +21,7 @@ class AdminController:
             add_tweets_from_account(form.twitter_handle.data)
             flash("Added tweets from the twitter handle", "success")
             return redirect(url_for("admin_controller.manage_categories"))
-        return render_template("manage_categories.html", form=form, categories=categories)
+        return render_template("admin/manage_categories.html", form=form, categories=categories)
 
     @classmethod
     def add_org(cls):
@@ -34,4 +34,4 @@ class AdminController:
             db_session.commit()
             flash("Your organization has been created!", "success")
             return redirect(url_for("admin_controller.add_org"))
-        return render_template("add_org.html", form=form, orgs=orgs)
+        return render_template("admin/add_org.html", form=form, orgs=orgs)

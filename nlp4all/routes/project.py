@@ -7,8 +7,13 @@ from nlp4all.controllers import ProjectController
 
 ProjectRouter = Blueprint("project_controller", __name__)
 
+@ProjectRouter.before_request
+@login_required
+def before_request():
+    """ Protect all of the project endpoints."""
+
 ProjectRouter.route("/add_project", methods=["GET", "POST"])(
-    login_required(ProjectController.add_project)
+    ProjectController.add_project
 )
-ProjectRouter.route("/project", methods=["GET", "POST"])(login_required(ProjectController.project))
-ProjectRouter.route("/home", methods=["GET", "POST"])(login_required(ProjectController.home))
+ProjectRouter.route("/project", methods=["GET", "POST"])(ProjectController.project)
+ProjectRouter.route("/home", methods=["GET", "POST"])(ProjectController.home)

@@ -46,7 +46,8 @@ class UserController:
             form.username.data = current_user.username
             form.email.data = current_user.email
         image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
-        return render_template("account.html", title="Account", image_file=image_file, form=form)
+        return render_template("user/account.html", title="Account",
+                                image_file=image_file, form=form)
 
     @classmethod
     def save_picture(cls, form_picture):
@@ -80,7 +81,7 @@ class UserController:
                     return redirect(next_page)
                 return redirect(url_for("project_controller.home"))
             flash("Login Unsuccessful. Please check email and password", "danger")
-        return render_template("login.html", title="Login", form=form)
+        return render_template("user/login.html", title="Login", form=form)
 
     @classmethod
     def logout(cls):
@@ -109,7 +110,7 @@ class UserController:
             db_session.commit()
             flash("Your account has been created! You are now able to log in", "success")
             return redirect(url_for("login"))
-        return render_template("register.html", title="Register", form=form)
+        return render_template("user/register.html", title="Register", form=form)
 
     @classmethod
     def reset_request(cls):
@@ -122,7 +123,7 @@ class UserController:
             cls.send_reset_email(user)
             flash("An email has been sent with instructions to reset your password.", "info")
             return redirect(url_for("login"))
-        return render_template("reset_request.html", title="Reset Password", form=form)
+        return render_template("user/reset_request.html", title="Reset Password", form=form)
 
     @classmethod
     def reset_token(cls, token):
@@ -140,7 +141,7 @@ class UserController:
             db_session.commit()
             flash("Your password has been updated! You are now able to log in", "success")
             return redirect(url_for("login"))
-        return render_template("reset_token.html", title="Reset Password", form=form)
+        return render_template("user/reset_token.html", title="Reset Password", form=form)
 
     @classmethod
     def register_imc(cls):
@@ -178,7 +179,7 @@ class UserController:
             db_session.add(bayes_analysis)
             db_session.commit()
             return redirect(url_for("project_controller.home"))
-        return render_template("register_imc.html", form=form)
+        return render_template("user/register_imc.html", form=form)
 
     @classmethod
     def send_reset_email(cls, user):

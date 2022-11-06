@@ -9,7 +9,7 @@
     
     <!-- NLP4ALL CSS -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-    <title>{% block title %}{% endblock %} - NLP4ALL</title>
+    <title>{% if title %}{{ title }} - {% endif %}NLP4ALL</title>
 </head>
 <body>
     <header class="site-header">

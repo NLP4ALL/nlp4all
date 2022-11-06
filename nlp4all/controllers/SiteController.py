@@ -9,9 +9,9 @@ class SiteController: # pylint: disable=too-few-public-methods
     @classmethod
     def home(cls):
         """Home page"""
-        return render_template("home.html", title="Home")
+        return render_template("site/home.html", title="Home")
 
     @classmethod
     def about(cls):
         """About page"""
-        return render_template("about.html", title="About")
+        return render_template("site/about.html", title="About")
