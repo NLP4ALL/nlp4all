@@ -20,14 +20,14 @@
 
     <br>
     {% set matrices = matrices %}
-    {% include "matrix_summary.html" %}
+    {% include "analyses/matrix_summary.html" %}
 
     </div>
     
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
         {% set table_data = matrix_info %}
         {% set table_name = "Matrices" %}
-        {% include "data_table.html" %}
+        {% include "analyses/data_table.html" %}
     </div>
 
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">

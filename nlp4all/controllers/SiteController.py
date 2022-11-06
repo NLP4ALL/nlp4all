@@ -1,17 +1,18 @@
 """Site controller, general pages, about us, etc.""" # pylint: disable=invalid-name
 
-from flask import render_template
+from .BaseController import BaseController
 
-
-class SiteController: # pylint: disable=too-few-public-methods
+class SiteController(BaseController): # pylint: disable=too-few-public-methods
     """Site Controller"""
+
+    view_subdir = "site"
 
     @classmethod
     def home(cls):
         """Home page"""
-        return render_template("site/home.html", title="Home")
+        return cls.render_template("home.html", title="Home")
 
     @classmethod
     def about(cls):
         """About page"""
-        return render_template("site/about.html", title="About")
+        return cls.render_template("about.html", title="About")

@@ -38,7 +38,7 @@
     <p>This bar graph shows the amount of correct and wrong categorizations.</p>
    
     <div class="content-section bar-chart" id="chart">
-        {% include "bar_chart.html" %}
+        {% include "analyses/bar_chart.html" %}
     <style>
         .bar-chart {
                 margin: auto;
@@ -57,12 +57,12 @@
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
 {% set table_data = word_info %}
 {% set table_name = "words" %}
-{% include "data_table.html" %}
+{% include "analyses/data_table.html" %}
     </div>
     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
 {% set table_data = tweets %}
 {% set table_name = "tweets" %}
-{% include "data_table.html" %}
+{% include "analyses/data_table.html" %}
     </div>
 </div>
 {% endblock content %}

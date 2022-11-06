@@ -41,7 +41,7 @@ Here you can see how each tag has been used.
             <h4 id="headline">Table for tweets using the annotation tag <b>{{ tag }}</b> </h4>
             {% set table_data = ann_table %}
             {% set table_name = "tweet_annotations" %}
-            {% include "data_table.html" %}
+            {% include "analyses/data_table.html" %}
         </div>
         
         </div>
@@ -56,7 +56,7 @@ Here you can see how each tag has been used.
                     <div class="all-annotations" id="chart">
                     {% set chart_data = allann_table %}
                     {% set table_name = "all_annotations" %}
-                    {% include "bar_chart.html" %}
+                    {% include "analyses/bar_chart.html" %}
                     <style>
                         .all-annotations {
                                 margin: auto;
@@ -73,7 +73,7 @@ Here you can see how each tag has been used.
                 </div>
                 <div class="col-md-6"> 
                     See all annotated tweets and annotations:
-                    {% include "annotated_tweets.html" %}
+                    {% include "analyses/annotated_tweets.html" %}
                 </div>
                
         </div>
@@ -94,7 +94,7 @@ Here you can see how each tag has been used.
             </div>
             {% endfor %}
             </table>
-            {% include "annotations_per_tweet_jq.html" %}
+            {% include "analyses/annotations_per_tweet_jq.html" %}
 
         </div>
         </div>

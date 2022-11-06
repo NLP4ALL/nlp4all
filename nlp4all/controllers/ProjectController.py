@@ -1,7 +1,7 @@
 """Project controller""" # pylint: disable=invalid-name
 
 from random import sample, shuffle
-from flask import redirect, render_template, request, url_for
+from flask import redirect, request, url_for
 from flask_login import current_user
 
 from nlp4all.models.database import db_session
@@ -15,17 +15,21 @@ from nlp4all.helpers.analyses import (
     get_user_projects,
 )  # @TODO: this add_project CLEARLY belongs on the model, not in helpers
 
+from .BaseController import BaseController
+
 # from flask_mail import Message
 
 
-class ProjectController:
+class ProjectController(BaseController):
     """Project controller"""
+
+    view_subdir = "project"
 
     @classmethod
     def home(cls):
         """Project list page"""
         my_projects = get_user_projects(current_user)
-        return render_template("project/projects.html", projects=my_projects)
+        return cls.render_template("projects.html", projects=my_projects)
 
     @classmethod
     def add_project(cls):
@@ -44,7 +48,7 @@ class ProjectController:
             )
             project_id = a_project.id
             return redirect(url_for("project_controller.home", project=project_id))
-        return render_template("project/add_project.html", title="Add New Project", form=form)
+        return cls.render_template("add_project.html", title="Add New Project", form=form)
 
     # @TODO: refactor this, i moved this function here
     # because it was in utils, which imported models which imported utils
@@ -111,8 +115,8 @@ class ProjectController:
                 db_session.flush()
                 db_session.commit()
             # return(redirect(url_for('project', project=project_id)))
-        return render_template(
-            "project/project.html",
+        return cls.render_template(
+            "project.html",
             title="About",
             project=a_project,
             analyses=analyses,
