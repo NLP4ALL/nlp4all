@@ -39,11 +39,14 @@ from nlp4all.helpers.analyses import (
 
 from nlp4all.forms.analyses import BayesianRobotForms, CreateMatrixForm, TaggingForm, ThresholdForm
 
+from .BaseController import BaseController
 
-class AnalysesController: # pylint: disable=too-many-public-methods
+class AnalysesController(BaseController): # pylint: disable=too-many-public-methods
     """Analyses Controller"""
 
     # @TODO break out (probably)
+
+    view_subdir = "analyses"
 
     @classmethod
     def robot_summary(cls):

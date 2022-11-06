@@ -56,7 +56,7 @@ Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted 
 <div class="tab-content col-md-8" id="searchResults">
             {% set table_data = acc_dict.table_data %}
             {% set table_name = "words" %}
-            {% include "data_table.html" %}
+            {% include "analyses/data_table.html" %}
 </div>
 {% endif %}
 {% if not r.retired %}

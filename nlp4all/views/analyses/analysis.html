@@ -57,7 +57,7 @@
     <p><span id='cat' type='hidden'></span></p>
 
         <div class="pie-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)" >
-            {% include "pie_chart.html" %}
+            {% include "analyses/pie_chart.html" %}
 
             <style>
                 .pie-section {
@@ -86,7 +86,7 @@
         </div>
     </div> -->
     
-    {% include "draggable.html" %}
+    {% include "analyses/draggable.html" %}
 
     <!-- <div class="content-section">
         <form method="POST" action="">
@@ -120,7 +120,7 @@
 <div id="add-annotation" class="content-section" style="display: none;"> 
     <h4>Add annotations to the tweet</h4>
     {% set tag_list = tag_list %}
-    {% include "annotation2.html" %}
+    {% include "analyses/annotation2.html" %}
 </div>
 {% endif %}
 
@@ -128,7 +128,7 @@
 <div id="add-annotation" class="content-section" style="display: none;"> 
     <h4>Add annotations to the tweet</h4>
     {% set tag_list = tag_list %}
-    {% include "annotation.html" %}
+    {% include "analyses/annotation.html" %}
 </div>
 {% endif %}
 </div>
@@ -148,7 +148,7 @@
 <div class="content-section">
     <h4>Bayesian probabilities</h4>
    
-    {% include "bar_chart_jq.html" %}
+    {% include "analyses/bar_chart_jq.html" %}
     <style type="text/css">
         #chart {
             margin-left:auto;margin-right:auto;width:50%;height:45%;
