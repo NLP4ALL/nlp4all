@@ -5,7 +5,6 @@
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">Join Today</legend>
-        <h1>If you are creating a profile to briefly test NLP4All or review for a conference, please use the easy-login. You will need to make a new account each time, but it is much faster. <a href="register_imc">here</a></h1>
                 <div class="form-group">
                     {{ form.username.label(class="form-control-label") }}
                     {% if form.username.errors %}
@@ -76,6 +75,8 @@
     <div class="border-top pt-3">
         <small class="text-muted">
             Already Have An Account? <a class="ml-2" href="{{ url_for('user_controller.login') }}">Sign In</a>
+            •
+            Wanna quickly try it out? <a class="ml-2" href="{{ url_for('user_controller.register_imc') }}">Try it!</a>
         </small>
     </div>
 {% endblock content %}
