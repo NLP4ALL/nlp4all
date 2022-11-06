@@ -8,7 +8,7 @@
     <!-- we have to find the version that works for our -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-    <title>{% block title %}{% endblock %} - NLP4ALL</title>
+    <title>{% if title %}{{ title }} - {% endif %}NLP4ALL</title>
 </head>
 <body>
     <header class="site-header">

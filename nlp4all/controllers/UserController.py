@@ -6,7 +6,7 @@ import secrets
 from PIL import Image
 
 
-from flask import flash, redirect, render_template, request, url_for, Blueprint, abort
+from flask import flash, redirect, request, url_for, abort
 from flask_login import current_user, login_user, logout_user
 from flask_mail import Message
 from flask_bcrypt import check_password_hash, generate_password_hash
@@ -24,10 +24,12 @@ from nlp4all.forms.user import (
     IMCRegistrationForm,
 )
 
-class UserController:
+from .BaseController import BaseController
+
+class UserController(BaseController):
     """User Controller"""
 
-    blueprint: Blueprint
+    view_subdir = "user"
 
     @classmethod
     def account(cls):
@@ -46,7 +48,8 @@ class UserController:
             form.username.data = current_user.username
             form.email.data = current_user.email
         image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
-        return render_template("account.html", title="Account", image_file=image_file, form=form)
+        return cls.render_template("account.html", title="Account",
+                                image_file=image_file, form=form)
 
     @classmethod
     def save_picture(cls, form_picture):
@@ -80,7 +83,7 @@ class UserController:
                     return redirect(next_page)
                 return redirect(url_for("project_controller.home"))
             flash("Login Unsuccessful. Please check email and password", "danger")
-        return render_template("login.html", title="Login", form=form)
+        return cls.render_template("login.html", title="Login", form=form)
 
     @classmethod
     def logout(cls):
@@ -109,7 +112,7 @@ class UserController:
             db_session.commit()
             flash("Your account has been created! You are now able to log in", "success")
             return redirect(url_for("login"))
-        return render_template("register.html", title="Register", form=form)
+        return cls.render_template("register.html", title="Register", form=form)
 
     @classmethod
     def reset_request(cls):
@@ -122,7 +125,7 @@ class UserController:
             cls.send_reset_email(user)
             flash("An email has been sent with instructions to reset your password.", "info")
             return redirect(url_for("login"))
-        return render_template("reset_request.html", title="Reset Password", form=form)
+        return cls.render_template("reset_request.html", title="Reset Password", form=form)
 
     @classmethod
     def reset_token(cls, token):
@@ -140,7 +143,7 @@ class UserController:
             db_session.commit()
             flash("Your password has been updated! You are now able to log in", "success")
             return redirect(url_for("login"))
-        return render_template("reset_token.html", title="Reset Password", form=form)
+        return cls.render_template("reset_token.html", title="Reset Password", form=form)
 
     @classmethod
     def register_imc(cls):
@@ -178,7 +181,7 @@ class UserController:
             db_session.add(bayes_analysis)
             db_session.commit()
             return redirect(url_for("project_controller.home"))
-        return render_template("register_imc.html", form=form)
+        return cls.render_template("register_imc.html", form=form)
 
     @classmethod
     def send_reset_email(cls, user):
