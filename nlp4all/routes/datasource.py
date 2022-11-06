@@ -7,12 +7,17 @@ from nlp4all.controllers import DataSourceController
 
 DataSourceRouter = Blueprint("datasource_controller", __name__)
 
+@DataSourceRouter.before_request
+@login_required
+def before_request():
+    """ Protect all of the data source endpoints."""
+
 DataSourceRouter.route("/", methods=["GET", "POST"])(
-    login_required(DataSourceController.home)
+    DataSourceController.home
 )
 DataSourceRouter.route("/create",
-    methods=["GET", "POST"])(login_required(DataSourceController.create))
+    methods=["GET", "POST"])(DataSourceController.create)
 DataSourceRouter.route("/configure",
-    methods=["GET", "POST"])(login_required(DataSourceController.configure))
+    methods=["GET", "POST"])(DataSourceController.configure)
 DataSourceRouter.route("/save",
-    methods=["GET", "POST"])(login_required(DataSourceController.save))
+    methods=["GET", "POST"])(DataSourceController.save)

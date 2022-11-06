@@ -51,7 +51,8 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         analysis_id = request.args.get("analysis", 0, type=int)
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
         robots = [r for r in bayes_analysis.robots if r.retired and r.user == current_user.id]
-        return render_template("robot_summary.html", analysis=bayes_analysis, robots=robots)
+        return render_template("analyses/robot_summary.html",
+                                analysis=bayes_analysis, robots=robots)
 
     @classmethod
     def robot(cls):
@@ -121,7 +122,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         acc_dict["table_data"] = table_data
         print(table_data)
         return render_template(
-            "robot.html", title="Robot", r=bayes_robot, form=form, acc_dict=acc_dict
+            "analyses/robot.html", title="Robot", r=bayes_robot, form=form, acc_dict=acc_dict
         )
 
     @classmethod
@@ -154,7 +155,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
                 table_data.append(rob_dict)
 
         print(table_data)
-        return render_template("highscore.html", title="High Score", table_data=table_data)
+        return render_template("analyses/highscore.html", title="High Score", table_data=table_data)
 
     @classmethod
     def shared_analysis_view(cls):  # pylint: disable=too-many-locals
@@ -235,7 +236,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         # print(word_info)
         # sorted_word_info = sorted([w for w in word_info], key=lambda x: x['counts'], reverse=True)
         return render_template(
-            "shared_analysis_view.html",
+            "analyses/shared_analysis_view.html",
             title="Oversigt over analyse",
             tweets=tweet_info,
             word_info=word_info,
@@ -617,7 +618,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         )
         metrics = [t[1] for t in metrics]
         return render_template(
-            "matrix.html",
+            "analyses/matrix.html",
             cat_names=cat_names,
             form=form,
             matrix=c_matrix,
@@ -681,7 +682,8 @@ class AnalysesController: # pylint: disable=too-many-public-methods
             reverse=True,
         )
         cm_info = [t[1] for t in cm_info]
-        return render_template("matrix_tweets.html", cm_info=cm_info, matrix=c_matrix, title=title)
+        return render_template("analyses/matrix_tweets.html",
+                                cm_info=cm_info, matrix=c_matrix, title=title)
 
     @classmethod
     def my_matrices(cls):  # pylint: disable=too-many-locals
@@ -775,7 +777,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
             db_session.commit()
             return redirect(url_for("my_matrices"))
 
-        return render_template("my_matrices.html", matrices=matrices, form=form)
+        return render_template("analyses/my_matrices.html", matrices=matrices, form=form)
 
     @classmethod
     def included_tweets(cls, matrix_id):
@@ -815,7 +817,8 @@ class AnalysesController: # pylint: disable=too-many-public-methods
             reverse=True,
         )
         cm_info = [t[1] for t in cm_info]
-        return render_template("matrix_tweets.html", cm_info=cm_info, matrix=c_matrix, title=title)
+        return render_template("analyses/matrix_tweets.html",
+                                cm_info=cm_info, matrix=c_matrix, title=title)
 
     @classmethod
     def excluded_tweets(cls, matrix_id):
@@ -855,7 +858,12 @@ class AnalysesController: # pylint: disable=too-many-public-methods
             reverse=True,
         )
         cm_info = [t[1] for t in cm_info]
-        return render_template("matrix_tweets.html", cm_info=cm_info, matrix=c_matrix, title=title)
+        return render_template(
+            "analyses/matrix_tweets.html",
+            cm_info=cm_info,
+            matrix=c_matrix,
+            title=title
+        )
 
     @classmethod
     def matrix_overview(cls):
@@ -884,7 +892,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         matrix_info = [m[1] for m in matrix_info]
         form = ThresholdForm()
         return render_template(
-            "matrix_overview.html",
+            "analyses/matrix_overview.html",
             matrices=matrices,
             matrix_info=matrix_info,
             form=form,
@@ -1266,7 +1274,10 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         cat_names = [c.name for c in all_cats]
 
         return render_template(
-            "matrix_compare_base.html", cat_names=cat_names, matrices=matrices, all_cats=all_cats
+            "analyses/matrix_compare_base.html",
+            cat_names=cat_names,
+            matrices=matrices,
+            all_cats=all_cats
         )
 
     # this is not used rn
@@ -1312,7 +1323,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
             return redirect(url_for("tweet_annotation", analysis=bayes_analysis.id, cat=cat_id))
 
         return render_template(
-            "tweet_annotate.html",
+            "analyses/tweet_annotate.html",
             tweet_table=tweet_table,
             categories=categories,
             analysis=bayes_analysis,
@@ -1415,7 +1426,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         ).all()  # pylint: disable=no-member
 
         return render_template(
-            "annotation_summary.html",
+            "analyses/annotation_summary.html",
             ann_table=tag_table,
             analysis=bayes_analysis,
             tag=a_tag,
@@ -1493,7 +1504,7 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         )
 
         return render_template(
-            "annotations.html",
+            "analyses/annotations.html",
             anns=ann_list.items,
             next_url=next_url,
             prev_url=prev_url,
@@ -1802,7 +1813,11 @@ class AnalysesController: # pylint: disable=too-many-public-methods
         # get all tags with a specific tweet
         tweets = tags[the_tag]["tweets"]
 
-        return render_template("annotations_per_tweet.html", the_tag=the_tag, tweets=tweets)
+        return render_template(
+            "analyses/annotations_per_tweet.html",
+            the_tag=the_tag,
+            tweets=tweets
+        )
 
     @classmethod
     def jq_highlight_tweet(cls):
