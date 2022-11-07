@@ -165,7 +165,10 @@ class UserController(BaseController):
             if any(User.query.filter_by(first_name=the_name)):
                 the_name = the_name + str(fake_id)
             user = User(
-                first_name=the_name, email=fake_email, password=hashed_password, organizations=imc_org
+                first_name=the_name,
+                email=fake_email,
+                password=hashed_password,
+                organizations=imc_org
             )
             db_session.add(user)
             db_session.commit()
