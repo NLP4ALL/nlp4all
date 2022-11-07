@@ -4,10 +4,10 @@
 <div class="content-section">
     <form method="POST" action="">
         {{ form.hidden_tag() }}
-        <fieldset class="form-group">
+        <fieldset class="mb-3">
             <legend class="border-bottom mb-4">{{ legend }}</legend>
-            <div class="form-group">
-                {{ form.name.label(class="form-control-label") }}
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
                 {% if form.name.errors %}
                     {{ form.name(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
@@ -20,7 +20,7 @@
                 {% endif %}
             </div>
         </fieldset>
-        <div class="form-group">
+        <div class="mb-3">
             {{ form.submit(class="btn btn-outline-info") }}
         </div>
     </form>

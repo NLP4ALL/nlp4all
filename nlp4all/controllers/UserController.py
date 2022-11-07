@@ -43,7 +43,7 @@ class UserController(BaseController):
             current_user.email = form.email.data
             db_session.commit()
             flash("Your account has been updated!", "success")
-            return redirect(url_for("account"))
+            return redirect(url_for("user_controller.account"))
         if request.method == "GET":
             form.username.data = current_user.username
             form.email.data = current_user.email

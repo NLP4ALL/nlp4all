@@ -62,10 +62,10 @@ Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted 
 {% if not r.retired %}
         <form method="POST" action="">
             {{ form.add_feature_form.hidden_tag() }}
-            <fieldset class="form-group col-md-8">
+            <fieldset class="mb-3 col-md-8">
                 <legend class="border-bottom mb-4">Add Terms to your Model</legend>
-                <div class="form-group">
-                    {{ form.add_feature_form.feature.label(class="form-control-label") }}
+                <div class="mb-3">
+                    {{ form.add_feature_form.feature.label(class="form-label") }}
                     {% if form.add_feature_form.feature.errors %}
                         {{ form.add_feature_form.feature(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
@@ -77,8 +77,8 @@ Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted 
                         {{ form.add_feature_form.feature(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    {{ form.add_feature_form.reasoning.label(class="form-control-label") }}
+                <div class="mb-3">
+                    {{ form.add_feature_form.reasoning.label(class="form-label") }}
                     {% if form.add_feature_form.reasoning.errors %}
                         {{ form.add_feature_form.reasoning(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
@@ -92,10 +92,10 @@ Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted 
                 </div>
 
             </fieldset>
-            <div class="form-group">
+            <div class="mb-3">
                 {{ form.add_feature_form.submit(class="btn btn-outline-info") }}
             </div>
-            <div class="form-group">
+            <div class="mb-3">
                 {{ form.run_analysis_form.run_analysis(class="btn btn-outline-info") }}
             </div>
         </form>
