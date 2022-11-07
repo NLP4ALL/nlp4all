@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+
+    <h1>
+        Annotate Tweets
+    </h1>
+    <p> <a class="nav-item nav-link" href="{{ url_for('annotation_summary') }}?analysis={{ analysis.id }}">See your annotations</a></p>
+
+    <p>Here you can highlight parts of tweets that you regard characteristic for the chosen political party.</p>
+    
+    
+    <form action="" method="post">
+        <select id="sel-cat"> 
+            <option value='0'>Select a category</option>
+            {% for c in categories %}
+            <option value={{ c.id }} >
+                        <span>{{ c.name }}</span>  
+            </option> 
+            {% endfor %}
+        </select>
+     <button id="cat-btn" type="submit" name="select-category" value="1">Select category</button></form>
+    <input id="tweettxt" type="hidden" value="">
+
+    <div class="content-section">
+        {% set table_data = tweet_table %}
+        {% set table_name = "Tweets" %}
+        {% include "analyses/data_table_add.html" %}
+    </div>
+    
+   
+             
+        {% include "analyses/annotation_form.html" %}
+  
+
+   
+{% endblock content %}
+
+

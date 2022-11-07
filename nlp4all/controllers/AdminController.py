@@ -1,6 +1,6 @@
 """Admin controller.""" # pylint: disable=invalid-name
 
-from flask import flash, redirect, render_template, url_for
+from flask import flash, redirect, url_for
 
 from nlp4all.models.database import db_session
 from nlp4all.models import Organization, TweetTagCategory
@@ -8,9 +8,13 @@ from nlp4all.forms.admin import AddOrgForm
 from nlp4all.forms.analyses import AddTweetCategoryForm
 from nlp4all.helpers.tweets import add_tweets_from_account
 
+from .BaseController import BaseController
 
-class AdminController:
+
+class AdminController(BaseController):
     """Admin Controller"""
+
+    view_subdir = "admin"
 
     @classmethod
     def manage_categories(cls):
@@ -20,8 +24,8 @@ class AdminController:
         if form.validate_on_submit():
             add_tweets_from_account(form.twitter_handle.data)
             flash("Added tweets from the twitter handle", "success")
-            return redirect(url_for("manage_categories"))
-        return render_template("manage_categories.html", form=form, categories=categories)
+            return redirect(url_for("admin_controller.manage_categories"))
+        return cls.render_template("manage_categories.html", form=form, categories=categories)
 
     @classmethod
     def add_org(cls):
@@ -33,5 +37,5 @@ class AdminController:
             db_session.add(org)
             db_session.commit()
             flash("Your organization has been created!", "success")
-            return redirect(url_for("add_org"))
-        return render_template("add_org.html", form=form, orgs=orgs)
+            return redirect(url_for("admin_controller.add_org"))
+        return cls.render_template("add_org.html", form=form, orgs=orgs)

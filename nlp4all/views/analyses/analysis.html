@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+    <div class="content-section">
+        <table>
+            <tr>
+                <td>
+                    <a class="nav-item nav-link" >Tweets</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.shared_analysis_view') }}?analysis={{ analysis.id }}">Label &amp; Word Statistics</a>
+                </td>
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.annotations') }}?analysis_id={{ analysis.id }}">Annotations</a>
+                </td>
+                {% if not analysis.shared %}
+                <td>
+                    <a class="nav-item nav-link" href="{{ url_for('analyses_controller.robot') }}?robot={{ last_robot.id }}">Gå til seneste Robot</a>
+                </td>
+                {% endif %}
+            </tr>
+        </table>
+    </div>
+        
+        {% if analysis.shared %}
+    <div class="content-section">
+        <p>You need to label {{ uncompleted_counts }} more tweets! (Refresh browser to update this!)</p>
+    </div>
+    {% endif %}
+    <div class="content-section tweet-container" id="draggable-tweet" tweet_id='' >
+        <!-- <h2>To which category does this tweet belong?</h2>
+        <i>Drag the Twitter Bird on the pie chart to submit your guess.</i>
+        <br></br> -->
+   
+   
+
+    <div id='dragme' draggable="true" ondragstart="drag(event)" class="dragme" ondragend="dragStop(event)" ><img class="rounded-circle article-img"
+        src="{{ url_for('static', filename='profile_pics/twitter-logo-9.png') }}"
+        alt="Tweet">
+        <style>
+            img{
+                max-width: 100%;
+                max-height: 100%;
+                display: block;
+                }
+                .dragme {
+                width: 50px;
+                height: 50px;
+                margin:auto;
+                align-self: center;
+
+                }
+                </style>
+                </div>
+    
+    <p><span id='cat' type='hidden'></span></p>
+
+        <div class="pie-section" id="piechart" ondrop="drop(event)" ondragover="allowDrop(event)" >
+            {% include "analyses/pie_chart.html" %}
+
+            <style>
+                .pie-section {
+                    margin: auto;
+                    width: 500px;
+                    height: 500px;
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                                        }
+            </style>
+            
+        </div>
+
+    <!-- <div class="tab-content" id="searchTerms">
+        <div class="content-section">
+            <table class="table">
+                <tr><th>Options</th></tr>
+                <tr>
+                {% for tag_option in tag_options %}
+                    <td><form action="" method="post"><button type="submit" value="{{(tweet.id, tag_option.id)}}" name="tag">{{ tag_option.name }}</button></form></td>
+                {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </div> -->
+    
+    {% include "analyses/draggable.html" %}
+
+    <!-- <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="mb-3">
+                <div class="mb-3">
+                    {{ form.choices.label(class="form-label")}}<br>
+                    {{ form.choices(class="form-control form-control-lg")}}
+                    {% for error in form.choices.errors %}
+                        <span style="color :red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            <div class="mb-3">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div> -->
+
+</div>
+    <div class="content-section" id="jquery-tweet" >
+        <p id="time-posted"></p>
+        <span id='tweet_id' type='hidden' value=""></span>
+        <span id="tuples" onmouseup="getSelText()"></span>
+      
+       
+      
+      </div>
+   
+{%if analysis.annotate == 2 %}
+<div id="add-annotation" class="content-section" style="display: none;"> 
+    <h4>Add annotations to the tweet</h4>
+    {% set tag_list = tag_list %}
+    {% include "analyses/annotation2.html" %}
+</div>
+{% endif %}
+
+{%if analysis.annotate == 3 %}
+<div id="add-annotation" class="content-section" style="display: none;"> 
+    <h4>Add annotations to the tweet</h4>
+    {% set tag_list = tag_list %}
+    {% include "analyses/annotation.html" %}
+</div>
+{% endif %}
+</div>
+<div class="col-md-4">
+<div class="content-section">
+    <table>
+        <tr>
+            <td>
+            <p>Analysis: {{ analysis.name }} </p>
+            </td>
+           
+        </tr>
+    </table>
+</div>
+
+
+<div class="content-section">
+    <h4>Bayesian probabilities</h4>
+   
+    {% include "analyses/bar_chart_jq.html" %}
+    <style type="text/css">
+        #chart {
+            margin-left:auto;margin-right:auto;width:50%;height:45%;
+        }
+    </style>
+</div>
+
+
+
+</div>
+{% endblock content %}

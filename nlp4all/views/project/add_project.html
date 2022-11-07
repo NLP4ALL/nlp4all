@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="mb-3">
+                <legend class="border-bottom mb-4">Create new Project</legend>
+                <div class="mb-3">
+                    {{ form.title.label(class="form-label") }}
+                    {% if form.title.errors %}
+                        {{ form.title(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.title(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {% if form.description.errors %}
+                        {{ form.description(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.description.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.description(class="form-control ") }}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.organization.label(class="form-label")}}<br>
+                    {{ form.organization(class="form-control form-control-lg")}}
+                    {% for error in form.organization.errors %}
+                        <span style="color :red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.categories.label(class="form-label")}}<br>
+                    {{ form.categories(class="form-control form-control-lg")}}
+                    {% for error in form.categories.errors %}
+                        <span style="color :red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            <div class="mb-3">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{% endblock content %}

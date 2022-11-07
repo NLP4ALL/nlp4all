@@ -1,0 +1,105 @@
+
+<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='simplePagination.css') }}"/>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.simplePagination.js') }}"></script>
+
+
+<div class="content-section">
+    
+    <h3>Your annotations</h3>
+    <p id="show_me"> </p>
+    {% for ann in anns %}
+        Tweet <span id="annid" value="{{ ann.id }}">{{ ann.id }}</span><br>
+            <i>Category: {{ ann.handle }}<br></i>
+           
+            <div class="content-section" id="ann-tuples" onclick=viewAnns(event)>
+        {% for tup in word_tuples[page-1] %}
+            <span id="{{ tup.1 }}" class="{{tup.2}}-{{tup.3}}" title="{{ tup.6 }} = {{tup.5}} tags">{{ tup.0 }}</span>
+            {% endfor %}
+
+
+            <style type="text/css">
+            {% for tup in word_tuples[page-1] %}
+            .{{tup.2}}-{{tup.3}} {
+                background : hsl({{tup.4}}, {{(tup.3 - 0.50) * 200 }}% , 80%);
+            }   
+            {% endfor %}
+            
+            </style>
+        </div>
+
+        <div class="content-section">
+           
+            <h3>Annotations in this tweet:</h3>
+            {% set table_data = ann_dict[ann.id] %}
+            {% set table_name = "tweet_annotations" %}
+            {% include "analyses/data_table.html" %}
+
+            
+    {% endfor %}
+   
+
+    </div>
+
+        <div class="content-section">
+            <table>
+                <tr><td>
+                {% if prev_url %}
+                <a class="nav-item nav-link" href="{{ prev_url }}">Forrige tweet</a>
+                {% endif %}
+            </td>
+            <td>
+                {% if next_url %}
+                <a class="nav-item nav-link"  href="{{ next_url }}">Næste tweet</a>
+                {% endif %}
+            </td>
+                </tr>
+            </table>
+    
+        </div>
+
+      
+</div>
+
+
+
+<script>
+    var tagged_tweets = [] ;
+    
+    var span ;
+    $('[tweet_id]').each(function( ) {
+        var tweet_id= ($(this).attr('tweet_id'));
+        console.log('this is' + tweet_id);
+        tagged_tweets.push(tweet_id); 
+        });
+
+    function showTweet() {
+        tagged_tweets.forEach(function(tweet_id) {
+            console.log('showing: ' +tweet_id);
+            var element = document.getElementById(tweet_id);
+                $.get('/tweet_annotations', {'analysis_id': {{ analysis.id }}, 'tweet_id': tweet_id}).done(
+                    function(returnedData) {
+                    console.log(returnedData[0].length)
+                    console.log(returnedData[0][1])
+                    var span ;
+                    for(var i=0; i<returnedData[0].length; i++){
+                        for(var j=0; j<returnedData[0][i].length; j++){
+                                span = $('<span class="'+returnedData[0][i][j][2]+'-'+returnedData[0][i][j][3]+'" title="'+returnedData[0][i][j][6]+'='+returnedData[0][i][j][5]+'%" value='+returnedData[0][i][j][1]+' id='+returnedData[0][i][j][1]+'>'+returnedData[0][i][j][0]+' '+'</span>')
+                                console.log(span)
+                                span.css("margin-left",  '.05rem');
+                                span.css("background-color", 'hsl('+returnedData[0][i][j][4]+', '+((returnedData[0][i][j][3]- 0.50) * 200)+'% , 70%)');
+                                element.append(span)
+                            };
+
+                        };
+                        //$("#tagged-tweet").attr('tweet_id', returnedData[1]);
+                        console.log('tweet is ' +returnedData[1]);
+            });   
+        }); 
+    };       
+
+    window.onload = showTweet()
+
+
+</script>
+
