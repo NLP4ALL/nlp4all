@@ -27,7 +27,6 @@ with app.app_context():
     user = User(
         first_name="Arthur",
         last_name="Hjorth",
-        username="arthurhjorth",
         email="arthur.hjorth@stx.oxon.org",
         password=hp,
         admin=True,
@@ -47,7 +46,6 @@ with app.app_context():
     user = User(
         first_name="Arthur",
         last_name="Hjorth",
-        username="arthurhjorth_teacher",
         email="arthur.hjorth@u.northwestern.edu",
         password=hp,
         organizations=[
@@ -61,7 +59,6 @@ with app.app_context():
     user = User(
         first_name="Arthur",
         last_name="Hjorth",
-        username="arthur_student",
         email="arthur@mgmt.au.dk",
         password=hp,
         organizations=[

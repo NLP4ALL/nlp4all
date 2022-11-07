@@ -109,7 +109,7 @@ class ProjectController(BaseController):
             org = Organization.query.get(a_project.organization)
             for _ in org.users:
                 bayes_robot = BayesianRobot(
-                    name=current_user.username + "s robot", analysis=bayes_analysis.id
+                    name=current_user.first_name + current_user.last_name + "s robot", analysis=bayes_analysis.id
                 )
                 db_session.add(bayes_robot)
                 db_session.flush()

@@ -4,7 +4,7 @@
       <div class="media">
         <img class="rounded-circle account-img" src="{{ image_file }}">
         <div class="media-body">
-          <h2 class="account-heading">{{ current_user.username }}</h2>
+          <h2 class="account-heading">{{ current_user.first_name + " " + current_user.last_name }}</h2>
           <p class="text-secondary">{{ current_user.email }}</p>
         </div>
       </div>
@@ -12,20 +12,40 @@
             {{ form.hidden_tag() }}
             <fieldset class="mb-3">
                 <legend class="border-bottom mb-4">Account Info</legend>
-                <div class="mb-3">
-                    {{ form.username.label(class="form-label") }}
+                <div class="row">
+                    <div class="col">
+                        <div class="mb-3">
+                            {{ form.first_name.label(class="form-label") }}
 
-                    {% if form.username.errors %}
-                        {{ form.username(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.username.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+                            {% if form.first_name.errors %}
+                                {{ form.first_name(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.first_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.first_name(class="form-control form-control-lg") }}
+                            {% endif %}
                         </div>
-                    {% else %}
-                        {{ form.username(class="form-control form-control-lg") }}
-                    {% endif %}
+                    </div>
+                    <div class="col">
+                        <div class="mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {% if form.last_name.errors %}
+                                {{ form.last_name(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.last_name(class="form-control form-control-lg") }}
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
+
                 <div class="mb-3">
                     {{ form.email.label(class="form-label") }}
                     {% if form.email.errors %}

@@ -14,19 +14,10 @@ class UpdateAccountForm(FlaskForm):
     """
     first_name = StringField("First Name", validators=[DataRequired(), Length(min=2, max=20)])
     last_name = StringField("Last Name", validators=[DataRequired(), Length(min=2, max=20)])
-    username = StringField("Username", validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField("Email", validators=[DataRequired(), Email()])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
 
-    def validate_username(self, username):
-        """
-        Validate username.
-        """
-        if username.data != current_user.username:
-            user = User.query.filter_by(username=username.data).first()
-            if user:
-                raise ValidationError("That username is taken. Please choose a different one.")
 
     def validate_email(self, email):
         """
@@ -55,7 +46,6 @@ class RegistrationForm(FlaskForm):
     """
     first_name = StringField("Name", validators=[DataRequired(), Length(min=2, max=20)])
     last_name = StringField("Last Name", validators=[DataRequired(), Length(min=2, max=20)])
-    username = StringField("Username", validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired()])
     confirm_password = PasswordField(
@@ -64,13 +54,6 @@ class RegistrationForm(FlaskForm):
     organizations = SelectField("Select your organization", validators=[DataRequired()])
     submit = SubmitField("Sign Up")
 
-    def validate_username(self, username):
-        """
-        Validate username.
-        """
-        user = User.query.filter_by(username=username.data).first()
-        if user:
-            raise ValidationError("That username is taken. Please choose a different one.")
 
     def validate_email(self, email):
         """
@@ -86,7 +69,7 @@ class IMCRegistrationForm(FlaskForm):
     IMC Registration form.
     """
 
-    username = StringField("Username", validators=[DataRequired(), Length(min=2, max=20)])
+    first_name = StringField("first_name", validators=[DataRequired(), Length(min=2, max=20)])
     submit = SubmitField("Sign Up")
 
 

@@ -39,13 +39,15 @@ class UserController(BaseController):
             if form.picture.data:
                 picture_file = cls.save_picture(form.picture.data)
                 current_user.image_file = picture_file
-            current_user.username = form.username.data
+            current_user.first_name = form.first_name.data
+            current_user.last_name = form.last_name.data
             current_user.email = form.email.data
             db_session.commit()
             flash("Your account has been updated!", "success")
             return redirect(url_for("user_controller.account"))
         if request.method == "GET":
-            form.username.data = current_user.username
+            form.first_name.data = current_user.first_name
+            form.last_name.data = current_user.last_name
             form.email.data = current_user.email
         image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
         return cls.render_template("account.html", title="Account",
@@ -105,7 +107,6 @@ class UserController(BaseController):
             user = User(
                 first_name=form.first_name.data,
                 last_name=form.last_name.data,
-                username=form.username.data,
                 email=form.email.data,
                 password=hashed_password,
                 organizations=[org],
@@ -160,17 +161,17 @@ class UserController(BaseController):
             hashed_password = generate_password_hash(fake_password).decode("utf-8")
             imc_org = Organization.query.filter_by(name="ATU").all()
             a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
-            the_name = form.username.data
-            if any(User.query.filter_by(username=the_name)):
+            the_name = form.first_name.data
+            if any(User.query.filter_by(first_name=the_name)):
                 the_name = the_name + str(fake_id)
             user = User(
-                username=the_name, email=fake_email, password=hashed_password, organizations=imc_org
+                first_name=the_name, email=fake_email, password=hashed_password, organizations=imc_org
             )
             db_session.add(user)
             db_session.commit()
             login_user(user)
             userid = current_user.id
-            name = current_user.username + "'s personal analysis"
+            name = current_user.first_name + "'s personal analysis"
             bayes_analysis = BayesianAnalysis(
                 user=userid,
                 name=name,
