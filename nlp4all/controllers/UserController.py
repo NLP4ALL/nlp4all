@@ -111,7 +111,7 @@ class UserController(BaseController):
             db_session.add(user)
             db_session.commit()
             flash("Your account has been created! You are now able to log in", "success")
-            return redirect(url_for("login"))
+            return redirect(url_for("user_controller.login"))
         return cls.render_template("register.html", title="Register", form=form)
 
     @classmethod
