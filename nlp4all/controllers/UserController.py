@@ -103,6 +103,8 @@ class UserController(BaseController):
             hashed_password = generate_password_hash(form.password.data).decode("utf-8")
             org = Organization.query.get(int(form.organizations.data))
             user = User(
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password,

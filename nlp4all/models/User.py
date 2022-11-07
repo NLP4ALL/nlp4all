@@ -15,6 +15,8 @@ class User(Base, UserMixin):
 
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
+    first_name = Column(String(50), nullable=False)
+    last_name = Column(String(50), nullable=False)
     username = Column(String(20), unique=True, nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     image_file = Column(String(20), nullable=False, default="default.jpg")

@@ -3,27 +3,37 @@
     <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
-
             <fieldset class="mb-3">
                 <legend class="border-bottom mb-4">Join Today</legend>
                 <div class="row">
                     <div class="col">
-                        {{ form.first_name.label(class="form-label") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.first_name.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+                        <div class="mb-3">
+                            {{ form.first_name.label(class="form-label") }}
+                            {% if form.first_name.errors %}
+                                {{ form.first_name(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.first_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.first_name(class="form-control form-control-lg") }}
+                            {% endif %}
                         </div>
-                        <!-- <input type="text" class="form-control" placeholder="First name" aria-label="First name"> -->
                     </div>
                     <div class="col">
-                        <!-- <input type="text" class="form-control" placeholder="First name" aria-label="First name"> -->
-
-                        {{ form.last_name.label(class="form-label") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.last_name.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+                        <div class="mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {% if form.last_name.errors %}
+                                {{ form.last_name(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.last_name(class="form-control form-control-lg") }}
+                            {% endif %}
                         </div>
                     </div>
                 </div>

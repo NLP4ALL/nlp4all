@@ -25,6 +25,8 @@ with app.app_context():
 
     hp = generate_password_hash("1234")
     user = User(
+        first_name="Arthur",
+        last_name="Hjorth",
         username="arthurhjorth",
         email="arthur.hjorth@stx.oxon.org",
         password=hp,

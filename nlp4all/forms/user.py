@@ -12,7 +12,8 @@ class UpdateAccountForm(FlaskForm):
     """
     Update account form.
     """
-
+    first_name = StringField("First Name", validators=[DataRequired(), Length(min=2, max=20)])
+    last_name = StringField("Last Name", validators=[DataRequired(), Length(min=2, max=20)])
     username = StringField("Username", validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField("Email", validators=[DataRequired(), Email()])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
