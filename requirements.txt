@@ -45,7 +45,7 @@ pathspec==0.10.1
 pickleshare
 Pillow==9.3.0
 pip-upgrader==1.4.15
-platformdirs==2.5.2
+platformdirs==2.5.3
 pluggy==1.0.0
 pre-commit==2.20.0
 pycparser==2.21
