@@ -43,7 +43,7 @@ nodeenv==1.7.0
 oauthlib==3.2.1
 pathspec==0.10.1
 pickleshare
-Pillow==9.2.0
+Pillow==9.3.0
 pip-upgrader==1.4.15
 platformdirs==2.5.2
 pluggy==1.0.0
