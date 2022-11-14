@@ -4,7 +4,7 @@ import hashlib
 
 from enum import Enum
 import os
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from sqlalchemy import (
     Boolean,
@@ -38,7 +38,7 @@ class ColType(Enum):
     TEXT = "text"
 
     @staticmethod
-    def get_type(col_type: str) -> "ColType":
+    def from_str(col_type: str) -> "ColType":
         """Get the column type"""
 
         return ColType[col_type.upper()]
@@ -249,7 +249,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
             self._colspec = {}
 
             for colname, coltype in colspec.metaspec.items():
-                self._colspec[colname] = ColType.get_type(coltype)
+                self._colspec[colname] = ColType.from_str(coltype)
 
     def _save_colspec(self) -> None:
         """Save the column spec to the datasource meta table"""
@@ -351,29 +351,29 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         return True
 
     def _map_datasource_meta_table(self) -> None:
-        """Map the table to the DataSourceBase"""
+        """Map the table to the UserDataSourceMeta class"""
 
         self._ensure_connected()
         mapper(self.UserDataSourceMeta, self._meta_table)
         self.UserDataSourceMeta.query = self._session.query_property()
 
     def _map_datasource_table(self) -> None:
-        """Map the table to the DataSourceBase"""
+        """Map the table to the UserDataSource"""
 
-        def init_user_datasource(sub_self, row):
-            """Initialize the user data source"""
+        def values_from_dict(sub_self, row: Dict[str, Any]) -> None:
+            """Set the column values from a row dictionary"""
+
             props = dir(sub_self)
-            print(props)
+
             for col, val in row.items():
                 if not col in props:
                     raise Exception(f"Column {col} not in colspec")
                 setattr(sub_self, col, val)
-                # sub_self.__dict__[col] = val
 
         self._ensure_connected()
         mapper(self.UserDataSource, self._table)
         self.UserDataSource.query = self._session.query_property()
-        self.UserDataSource.row_dict = init_user_datasource
+        self.UserDataSource.values_from_dict = values_from_dict
 
     def __del__(self):
         """Destructor"""
