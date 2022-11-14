@@ -35,7 +35,7 @@ itsdangerous==2.0.1
 Jinja2==3.1.2
 jupyter_client
 jupyter_core
-lazy-object-proxy==1.7.1
+lazy-object-proxy==1.8.0
 MarkupSafe==2.1.1
 matplotlib-inline
 mccabe==0.7.0
