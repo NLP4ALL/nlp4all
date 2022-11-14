@@ -263,11 +263,15 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
     def _datasource_filename(self) -> None:
         """Get the filename for specified datasource and user"""
 
+        ds_dir = "data/user"
+
+        if not os.path.exists(ds_dir):
+            os.makedirs(ds_dir)
         # generate a unique filename from a hash of the data source id
         # this is to prevent a user from accessing another user's data
         ds_id_hash = hashlib.sha256(self._data_source_name.encode()).hexdigest()
         self._tablename = f"ds_{ds_id_hash}"
-        self._filename = f"data/user/user_{self._user_id}_{ds_id_hash}.db"
+        self._filename = f"{ds_dir}/user_{self._user_id}_{ds_id_hash}.db"
 
     def _create_engine(self) -> None:
         """Create the engine for the datasource"""
