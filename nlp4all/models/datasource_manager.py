@@ -368,3 +368,8 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         mapper(self.UserDataSource, self._table)
         self.UserDataSource.query = self._session.query_property()
         self.UserDataSource.row_dict = init_user_datasource
+
+    def __del__(self):
+        """Destructor"""
+
+        self.disconnect()
