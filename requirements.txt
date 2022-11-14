@@ -41,7 +41,7 @@ matplotlib-inline
 mccabe==0.7.0
 nodeenv==1.7.0
 oauthlib==3.2.1
-pathspec==0.10.1
+pathspec==0.10.2
 pickleshare
 Pillow==9.3.0
 pip-upgrader==1.4.15
