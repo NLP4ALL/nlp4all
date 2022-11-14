@@ -14,6 +14,5 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
     __tablename__ = 'data_source'
 
     id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey("user.id"))
-    data_source_id = Column(String(80), unique=True, nullable=False)
-    user_id = Column(Integer, nullable=False)
+    user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    data_source_name = Column(String(80), nullable=False)
