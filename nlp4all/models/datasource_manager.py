@@ -29,51 +29,57 @@ from sqlalchemy.orm import scoped_session, sessionmaker, mapper
 class ColType(Enum):
     """Column types"""
 
-    STRING = "string"
-    INTEGER = "integer"
-    FLOAT = "float"
     BOOLEAN = "boolean"
     DATETIME = "datetime"
-    TEXT = "text"
+    FLOAT = "float"
     ID = "id"
+    INTEGER = "integer"
+    STRING = "string"
+    TEXT = "text"
 
     @staticmethod
     def get_type(col_type: str) -> "ColType":
         """Get the column type"""
+
         return ColType[col_type.upper()]
 
 
 class ColTypeSQL(Enum):
     """Column types to map to SQLAlchemy types"""
 
-    STRING = String
-    INTEGER = Integer
-    FLOAT = Float
     BOOLEAN = Boolean
     DATETIME = DateTime
+    FLOAT = Float
     ID = Integer
+    INTEGER = Integer
+    STRING = String
     TEXT = String
 
     @staticmethod
-    def from_coltype(coltype: ColType) -> "ColTypeSQL": # pylint: disable=too-many-return-statements
+    def from_coltype(coltype: ColType) -> "ColTypeSQL":
         """Convert a ColType to a ColTypeSQL"""
 
-        if coltype == ColType.STRING:
-            return ColTypeSQL.STRING
-        if coltype == ColType.INTEGER:
-            return ColTypeSQL.INTEGER
-        if coltype == ColType.FLOAT:
-            return ColTypeSQL.FLOAT
-        if coltype == ColType.BOOLEAN:
-            return ColTypeSQL.BOOLEAN
-        if coltype == ColType.DATETIME:
-            return ColTypeSQL.DATETIME
-        if coltype == ColType.ID:
-            return ColTypeSQL.ID
-        if coltype == ColType.TEXT:
-            return ColTypeSQL.STRING
+        coltype_sql = None
 
-        raise ValueError(f"Unknown coltype: {coltype}")
+        if coltype == ColType.BOOLEAN:
+            coltype_sql = ColTypeSQL.BOOLEAN
+        if coltype == ColType.DATETIME:
+            coltype_sql = ColTypeSQL.DATETIME
+        if coltype == ColType.FLOAT:
+            coltype_sql = ColTypeSQL.FLOAT
+        if coltype == ColType.ID:
+            coltype_sql = ColTypeSQL.ID
+        if coltype == ColType.INTEGER:
+            coltype_sql = ColTypeSQL.INTEGER
+        if coltype == ColType.STRING:
+            coltype_sql = ColTypeSQL.STRING
+        if coltype == ColType.TEXT:
+            coltype_sql = ColTypeSQL.STRING
+
+        if coltype_sql is None:
+            raise ValueError(f"Unknown coltype: {coltype}")
+
+        return coltype_sql
 
 
 class DataSourceManager: # pylint: disable=too-many-instance-attributes
