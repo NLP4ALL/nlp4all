@@ -182,7 +182,7 @@ class UserController(BaseController):
             bayes_analysis = BayesianAnalysis(
                 user=userid,
                 name=name,
-                #project=a_project.id, #TODO this when unncommented
+                #project=a_project.id, # error when unncommented
                 data={"counts": 0, "words": {}},
                 tweets=[],
                 annotation_tags={},
