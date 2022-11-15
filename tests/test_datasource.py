@@ -71,7 +71,7 @@ class TestDataSourceManager(unittest.TestCase):
 
     dsm: Union[DataSourceManager, None] = None
     user_id: int = 1
-    data_source_name: str = "test_data_source"
+    data_source_id: int = 99
     test_colspec: dict = {
         "id": ColType.ID,
         "col1": ColType.STRING,
@@ -95,7 +95,7 @@ class TestDataSourceManager(unittest.TestCase):
 
     def create_dsm(self):
         """Create simple dsm"""
-        self.dsm = DataSourceManager(self.data_source_name, self.user_id)
+        self.dsm = DataSourceManager(self.data_source_id, self.user_id)
 
     def destroy_dsm(self):
         """Destroy dsm"""
@@ -108,7 +108,7 @@ class TestDataSourceManager(unittest.TestCase):
         """Test connect"""
         self.create_dsm()
         assert self.dsm is not None
-        assert self.dsm._data_source_name == self.data_source_name
+        assert self.dsm._data_source_id == self.data_source_id
         assert self.dsm._user_id == self.user_id
         assert self.dsm._connected is False
         assert self.dsm._filename is not None

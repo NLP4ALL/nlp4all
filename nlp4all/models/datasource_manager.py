@@ -99,7 +99,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
     _orm_base_class: Dict[str, object] = {}
 
     _user_id: int
-    _data_source_name: str
+    _data_source_id: int
     _filename: str
     _tablename: str
     _meta_table_name: str = "datasource_meta"
@@ -126,10 +126,10 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
 
         self.UserDataSource = UserDataSource # pylint: disable=invalid-name
 
-    def __init__(self, data_source_name: str, user_id: int) -> None:
+    def __init__(self, data_source_id: int, user_id: int) -> None:
         """Initialize the datasource manager"""
 
-        self._data_source_name = data_source_name
+        self._data_source_id = data_source_id
         self._user_id = user_id
         self._set_base_class()
         self._set_datasource_class()
@@ -275,7 +275,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
             os.makedirs(ds_dir)
         # generate a unique filename from a hash of the data source id
         # this is to prevent a user from accessing another user's data
-        ds_id_hash = hashlib.sha256(self._data_source_name.encode()).hexdigest()
+        ds_id_hash = hashlib.sha256(str(self._data_source_id).encode()).hexdigest()
         self._tablename = f"ds_{ds_id_hash}"
         self._filename = f"{ds_dir}/user_{self._user_id}_{ds_id_hash}.db"
 
