@@ -69,7 +69,7 @@ class IMCRegistrationForm(FlaskForm):
     IMC Registration form.
     """
 
-    first_name = StringField("first_name", validators=[DataRequired(), Length(min=2, max=20)])
+    quick_name = StringField("Your name", validators=[DataRequired(), Length(min=2, max=20)])
     submit = SubmitField("Sign Up")
 
 
