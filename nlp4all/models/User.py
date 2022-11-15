@@ -23,6 +23,7 @@ class User(Base, UserMixin):
     admin = Column(Boolean, default=False)
     roles = relationship("Role", secondary="user_roles")
     analyses = relationship("BayesianAnalysis")
+    data_sources = relationship("DataSource")
 
     def get_reset_token(self, secret_key: str, expires_sec: int = 1800) -> str:
         """Get a reset token.
