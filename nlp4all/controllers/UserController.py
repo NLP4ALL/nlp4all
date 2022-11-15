@@ -160,10 +160,10 @@ class UserController(BaseController):
             fake_password = str(fake_id)
             hashed_password = generate_password_hash(fake_password).decode("utf-8")
             imc_org = Organization.query.filter_by(name="ATU").all()
-            try: #temporary fix for #error when no project. out of range
-                a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
-            except IndexError:
-                a_project = "None"
+            #try: #temporary fix for #error when no project. out of range
+            #    a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
+            #except IndexError:
+            #    a_project = "None"
             the_quick_name = form.quick_name.data
             if any(User.query.filter_by(first_name=the_quick_name)):
                 the_quick_name = the_quick_name + str(fake_id)
