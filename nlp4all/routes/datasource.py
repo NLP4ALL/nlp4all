@@ -5,7 +5,7 @@ from flask_login import login_required
 
 from nlp4all.controllers import DataSourceController
 
-DataSourceRouter = Blueprint("datasource_controller", __name__)
+DataSourceRouter = Blueprint("data_source_controller", __name__)
 
 @DataSourceRouter.before_request
 @login_required
