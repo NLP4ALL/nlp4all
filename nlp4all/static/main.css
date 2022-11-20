@@ -11,12 +11,12 @@ h1, h2, h3, h4, h5, h6 {
 .bg-steel {
   background-color: #5f788a;
 }
-/* trying to recover the orginal look */ 
-.form-group {
-  margin: 1em 0;
+
+.site-header .navbar-nav .nav-link.logout {
+  color: #c4c4c489;
 }
-.form-control {
-  margin: 0.5em 0;
+.site-header .navbar-nav .nav-link.logout:hover {
+  color: #c4c4c4f3;
 }
 /* trying to recover the orginal look */ 
 .site-header .navbar-nav .nav-link {
@@ -28,15 +28,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .site-header .navbar-nav .nav-link.active {
-  font-weight: 800;
-  color: #ffea00;
+  color: rgba(251, 186, 104);
 }
 
 .content-section {
   background: #ffffff;
   padding: 10px 20px;
   border: 1px solid #dddddd;
-  border-radius: 3px;
+  border-radius: 16px;
   margin-bottom: 20px;
 }
 
