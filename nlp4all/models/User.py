@@ -19,7 +19,10 @@ class User(Base, UserMixin):
     email = Column(String(120), unique=True, nullable=False)
     image_file = Column(String(20), nullable=False, default="default.jpg")
     password = Column(String(60), nullable=False)
-    organizations = relationship("Organization", secondary="user_orgs")
+    organizations = relationship(
+        "Organization",
+        secondary="user_orgs",
+        back_populates="users")
     admin = Column(Boolean, default=False)
     roles = relationship("Role", secondary="user_roles")
     analyses = relationship("BayesianAnalysis")
