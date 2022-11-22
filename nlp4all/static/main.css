@@ -12,6 +12,13 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #5f788a;
 }
 
+.site-header .navbar-nav .nav-link.logout {
+  color: #c4c4c489;
+}
+.site-header .navbar-nav .nav-link.logout:hover {
+  color: #c4c4c4f3;
+}
+/* trying to recover the orginal look */ 
 .site-header .navbar-nav .nav-link {
   color: #cbd5db;
 }
@@ -21,14 +28,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .site-header .navbar-nav .nav-link.active {
-  font-weight: 500;
+  color: rgba(251, 186, 104);
 }
 
 .content-section {
   background: #ffffff;
   padding: 10px 20px;
   border: 1px solid #dddddd;
-  border-radius: 3px;
+  border-radius: 16px;
   margin-bottom: 20px;
 }
 .footer {
