@@ -4,16 +4,17 @@ import datetime
 import os
 from typing import Union
 import unittest
+import pytest
 
 from sqlalchemy import (
     Boolean,
     DateTime,
     Float,
     Integer,
-    String,
+    String
 )
 
-from nlp4all.models import DataSourceManager, ColTypeSQL, ColType
+from nlp4all.models import DataSourceManager, ColTypeSQL, ColType, DataSource, User
 
 # pylint: disable=protected-access
 
@@ -261,3 +262,48 @@ class TestDataSourceManager(unittest.TestCase):
         assert self.is_row_in_db(test_row)
 
         self.destroy_dsm()
+
+
+class TestDataSource:
+    """Test DataSource"""
+
+    colspec = {
+        "col1": ColType.STRING,
+        "col2": ColType.INTEGER,
+        "col3": ColType.FLOAT,
+        "col4": ColType.BOOLEAN,
+        "col5": ColType.DATETIME,
+        "maintext": ColType.TEXT,
+    }
+
+    def create_user(self, db_session):
+        """Create user"""
+        self.user = User() # pylint: disable=attribute-defined-outside-init
+        self.user.username = "test_user"
+        self.user.email = "test@example.org"
+        self.user.password = "test_password"
+        db_session.add(self.user)
+        db_session.commit()
+
+    @pytest.mark.usefixtures("db_session", "init_db")
+    def test_create_data_source(self, db_session, init_db):
+        """Test create data source"""
+        init_db()
+        self.create_user(db_session)
+        ds = DataSource() # pylint: disable=invalid-name
+        ds.user = self.user.id
+        ds.data_source_name = "test_data_source"
+        assert ds is not None
+        assert ds.user is not None
+        with pytest.raises(ValueError) as exc_info:
+            ds.create(self.colspec)
+        assert "Data source not saved yet" in str(exc_info.value)
+        db_session.add(ds)
+        db_session.commit()
+        ds.create(self.colspec)
+        dsm = ds.data_source_manager()
+        assert dsm is not None
+        assert os.path.exists(dsm._filename)
+        db_session.delete(self.user)
+        db_session.commit()
+        assert not os.path.exists(dsm._filename)

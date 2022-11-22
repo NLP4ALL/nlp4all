@@ -140,6 +140,11 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         """Set the base class for the table and meta table"""
         self._orm_base_class = declarative_base()
 
+    def is_connected(self) -> bool:
+        """Check if the datasource is connected"""
+
+        return self._connected
+
     def connect(self) -> None:
         """Connect to the datasource"""
         if self._engine is None:
