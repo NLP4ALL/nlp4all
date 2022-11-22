@@ -10,5 +10,5 @@ class ProjectCategories(Base):  # pylint: disable=too-few-public-methods
 
     __tablename__ = "project_categories"
     id = Column(Integer(), primary_key=True)
-    user_id = Column(Integer(), ForeignKey("project.id", ondelete="CASCADE"))
-    role_id = Column(Integer(), ForeignKey("tweet_tag_category.id", ondelete="CASCADE"))
+    project_id = Column(Integer(), ForeignKey("project.id", ondelete="CASCADE"))
+    category_id = Column(Integer(), ForeignKey("tweet_tag_category.id", ondelete="CASCADE"))

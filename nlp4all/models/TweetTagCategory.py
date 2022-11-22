@@ -15,5 +15,5 @@ class TweetTagCategory(Base):  # pylint: disable=too-few-public-methods
     description = Column(String(100))
     tweets = relationship("Tweet")
     tags = relationship("TweetTag")
-    projects = relationship("Project", secondary="project_categories")
+    projects = relationship("Project", secondary="project_categories", back_populates="categories")
     # matrices = relationship('ConfusionMatrix', secondary='matrix_categories')
