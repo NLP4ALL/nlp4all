@@ -17,7 +17,10 @@ class Project(Base):
     description = Column(String)
     organization = Column(Integer, ForeignKey("organization.id"))
     analyses = relationship("BayesianAnalysis")
-    categories = relationship("TweetTagCategory", secondary="project_categories")
+    categories = relationship(
+        "TweetTagCategory",
+        secondary="project_categories",
+        back_populates="projects")
     tf_idf = Column(JSON)
     tweets = relationship("Tweet", secondary="tweet_project", lazy="dynamic")
     training_and_test_sets = Column(JSON)

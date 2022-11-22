@@ -12,5 +12,5 @@ class Organization(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "organization"
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    users = relationship("User", secondary="user_orgs")
+    users = relationship("User", secondary="user_orgs", back_populates="organizations")
     projects = relationship("Project")
