@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set active_page = "account" %}
 {% block content %}
     <div class="content-section col-md-8">
       <div class="media">
@@ -16,7 +17,6 @@
                     <div class="col">
                         <div class="mb-3">
                             {{ form.first_name.label(class="form-label") }}
-
                             {% if form.first_name.errors %}
                                 {{ form.first_name(class="form-control form-control-lg is-invalid") }}
                                 <div class="invalid-feedback">
@@ -45,7 +45,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="mb-3">
                     {{ form.email.label(class="form-label") }}
                     {% if form.email.errors %}
