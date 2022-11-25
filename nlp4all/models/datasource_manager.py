@@ -18,12 +18,24 @@ from sqlalchemy import (
     MetaData,
     String,
     Table,
+    Text
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.pool import NullPool
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker, mapper
+
+DataSourceBase = declarative_base()
+class Datum(DataSourceBase):
+    """Datum model"""
+    __abstract__ = True
+
+    id = Column(Integer, primary_key=True)
+    word_list = Column(JSON)
+    clean_text = Column(Text)
+    category = Column(Integer)
+
 
 
 class ColType(Enum):
@@ -53,7 +65,7 @@ class ColTypeSQL(Enum):
     ID = Integer
     INTEGER = Integer
     STRING = String
-    TEXT = String
+    TEXT = Text
 
     @staticmethod
     def from_coltype(coltype: ColType) -> "ColTypeSQL":
@@ -107,7 +119,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
     _connected: bool = False
 
     def _set_datasource_meta_class(self):
-        class UserDataSourceMeta(self._orm_base_class): # pylint: disable=too-few-public-methods
+        class UserDataSourceMeta(DataSourceBase): # pylint: disable=too-few-public-methods
             """UserDataSourceMeta for table spec information"""
 
             __abstract__ = True
@@ -138,7 +150,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
 
     def _set_base_class(self):
         """Set the base class for the table and meta table"""
-        self._orm_base_class = declarative_base()
+        self._orm_base_class = Datum
 
     def is_connected(self) -> bool:
         """Check if the datasource is connected"""

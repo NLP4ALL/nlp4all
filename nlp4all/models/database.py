@@ -28,6 +28,8 @@ def init_db(): # pylint: disable=too-many-locals
     from . import BayesianAnalysis
     from . import BayesianRobot
     from . import ConfusionMatrix
+    from . import DataSource
+    from . import DataTagCategory
     from . import MatrixCategories
     from . import Organization
     from . import Project
@@ -38,7 +40,6 @@ def init_db(): # pylint: disable=too-many-locals
     from . import TweetMatrix
     from . import TweetProject
     from . import TweetTag
-    from . import TweetTagCategory
     from . import User
     from . import UserOrgs
     from . import UserRoles
@@ -53,6 +54,8 @@ def drop_db(): # pylint: disable=too-many-locals
     from . import BayesianAnalysis
     from . import BayesianRobot
     from . import ConfusionMatrix
+    from . import DataSource
+    from . import DataTagCategory
     from . import MatrixCategories
     from . import Organization
     from . import Project
@@ -63,7 +66,6 @@ def drop_db(): # pylint: disable=too-many-locals
     from . import TweetMatrix
     from . import TweetProject
     from . import TweetTag
-    from . import TweetTagCategory
     from . import User
     from . import UserOrgs
     from . import UserRoles

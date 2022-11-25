@@ -19,6 +19,7 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"), nullable=False)
     data_source_name = Column(String(80), nullable=False)
+    data = Column()
 
     _dsm: Union[DataSourceManager, None] = None
 

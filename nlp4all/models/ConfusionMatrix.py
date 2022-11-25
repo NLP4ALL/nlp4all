@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
 from sqlalchemy.orm import relationship
 
 from .database import Base
-from . import Tweet, TweetTagCategory
+from . import Tweet, DataTagCategory
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -111,7 +111,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
         for tweet_id in train_tweet_ids:
             tweet = Tweet.query.get(tweet_id)
             category_id = tweet.category
-            category = TweetTagCategory.query.get(category_id)
+            category = DataTagCategory.query.get(category_id)
             train_data = self.updated_data(tweet, category)
         return train_data
 

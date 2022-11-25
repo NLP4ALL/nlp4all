@@ -5,7 +5,7 @@ from flask import redirect, request, url_for
 from flask_login import current_user
 
 from nlp4all.models.database import db_session
-from nlp4all.models import BayesianAnalysis, Organization, TweetTagCategory, Project, BayesianRobot
+from nlp4all.models import BayesianAnalysis, Organization, DataTagCategory, Project, BayesianRobot
 
 from nlp4all.forms.admin import AddProjectForm
 from nlp4all.forms.analyses import AddBayesianAnalysisForm
@@ -37,7 +37,7 @@ class ProjectController(BaseController):
         form = AddProjectForm()
         # find forst alle mulige organizations
         form.organization.choices = [(str(o.id), o.name) for o in Organization.query.all()]
-        form.categories.choices = [(str(s.id), s.name) for s in TweetTagCategory.query.all()]
+        form.categories.choices = [(str(s.id), s.name) for s in DataTagCategory.query.all()]
         if form.validate_on_submit():
             # orgs = [int(n) for n in form.organization.data]
             # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
