@@ -139,7 +139,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 last_run_robot = ana.robots[-2]
                 rob_dict = {}
                 user = User.query.get(ana.user)
-                rob_dict["user"] = user.username
+                rob_dict["user"] = user.first_name
                 link_text = (
                     '<a href="/robot?robot='
                     + str(last_run_robot.id)
@@ -391,7 +391,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             ).all()
             if len(user_analysis_robots) == 0:
                 bayes_robot = BayesianRobot(
-                    name=current_user.username + "s robot",
+                    name=current_user.first_name + current_user.last_name + "s robot",
                     analysis=bayes_analysis.id,
                     user=current_user.id,
                 )

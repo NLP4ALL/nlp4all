@@ -15,7 +15,8 @@ class User(Base, UserMixin):
 
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
-    username = Column(String(20), unique=True, nullable=False)
+    first_name = Column(String(50), nullable=False)
+    last_name = Column(String(50), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     image_file = Column(String(20), nullable=False, default="default.jpg")
     password = Column(String(60), nullable=False)
@@ -70,4 +71,4 @@ class User(Base, UserMixin):
     def __repr__(self):
         """represents the user object
         without it print(User.query.get(user_id)) returns <user.id>"""
-        return f"User('{self.username}', '{self.email}', '{self.image_file}')"
+        return f"User('{self.first_name}', '{self.email}', '{self.image_file}')"

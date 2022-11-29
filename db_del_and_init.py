@@ -25,7 +25,8 @@ with app.app_context():
 
     hp = generate_password_hash("1234")
     user = User(
-        username="arthurhjorth",
+        first_name="Arthur",
+        last_name="Hjorth",
         email="arthur.hjorth@stx.oxon.org",
         password=hp,
         admin=True,
@@ -43,7 +44,8 @@ with app.app_context():
     db_session.commit()
 
     user = User(
-        username="arthurhjorth_teacher",
+        first_name="Arthur",
+        last_name="Hjorth",
         email="arthur.hjorth@u.northwestern.edu",
         password=hp,
         organizations=[
@@ -55,7 +57,8 @@ with app.app_context():
     ]
     db_session.add(user)
     user = User(
-        username="arthur_student",
+        first_name="Arthur",
+        last_name="Hjorth",
         email="arthur@mgmt.au.dk",
         password=hp,
         organizations=[
