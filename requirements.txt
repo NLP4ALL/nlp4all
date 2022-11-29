@@ -1,3 +1,4 @@
+alembic==1.8.1
 asgiref==3.5.2
 astroid==2.12.13
 attrs==22.1.0
@@ -22,6 +23,7 @@ flask_cors==3.0.10
 Flask-Email==1.4.4
 Flask-Login==0.6.2
 Flask-Mail==0.9.1
+flask_migrate==4.0.0
 Flask-WTF==1.0.1
 greenlet==2.0.1
 gunicorn==20.1.0
@@ -36,6 +38,7 @@ Jinja2==3.1.2
 jupyter_client
 jupyter_core
 lazy-object-proxy==1.8.0
+Mako==1.2.4
 MarkupSafe==2.1.1
 matplotlib-inline
 mccabe==0.7.0
