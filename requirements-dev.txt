@@ -1,7 +1,7 @@
 # include main requirements
 -r requirements.txt
 pytest==7.2.0
-pylint==2.15.5
+pylint==2.15.6
 pylint-flask==0.6
 pylint-plugin-utils==0.7
 pre-commit==2.20.0
