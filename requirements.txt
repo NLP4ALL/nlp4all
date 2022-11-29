@@ -66,7 +66,7 @@ tomlkit==0.11.6
 tweepy==4.12.1
 typing_extensions==4.4.0
 tzdata==2022.4
-urllib3==1.26.12
+urllib3==1.26.13
 virtualenv==20.17.0
 Werkzeug==2.2.2
 wincertstore==0.2
