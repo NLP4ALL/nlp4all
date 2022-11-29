@@ -1,8 +1,7 @@
 """Admin controller.""" # pylint: disable=invalid-name
 
-from flask import flash, redirect, url_for
+from flask import flash, redirect, url_for, g
 
-from nlp4all.models.database import db_session
 from nlp4all.models import Organization, TweetTagCategory
 from nlp4all.forms.admin import AddOrgForm
 from nlp4all.forms.analyses import AddTweetCategoryForm
@@ -34,8 +33,8 @@ class AdminController(BaseController):
         orgs = Organization.query.all()
         if form.validate_on_submit():
             org = Organization(name=form.name.data)
-            db_session.add(org)
-            db_session.commit()
+            g.db.add(org)
+            g.db.commit()
             flash("Your organization has been created!", "success")
             return redirect(url_for("admin_controller.add_org"))
         return cls.render_template("add_org.html", form=form, orgs=orgs)

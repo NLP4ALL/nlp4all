@@ -5,7 +5,8 @@ import time
 import operator
 from datetime import datetime
 
-from nlp4all.models.database import db_session
+from flask import g
+
 from nlp4all.helpers.datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
 from nlp4all.helpers.colors import (
     assign_colors,
@@ -103,8 +104,8 @@ def create_css_info(classifications, text, list_of_categories):
 def add_category(name, description):
     """add a category to the database"""
     category = TweetTagCategory(name=name, description=description)
-    db_session.add(category)
-    db_session.commit()
+    g.db.add(category)
+    g.db.commit()
 
 
 def get_user_projects(a_user):
@@ -141,8 +142,8 @@ def add_project(name, description, org, cat_ids):
         tf_idf=tf_idf,
         training_and_test_sets=training_and_test_sets,
     )
-    db_session.add(project)
-    db_session.commit()
+    g.db.add(project)
+    g.db.commit()
     return project
 
 
@@ -168,8 +169,8 @@ def add_matrix(cat_ids, ratio, userid):
         ratio=ratio,
         user=userid,
     )
-    db_session.add(matrix)
-    db_session.commit()
+    g.db.add(matrix)
+    g.db.commit()
     return matrix
 
 
@@ -221,15 +222,15 @@ def add_tweet_from_dict(indict, category=None):
         url="https://twitter.com/" + indict["twitter_handle"] + "/" + str(indict["id"]),
         text=" ".join([clean_word(word) for word in text.split()]),
     )
-    db_session.add(a_tweet)
-    db_session.commit()
+    g.db.add(a_tweet)
+    g.db.commit()
 
 
 def add_role(role_name):
     """add a role to the database"""
     role = Role(name=role_name)
-    db_session.add(role)
-    db_session.commit()
+    g.db.add(role)
+    g.db.commit()
 
 
 def get_role(role_name):
