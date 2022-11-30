@@ -20,7 +20,7 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint nlp4all tests
     - name: Run tests with pytest
       run: |
         pytest

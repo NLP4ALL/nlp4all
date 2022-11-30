@@ -10,7 +10,7 @@ def get_env_variable(name: str) -> str:
     try:
         return os.environ[name]
     except KeyError as exc:
-        message = "Expected environment variable '{}' not set.".format(name)
+        message = f"Expected environment variable '{name}' not set."
         raise EnvironmentError(message) from exc
 
 # # Load environment variables from .flaskenv and .env file
@@ -30,8 +30,8 @@ if DB_BACKEND == "postgres":
     pg_user = get_env_variable('POSTGRES_USER')
     pg_pass = get_env_variable('POSTGRES_PASSWORD')
     pg_db = get_env_variable('POSTGRES_DB')
-    uri_template = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'
-    DB_URI = uri_template.format(
+    URI_TEMPLATE = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'
+    DB_URI = URI_TEMPLATE.format(
         user=pg_user,
         pw=pg_pass,
         url=pg_host,
@@ -47,7 +47,7 @@ class Config: # pylint: disable=too-few-public-methods
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = DB_URI
     STATIC_DIR = Path(__file__).parent / "static"
-    
+
     def get_secret(self) -> str:
         """Get the secret key for the app."""
         try:
@@ -81,7 +81,6 @@ class TestConfig(Config): # pylint: disable=too-few-public-methods
 
 class ProductionConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in production."""
-    pass
 
 
 def get_config(env=None):

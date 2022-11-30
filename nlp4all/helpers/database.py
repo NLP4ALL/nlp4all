@@ -27,7 +27,7 @@ def init_db(): # pylint: disable=too-many-locals
     from nlp4all.models import UserOrgs
     from nlp4all.models import UserRoles
     # pylint: enable=wrong-import-position, unused-import
-    engine = current_app.extensions["sqlalchemy"].get_engine()
+    engine = current_app.extensions["sqlalchemy"].engine
     Base.metadata.create_all(bind=engine)
 
 @click.command("init-db")

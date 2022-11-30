@@ -1,3 +1,5 @@
+"""Helper functions for development."""
+
 from flask import current_app
 from flask import jsonify
 
