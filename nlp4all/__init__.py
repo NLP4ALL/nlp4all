@@ -20,7 +20,6 @@ from .routes import Router
 db = SQLAlchemy(model_class = Base)
 migrate = Migrate()
 
-
 def create_app(env: str = "production") -> Flask:
     """Create the Flask app."""
 
@@ -44,11 +43,11 @@ def create_app(env: str = "production") -> Flask:
 
     dbhelper.init_app(app)
 
+    # in non-production environments, we want to be able to get a list of routes
     if env != "production":
         from .helpers import development # pylint: disable=wrong-import-position
         app.add_url_rule('/api/help', methods = ['GET'], view_func=development.help_route)
-    
-    
+
     @app.route("/static/<path:filename>")
     def staticfiles(filename):
         """Static file router"""

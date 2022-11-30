@@ -77,12 +77,14 @@ def get_config(env=None):
         try:
             env = get_env_variable('ENV')
         except Exception:
-            env = 'development'
-            print('env is not set, using env:', env)
+            env = 'production'
+            print('env is not set, using production:', env)
 
     if env == 'production':
         return ProductionConfig()
-    elif env == 'test':
+    elif env == 'testing':
         return TestConfig()
-
-    return DevelopmentConfig()
+    elif env == 'development':
+        return DevelopmentConfig()
+    else:
+        raise Exception('Unknown environment: {}'.format(env))
