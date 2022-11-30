@@ -18,6 +18,6 @@ from .TweetMatrix import TweetMatrix
 from .TweetProject import TweetProject
 from .TweetTag import TweetTag
 from .TweetTagCategory import TweetTagCategory
-from .User import User
+from .User import User, load_user
 from .UserOrgs import UserOrgs
 from .UserRoles import UserRoles

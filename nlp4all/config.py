@@ -3,7 +3,7 @@
 import os
 import secrets
 from pathlib import Path
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 def get_env_variable(name: str) -> str:
     """Get the environment variable or raise exception."""
@@ -13,13 +13,13 @@ def get_env_variable(name: str) -> str:
         message = "Expected environment variable '{}' not set.".format(name)
         raise Exception(message)
 
-# Load environment variables from .flaskenv and .env file
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, ".flaskenv"))
-load_dotenv(os.path.join(basedir, ".env"))
+# # Load environment variables from .flaskenv and .env file
+# basedir = os.path.abspath(os.path.dirname(__file__))
+# load_dotenv(os.path.join(basedir, ".flaskenv"))
+# load_dotenv(os.path.join(basedir, ".env"))
 
 
-POSTGRES_URL = get_env_variable('POSTGRES_URL')
+POSTGRES_URL = get_env_variable('POSTGRES_HOST')
 POSTGRES_USER = get_env_variable('POSTGRES_USER')
 POSTGRES_PASSWORD = get_env_variable('POSTGRES_PASSWORD')
 POSTGRES_DB = get_env_variable('POSTGRES_DB')
@@ -39,6 +39,7 @@ class Config: # pylint: disable=too-few-public-methods
         pw=POSTGRES_PASSWORD,
         url=POSTGRES_URL,
         db=POSTGRES_DB)
+    STATIC_DIR = Path(__file__).parent / "static"
     
     def get_secret(self) -> str:
         """Get the secret key for the app."""
@@ -62,6 +63,7 @@ class DevelopmentConfig(Config): # pylint: disable=too-few-public-methods
 class TestConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in testing."""
     SECRET_FILE_PATH = Path(".flask_secret_test")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     TESTING = True
 
 
