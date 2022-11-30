@@ -3,6 +3,7 @@ nlp4all module
 """
 
 import os
+from typing import Union
 
 from flask import Flask, send_from_directory
 from flask_login import LoginManager
@@ -20,14 +21,13 @@ from .routes import Router
 db = SQLAlchemy(model_class = Base)
 migrate = Migrate()
 
-def create_app(env: str = "production") -> Flask:
+def create_app(env: Union[None, str] = None) -> Flask:
     """Create the Flask app."""
 
     app = Flask(__name__, template_folder="views")
     conf: Config = get_config(env)
     app.secret_key = conf.get_secret()
     app.config.from_object(conf)
-    os.environ.setdefault("SQLALCHEMY_DATABASE_URI", conf.SQLALCHEMY_DATABASE_URI)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -45,7 +45,7 @@ def create_app(env: str = "production") -> Flask:
 
     # in non-production environments, we want to be able to get a list of routes
     if env != "production":
-        from .helpers import development # pylint: disable=wrong-import-position
+        from .helpers import development # pylint: disable=import-outside-toplevel
         app.add_url_rule('/api/help', methods = ['GET'], view_func=development.help_route)
 
     @app.route("/static/<path:filename>")

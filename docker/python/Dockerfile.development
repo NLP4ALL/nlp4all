@@ -1,3 +1,6 @@
+# This is the same as Dockerfile, but it installs the dev requirements with pip as well.
+
+
 ###########
 # BUILDER #
 ###########
@@ -13,8 +16,9 @@ RUN apt-get update && apt-get install -y netcat && apt-get install -y --no-insta
 # install dependencies
 RUN python -m pip install --progress-bar off --no-cache-dir --upgrade pip
 COPY ./requirements.txt /usr/src/app/requirements.txt
+COPY ./requirements.txt /usr/src/app/requirements-dev.txt
 
-RUN pip wheel --progress-bar off --no-cache-dir --wheel-dir /usr/src/app/wheels -r requirements.txt
+RUN pip wheel --progress-bar off --no-cache-dir --wheel-dir /usr/src/app/wheels -r requirements-dev.txt
 
 #########
 # FINAL #
@@ -36,6 +40,7 @@ WORKDIR $HOME
 RUN apt-get update && apt-get install -y --no-install-recommends netcat
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
+COPY --from=builder /usr/src/app/requirements-dev.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 

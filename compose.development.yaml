@@ -14,7 +14,7 @@ services:
     restart: always
     build: 
       context: .
-      dockerfile: ./docker/python/Dockerfile
+      dockerfile: ./docker/python/Dockerfile.development
     command: flask --debug --app nlp4all run --host=0.0.0.0
     volumes:
       - static_volume_dev:/home/app/nlp4all/static

@@ -9,21 +9,33 @@ def get_env_variable(name: str) -> str:
     """Get the environment variable or raise exception."""
     try:
         return os.environ[name]
-    except KeyError:
+    except KeyError as exc:
         message = "Expected environment variable '{}' not set.".format(name)
-        raise Exception(message)
+        raise EnvironmentError(message) from exc
 
 # # Load environment variables from .flaskenv and .env file
 # basedir = os.path.abspath(os.path.dirname(__file__))
 # load_dotenv(os.path.join(basedir, ".flaskenv"))
 # load_dotenv(os.path.join(basedir, ".env"))
 
+DB_URI = ""
 
-POSTGRES_URL = get_env_variable('POSTGRES_HOST')
-POSTGRES_USER = get_env_variable('POSTGRES_USER')
-POSTGRES_PASSWORD = get_env_variable('POSTGRES_PASSWORD')
-POSTGRES_DB = get_env_variable('POSTGRES_DB')
+try:
+    DB_BACKEND = get_env_variable("DB_BACKEND")
+except EnvironmentError:
+    DB_BACKEND = "sqlite"
 
+if DB_BACKEND == "postgres":
+    pg_host = get_env_variable('POSTGRES_HOST')
+    pg_user = get_env_variable('POSTGRES_USER')
+    pg_pass = get_env_variable('POSTGRES_PASSWORD')
+    pg_db = get_env_variable('POSTGRES_DB')
+    uri_template = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'
+    DB_URI = uri_template.format(
+        user=pg_user,
+        pw=pg_pass,
+        url=pg_host,
+        db=pg_db)
 
 class Config: # pylint: disable=too-few-public-methods
     """Configuration for the Flask app."""
@@ -33,12 +45,7 @@ class Config: # pylint: disable=too-few-public-methods
     SECRET_FILE_PATH = Path(".flask_secret")
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    uri_template = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'
-    SQLALCHEMY_DATABASE_URI = uri_template.format(
-        user=POSTGRES_USER,
-        pw=POSTGRES_PASSWORD,
-        url=POSTGRES_URL,
-        db=POSTGRES_DB)
+    SQLALCHEMY_DATABASE_URI = DB_URI
     STATIC_DIR = Path(__file__).parent / "static"
     
     def get_secret(self) -> str:
@@ -59,6 +66,11 @@ class DevelopmentConfig(Config): # pylint: disable=too-few-public-methods
     SECRET_FILE_PATH = Path(".flask_secret_dev")
     DEBUG = True
 
+class LocalDevelopmentConfig(Config): # pylint: disable=too-few-public-methods
+    """Configuration for the Flask app in testing."""
+    SECRET_FILE_PATH = Path(".flask_secret_localdev")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///../data/nlp4all_dev.db"
+    TESTING = True
 
 class TestConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in testing."""
@@ -73,18 +85,28 @@ class ProductionConfig(Config): # pylint: disable=too-few-public-methods
 
 
 def get_config(env=None):
+    """Get the configuration for the Flask app."""
     if env is None:
         try:
-            env = get_env_variable('ENV')
-        except Exception:
+            env = get_env_variable('NLP4ALL_ENV')
+        except EnvironmentError:
             env = 'production'
-            print('env is not set, using production:', env)
+            print(f'env is not set, using: {env}')
 
     if env == 'production':
+        if DB_URI == "":
+            raise EnvironmentError('Cannot use SQLite in production')
         return ProductionConfig()
-    elif env == 'testing':
+
+    if env == 'testing':
         return TestConfig()
-    elif env == 'development':
+
+    if env == 'development':
+        if DB_URI == "":
+            raise EnvironmentError('Cannot use SQLite in production')
         return DevelopmentConfig()
-    else:
-        raise Exception('Unknown environment: {}'.format(env))
+
+    if env == 'localdev':
+        return LocalDevelopmentConfig()
+
+    raise EnvironmentError(f'Unknown environment: {env}')

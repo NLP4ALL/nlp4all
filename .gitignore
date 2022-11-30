@@ -12,6 +12,6 @@ venv/
 .ipynb_checkpoints
 .mypy_cache
 .pytest_cache
-.flask_secret
+.flask_secret*
 .env
 *.env
