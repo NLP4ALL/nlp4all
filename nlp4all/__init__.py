@@ -18,7 +18,7 @@ from .models.database import Base
 from .models import load_user
 from .routes import Router
 
-db = SQLAlchemy(model_class = Base)
+db = SQLAlchemy(model_class = Base, engine_options={"future": True})
 migrate = Migrate()
 
 def create_app(env: Union[None, str] = None) -> Flask:

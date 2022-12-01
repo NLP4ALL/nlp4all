@@ -6,11 +6,13 @@ import ast
 import datetime
 from random import sample
 import re
-from flask import jsonify, redirect, render_template, request, url_for, flash, g
+from flask import jsonify, redirect, render_template, request, url_for, flash
 from flask_login import current_user
 
 
 from sqlalchemy.orm.attributes import flag_modified
+
+from nlp4all import db
 
 from nlp4all.models import (
     BayesianAnalysis,
@@ -80,10 +82,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         if request.method == "POST" and "delete" in request.form.to_dict():
             del bayes_robot.features[request.form.to_dict()["delete"]]
             flag_modified(bayes_robot, "features")
-            g.db.add(bayes_robot)
-            g.db.merge(bayes_robot)
-            g.db.flush()
-            g.db.commit()
+            db.add(bayes_robot)
+            db.merge(bayes_robot)
+            db.flush()
+            db.session.commit()
             redirect(url_for("robot", robot=robot_id))
         form = BayesianRobotForms()
         if request.method == "POST" and "add_feature_form-submit" in request.form.to_dict():
@@ -98,26 +100,26 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 }
                 bayes_robot.features.update(new_feature)
                 flag_modified(bayes_robot, "features")
-                g.db.add(bayes_robot)
-                g.db.merge(bayes_robot)
-                g.db.flush()
-                g.db.commit()
+                db.add(bayes_robot)
+                db.merge(bayes_robot)
+                db.flush()
+                db.session.commit()
                 return redirect(url_for("robot", robot=robot_id))
         form = BayesianRobotForms()
         if request.method == "POST" and "run_analysis_form-run_analysis" in request.form.to_dict():
             if len(bayes_robot.features) > 0:
                 bayes_robot.accuracy = bayes_robot.calculate_accuracy()
                 flag_modified(bayes_robot, "accuracy")
-                g.db.merge(bayes_robot)
+                db.merge(bayes_robot)
                 bayes_robot.accuracy = BayesianRobot.calculate_accuracy(bayes_robot)
                 bayes_robot.retired = True
                 bayes_robot.time_retired = datetime.datetime.utcnow()
                 child_robot = bayes_robot.clone()
-                g.db.add(child_robot)
-                g.db.flush()
+                db.add(child_robot)
+                db.flush()
                 bayes_robot.child = child_robot.id
-                g.db.add(bayes_robot)
-                g.db.commit()
+                db.add(bayes_robot)
+                db.session.commit()
                 return redirect(url_for("robot", robot=bayes_robot.id))
         table_data = acc_dict["table_data"]
         table_data = [d for d in table_data if not "*" in d["word"]]
@@ -266,18 +268,18 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             # all this  stuff is necessary  because the database backend doesnt resgister
             # changes on JSON
             flag_modified(bayes_analysis, "data")
-            g.db.add(bayes_analysis)
-            g.db.merge(bayes_analysis)
-            g.db.flush()
-            g.db.commit()
+            db.add(bayes_analysis)
+            db.merge(bayes_analysis)
+            db.flush()
+            db.session.commit()
             tag = TweetTag(
                 category=category.id,
                 analysis=bayes_analysis.id,
                 tweet=the_tweet.id,
                 user=current_user.id,
             )
-            g.db.add(tag)
-            g.db.commit()
+            db.add(tag)
+            db.session.commit()
             # redirect(url_for('home'))
             return redirect(url_for("analysis", analysis=analysis_id))
         # check if user has access to this.
@@ -344,18 +346,18 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             # all this  stuff is necessary  because the database backend doesnt resgister
             # changes on JSON
             flag_modified(bayes_analysis, "data")
-            g.db.add(bayes_analysis)
-            g.db.merge(bayes_analysis)
-            g.db.flush()
-            g.db.commit()
+            db.add(bayes_analysis)
+            db.merge(bayes_analysis)
+            db.flush()
+            db.session.commit()
             tag = TweetTag(
                 category=category.id,
                 analysis=bayes_analysis.id,
                 tweet=the_tweet.id,
                 user=current_user.id,
             )
-            g.db.add(tag)
-            g.db.commit()
+            db.add(tag)
+            db.session.commit()
             # redirect(url_for('home'))
             return redirect(url_for("analysis", analysis=analysis_id))
 
@@ -394,9 +396,9 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                     analysis=bayes_analysis.id,
                     user=current_user.id,
                 )
-                g.db.add(bayes_robot)
-                g.db.flush()
-                g.db.commit()
+                db.add(bayes_robot)
+                db.flush()
+                db.session.commit()
                 return redirect(url_for("analysis", analysis=analysis_id))
             data["last_robot"] = user_analysis_robots[-1]
 
@@ -449,10 +451,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             flag_modified(c_matrix, "ratio")
             c_matrix.training_and_test_sets = c_matrix.update_tnt_set()
             flag_modified(c_matrix, "training_and_test_sets")
-            g.db.add(c_matrix)
-            g.db.merge(c_matrix)
-            g.db.flush()
-            g.db.commit()
+            db.add(c_matrix)
+            db.merge(c_matrix)
+            db.flush()
+            db.session.commit()
             if form.shuffle.data:
                 tnt_list = list(range(0, len(tnt_sets)))
                 tnt_nr = sample(tnt_list, 1)[0]
@@ -523,10 +525,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                     "nr_excl_tweets": len(excl_tweets),
                 }
                 flag_modified(c_matrix, "data")
-                g.db.add(c_matrix)
-                g.db.merge(c_matrix)
-                g.db.flush()
-                g.db.commit()
+                db.add(c_matrix)
+                db.merge(c_matrix)
+                db.flush()
+                db.session.commit()
                 return redirect(url_for("matrix", matrix_id=c_matrix.id, tnt_nr=tnt_nr))
 
             # train on the training set:
@@ -588,10 +590,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 "nr_excl_tweets": len(excl_tweets),
             }
             flag_modified(c_matrix, "data")
-            g.db.add(c_matrix)
-            g.db.merge(c_matrix)
-            g.db.flush()
-            g.db.commit()
+            db.add(c_matrix)
+            db.merge(c_matrix)
+            db.flush()
+            db.session.commit()
             return redirect(url_for("matrix", matrix_id=c_matrix.id, tnt_nr=tnt_nr))
 
         # prepare data for matrix table
@@ -702,10 +704,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             cats = [int(n) for n in form.categories.data]
             ratio = form.ratio.data * 0.01  # convert back to decimals
             c_matrix = add_matrix(cat_ids=cats, ratio=ratio, userid=userid)
-            g.db.add(c_matrix)
-            g.db.merge(c_matrix)
-            g.db.flush()
-            g.db.commit()  # not sure if this is necessary
+            db.add(c_matrix)
+            db.merge(c_matrix)
+            db.flush()
+            db.session.commit()  # not sure if this is necessary
 
             cat_names = [c.name for c in c_matrix.categories]
             a_tnt_set = c_matrix.training_and_test_sets[0]  # as a default
@@ -773,10 +775,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 "nr_excl_tweets": len(excl_tweets),
             }
             flag_modified(c_matrix, "data")
-            g.db.add(c_matrix)
-            g.db.merge(c_matrix)
-            g.db.flush()
-            g.db.commit()
+            db.add(c_matrix)
+            db.merge(c_matrix)
+            db.flush()
+            db.session.commit()
             return redirect(url_for("my_matrices"))
 
         return render_template("analyses/my_matrices.html", matrices=matrices, form=form)
@@ -928,9 +930,9 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         # this loop creates a new matrix for each iteration
         for i in range(n):
             new_mx = c_matrix.clone()
-            g.db.add(new_mx)
-            g.db.flush()
-            g.db.commit()
+            db.add(new_mx)
+            db.flush()
+            db.session.commit()
             tnt_sets = new_mx.training_and_test_sets
             # select a new
             tnt_list = [
@@ -949,14 +951,14 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             # train on the training set:
             new_mx.train_data = new_mx.train_model(train_tweet_ids)
             flag_modified(new_mx, "train_data")
-            g.db.flush()
+            db.flush()
 
             # make matrix data
             matrix_data = new_mx.make_matrix_data(test_tweets, cat_names)
             new_mx.matrix_data = {i[0]: i[1] for i in matrix_data}
 
             flag_modified(new_mx, "matrix_data")
-            g.db.flush()
+            db.flush()
 
             # filter according to the threshold
             incl_tweets = sorted(
@@ -1015,10 +1017,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 "nr_excl_tweets": len(excl_tweets),
             }
             flag_modified(new_mx, "data")
-            g.db.add(new_mx)
-            g.db.merge(new_mx)
-            g.db.flush()
-            g.db.commit()
+            db.add(new_mx)
+            db.merge(new_mx)
+            db.flush()
+            db.session.commit()
             metrix = new_mx.data["metrics"].items()
             metrix = sorted(
                 [t for t in new_mx.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
@@ -1149,10 +1151,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         matrix2 = add_matrix(cat_ids, ratio=c_matrix.ratio, userid="")
         matrix2.threshold = c_matrix.threshold
         flag_modified(matrix2, "threshold")
-        g.db.add(matrix2)
-        g.db.merge(matrix2)
-        g.db.flush()
-        g.db.commit()  # not sure if this is necessary
+        db.add(matrix2)
+        db.merge(matrix2)
+        db.flush()
+        db.session.commit()  # not sure if this is necessary
 
         tnt_sets = matrix2.training_and_test_sets
 
@@ -1227,10 +1229,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             "nr_excl_tweets": len(excl_tweets),
         }
         flag_modified(matrix2, "data")
-        g.db.add(matrix2)
-        g.db.merge(matrix2)
-        g.db.flush()
-        g.db.commit()
+        db.add(matrix2)
+        db.merge(matrix2)
+        db.flush()
+        db.session.commit()
 
         # prepare data for matrix table
         old_names = [c.name for c in c_matrix.categories]
@@ -1571,10 +1573,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
         bayes_analysis.updated_a_tags(atag, twit)
         flag_modified(bayes_analysis, "annotation_tags")
-        g.db.add(bayes_analysis)
-        g.db.merge(bayes_analysis)
-        g.db.flush()
-        g.db.commit()
+        db.add(bayes_analysis)
+        db.merge(bayes_analysis)
+        db.flush()
+        db.session.commit()
 
         coordinates = {}
         # end and start word position
@@ -1619,8 +1621,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             words=words,
             annotation_tag=atag.lower(),
         )
-        g.db.add(annotation)
-        g.db.commit()
+        db.add(annotation)
+        db.session.commit()
 
         ann_tags = [c.name for c in Project.query.get(bayes_analysis.project).categories]
         for tag in list(bayes_analysis.annotation_tags.keys()):
@@ -1657,10 +1659,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         # all this  stuff is necessary  because the database backend doesnt resgister
         # changes on JSON
         flag_modified(bayes_analysis, "data")
-        g.db.add(bayes_analysis)
-        g.db.merge(bayes_analysis)
-        g.db.flush()
-        g.db.commit()
+        db.add(bayes_analysis)
+        db.merge(bayes_analysis)
+        db.flush()
+        db.session.commit()
         print("hep2")
         tag = TweetTag(
             category=category.id,
@@ -1668,8 +1670,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             tweet=this_tweet.id,
             user=current_user.id,
         )
-        g.db.add(tag)
-        g.db.commit()
+        db.add(tag)
+        db.session.commit()
 
         # show a new tweet
         categories = TweetTagCategory.query.filter(
@@ -1919,8 +1921,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             # delete the last one
             ann_to_delete = myanns[-1]
             print(ann_to_delete)
-            g.db.delete(ann_to_delete)
-            g.db.commit()
+            db.delete(ann_to_delete)
+            db.session.commit()
 
         return jsonify({})
 
@@ -1937,8 +1939,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
 
         # delete
-        g.db.delete(ann)
-        g.db.commit()
+        db.delete(ann)
+        db.session.commit()
 
         # make new table data
         # filter relevant annotations

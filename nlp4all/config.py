@@ -39,7 +39,7 @@ if DB_BACKEND == "postgres":
 
 class Config: # pylint: disable=too-few-public-methods
     """Configuration for the Flask app."""
-
+    SQLALCHEMY_WARN_20 = 1
     DEBUG = False
     TESTING = False
     SECRET_FILE_PATH = Path(".flask_secret")

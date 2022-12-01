@@ -4,5 +4,6 @@
 FLASK_APP=nlp4all
 NLP4ALL_ENV=localdev
 FLASK_DEBUG=1
+SQLALCHEMY_WARN_20=1
 # you could optionally override the default port here
 # FLASK_RUN_PORT=5000
