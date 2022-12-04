@@ -1,5 +1,14 @@
 """NLP helpers, a mess at the moment"""
 
+import importlib
+import subprocess
+import click
+from flask import current_app
+from flask.cli import with_appcontext
+
+from nlp4all.config import Config
+
+
 def clean_word(aword):
     """remove twitter handles, hashtags, and urls
 
@@ -44,3 +53,21 @@ def clean_non_transparencynum(text):
     text = text.replace("(", " ")
     text = text.replace(")", " ")
     return text.strip()  # changed this, might not work!
+
+@click.command("spacy-download")
+@with_appcontext
+def get_spacy_models():
+    """Download the spacy models"""
+    current_app.config.get("SPACY_MODEL_LANGUAGES")
+    packages = []
+    for lang in current_app.config.get("SPACY_MODEL_LANGUAGES"):
+        for model_type in current_app.config.get("SPACY_MODEL_TYPES"):
+            packages.append(Config.spacy_model_name(lang, model_type))
+    for pkg in packages:
+        if not importlib.util.find_spec(pkg):
+            print(f"Installing required spacy model {pkg}...")
+            subprocess.check_call(['python', '-m', 'spacy', 'download', pkg])
+
+def init_app(app):
+    """Initialize the app with the spacy download command"""
+    app.cli.add_command(get_spacy_models)

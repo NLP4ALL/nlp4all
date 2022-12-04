@@ -127,4 +127,3 @@ def get_config(env=None):
         return LocalDevelopmentConfig()
 
     raise EnvironmentError(f'Unknown environment: {env}')
-
