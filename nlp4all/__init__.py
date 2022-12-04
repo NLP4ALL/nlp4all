@@ -13,6 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 from .helpers import database as dbhelper
+from .helpers import nlp
 from .config import get_config, Config
 from .models.database import Base
 from .models import load_user
@@ -42,6 +43,7 @@ def create_app(env: Union[None, str] = None) -> Flask:
     login_manager.login_message_category = "info"
 
     dbhelper.init_app(app)
+    nlp.init_app(app)
 
     # in non-production environments, we want to be able to get a list of routes
     if env != "production":

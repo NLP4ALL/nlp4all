@@ -48,6 +48,24 @@ class Config: # pylint: disable=too-few-public-methods
     SQLALCHEMY_DATABASE_URI = DB_URI
     STATIC_DIR = Path(__file__).parent / "static"
 
+    SPACY_MODEL_TYPES = {
+        "small": "sm",
+        #"medium": "md",
+        #"large": "lg",
+
+        # Note: Transformer versions require GPU
+        #"transformer": "trf",
+    }
+    SPACY_MODEL_LANGUAGES = {
+        "en": "en_core_web",
+        "da": "da_core_news",
+    }
+
+    @staticmethod
+    def spacy_model_name(language, model_type):
+        """Get the spacy model name."""
+        return Config.SPACY_MODEL_LANGUAGES[language] + "_" + Config.SPACY_MODEL_TYPES[model_type]
+
     def get_secret(self) -> str:
         """Get the secret key for the app."""
         try:
