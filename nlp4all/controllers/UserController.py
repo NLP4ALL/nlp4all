@@ -10,9 +10,10 @@ from flask import flash, redirect, request, url_for, abort
 from flask_login import current_user, login_user, logout_user
 from flask_mail import Message
 from flask_bcrypt import check_password_hash, generate_password_hash
+from nlp4all import db
 from nlp4all.helpers.site import is_safe_url
 
-from nlp4all.models.database import db_session
+
 from nlp4all.models import BayesianAnalysis, Organization, User
 
 from nlp4all.forms.user import (
@@ -41,7 +42,7 @@ class UserController(BaseController):
                 current_user.image_file = picture_file
             current_user.username = form.username.data
             current_user.email = form.email.data
-            db_session.commit()
+            db.session.commit()
             flash("Your account has been updated!", "success")
             return redirect(url_for("user_controller.account"))
         if request.method == "GET":
@@ -108,8 +109,8 @@ class UserController(BaseController):
                 password=hashed_password,
                 organizations=[org],
             )
-            db_session.add(user)
-            db_session.commit()
+            db.add(user)
+            db.session.commit()
             flash("Your account has been created! You are now able to log in", "success")
             return redirect(url_for("login"))
         return cls.render_template("register.html", title="Register", form=form)
@@ -140,7 +141,7 @@ class UserController(BaseController):
         if form.validate_on_submit():
             hashed_password = generate_password_hash(form.password.data).decode("utf-8")
             user.password = hashed_password
-            db_session.commit()
+            db.session.commit()
             flash("Your password has been updated! You are now able to log in", "success")
             return redirect(url_for("login"))
         return cls.render_template("reset_token.html", title="Reset Password", form=form)
@@ -164,8 +165,8 @@ class UserController(BaseController):
             user = User(
                 username=the_name, email=fake_email, password=hashed_password, organizations=imc_org
             )
-            db_session.add(user)
-            db_session.commit()
+            db.add(user)
+            db.session.commit()
             login_user(user)
             userid = current_user.id
             name = current_user.username + "'s personal analysis"
@@ -178,8 +179,8 @@ class UserController(BaseController):
                 annotation_tags={},
                 annotate=1,
             )
-            db_session.add(bayes_analysis)
-            db_session.commit()
+            db.add(bayes_analysis)
+            db.session.commit()
             return redirect(url_for("project_controller.home"))
         return cls.render_template("register_imc.html", form=form)
 

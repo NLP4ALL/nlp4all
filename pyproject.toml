@@ -18,6 +18,9 @@ load-plugins = [
   "pylint_flask"
 ]
 jobs = 4
+ignore=[
+  "migrations"
+]
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [

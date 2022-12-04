@@ -3,16 +3,21 @@ Set up database and user
 """
 
 from flask_bcrypt import generate_password_hash
-from nlp4all import app, db_session
+from nlp4all import create_app
 
 # from nlp4all.utils import add_project, clean_word
-from nlp4all.models import User, Role, Organization, database
+from nlp4all.models import User, Role, Organization
+from nlp4all.helpers import database
 
-# app context part of update of flask -
+print("WARNING: This file only works for 'localdev' environment.")
+
+app = create_app("localdev")
 with app.app_context():
     database.drop_db()
 
     database.init_db()
+
+    db_session = app.extensions["sqlalchemy"].session
     db_session.commit()
 
     admin_role = Role(name="Admin")

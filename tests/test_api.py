@@ -2,14 +2,19 @@
 
 import pytest
 
-from nlp4all import app
+from nlp4all import create_app
+from nlp4all.helpers import database
 
-# @TODO: this needs refactoring, * import is not needed
-from nlp4all.routes import *  # pylint: disable=unused-wildcard-import, wildcard-import
-
-
+@pytest.fixture
+def app():
+    """Create and configure a new app instance for each test."""
+    nlp4all_app = create_app("testing")
+    with nlp4all_app.app_context():
+        database.init_db()
+        yield nlp4all_app
+# pylint: disable=redefined-outer-name
 @pytest.mark.api
-def test_home():
+def test_home(app):
     """Test home page."""
     tester = app.test_client()
     # check redirect from / to login
@@ -18,7 +23,7 @@ def test_home():
     assert b"Welcome to NLP4All" in response.data
 
 @pytest.mark.api
-def test_login():
+def test_login(app):
     """Test login page."""
     tester = app.test_client()
     # check redirect from /login to login

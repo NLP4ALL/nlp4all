@@ -84,12 +84,11 @@ class TestDataSourceManager(unittest.TestCase):
 
     def is_row_in_db(self, row_dict: dict) -> bool:
         """Check if row is in database"""
-        ds_sess = self.dsm.get_session()
-        uds = self.dsm.get_data_source_class()
-
-        # check values in the database
-        for col, value in row_dict.items():
-            assert getattr(ds_sess.query(uds).first(), col) == value
+        with self.dsm.session() as ds_sess:
+            uds = self.dsm.get_data_source_class()
+            # check values in the database
+            for col, value in row_dict.items():
+                assert getattr(ds_sess.query(uds).first(), col) == value
 
         return True
 
@@ -116,8 +115,7 @@ class TestDataSourceManager(unittest.TestCase):
         assert self.dsm._connected is True
         assert os.path.exists(self.dsm._filename)
         assert self.dsm._engine is not None
-        assert self.dsm._session is not None
-        assert self.dsm._table is None
+        # assert self.dsm._table is None
         assert self.dsm._meta_table is not None
         self.destroy_dsm()
 
@@ -167,26 +165,26 @@ class TestDataSourceManager(unittest.TestCase):
         uds = self.dsm.get_data_source_class()
         assert uds is not None
 
-        ds_sess = self.dsm.get_session()
-        assert ds_sess is not None
+        with self.dsm.session() as ds_sess:
+            assert ds_sess is not None
 
-        uds_instance = uds()
-        assert uds_instance is not None
+            uds_instance = uds()
+            assert uds_instance is not None
 
-        test_row = {
-            "col1": "string1",
-            "col2": 1,
-            "col3": 1.0,
-            "col4": True,
-            "col5": datetime.datetime.now(),
-            "maintext": "text1",
-        }
+            test_row = {
+                "col1": "string1",
+                "col2": 1,
+                "col3": 1.0,
+                "col4": True,
+                "col5": datetime.datetime.now(),
+                "maintext": "text1",
+            }
 
-        uds_instance.values_from_dict(test_row)
+            uds_instance.values_from_dict(test_row)
 
-        ds_sess.add(uds_instance)
+            ds_sess.add(uds_instance)
 
-        ds_sess.commit()
+            ds_sess.commit()
 
         assert self.is_row_in_db(test_row)
 
@@ -201,27 +199,27 @@ class TestDataSourceManager(unittest.TestCase):
         uds = self.dsm.get_data_source_class()
         assert uds is not None
 
-        ds_sess = self.dsm.get_session()
-        assert ds_sess is not None
+        with self.dsm.session() as ds_sess:
+            assert ds_sess is not None
 
-        test_row = {
-            "col1": "string2",
-            "col2": 2,
-            "col3": 2.0,
-            "col4": False,
-            "col5": datetime.datetime.now(),
-            "maintext": "text2",
-        }
+            test_row = {
+                "col1": "string2",
+                "col2": 2,
+                "col3": 2.0,
+                "col4": False,
+                "col5": datetime.datetime.now(),
+                "maintext": "text2",
+            }
 
-        uds_instance = uds(**test_row)
+            uds_instance = uds(**test_row)
 
-        ds_sess.add(uds_instance)
+            ds_sess.add(uds_instance)
 
-        ds_sess.commit()
+            ds_sess.commit()
 
-        assert self.is_row_in_db(test_row)
+            assert self.is_row_in_db(test_row)
 
-        self.destroy_dsm()
+            self.destroy_dsm()
 
     def test_add_row_syntax_3(self):
         """Test add_row syntax 3"""
@@ -231,32 +229,31 @@ class TestDataSourceManager(unittest.TestCase):
 
         uds = self.dsm.get_data_source_class()
         assert uds is not None
+        with self.dsm.session() as ds_sess:
+            assert ds_sess is not None
 
-        ds_sess = self.dsm.get_session()
-        assert ds_sess is not None
+            test_row = {
+                "col1": "string3",
+                "col2": 3,
+                "col3": 3.0,
+                "col4": True,
+                "col5": datetime.datetime.now(),
+                "maintext": "text3",
+            }
 
-        test_row = {
-            "col1": "string3",
-            "col2": 3,
-            "col3": 3.0,
-            "col4": True,
-            "col5": datetime.datetime.now(),
-            "maintext": "text3",
-        }
+            uds_instance = uds()
+            assert uds_instance is not None
 
-        uds_instance = uds()
-        assert uds_instance is not None
+            uds_instance.col1 = test_row["col1"]
+            uds_instance.col2 = test_row["col2"]
+            uds_instance.col3 = test_row["col3"]
+            uds_instance.col4 = test_row["col4"]
+            uds_instance.col5 = test_row["col5"]
+            uds_instance.maintext = test_row["maintext"]
 
-        uds_instance.col1 = test_row["col1"]
-        uds_instance.col2 = test_row["col2"]
-        uds_instance.col3 = test_row["col3"]
-        uds_instance.col4 = test_row["col4"]
-        uds_instance.col5 = test_row["col5"]
-        uds_instance.maintext = test_row["maintext"]
+            ds_sess.add(uds_instance)
 
-        ds_sess.add(uds_instance)
-
-        ds_sess.commit()
+            ds_sess.commit()
 
         assert self.is_row_in_db(test_row)
 

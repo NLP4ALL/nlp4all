@@ -1,0 +1,37 @@
+services:
+  db-dev:
+    restart: always
+    image: postgres:15.1
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data/
+    expose:
+      - "5432"
+    networks:
+      - back-tier
+    env_file:
+      - ./db.env
+  app-dev:
+    restart: always
+    build: 
+      context: .
+      dockerfile: ./docker/python/Dockerfile.development
+    command: flask --debug --app nlp4all run --host=0.0.0.0
+    volumes:
+      - static_volume_dev:/home/app/nlp4all/static
+      - ./nlp4all:/home/app/nlp4all
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./db.dev.env
+      - ./app.dev.env
+    networks:
+      - front-tier
+      - back-tier
+    depends_on:
+      - db-dev
+networks:
+  front-tier: {}
+  back-tier: {}
+volumes:
+  postgres_data_dev:
+  static_volume_dev:
