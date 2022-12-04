@@ -1,0 +1,48 @@
+services:
+  nlpdb:
+    restart: always
+    image: postgres:15.1
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data/
+    expose:
+      - "5432"
+    networks:
+      - back-tier
+    env_file:
+      - ./db.env
+  app:
+    restart: always
+    build: 
+      context: .
+      dockerfile: ./docker/python/Dockerfile
+    command: gunicorn -w 4 --bind 0.0.0.0:5000 'nlp4all:create_app()'
+    volumes:
+      - static_volume:/home/app/nlp4all/static
+    expose:
+      - "5000"
+    env_file:
+      - ./db.env
+      - ./app.env
+    networks:
+      - front-tier
+      - back-tier
+    depends_on:
+      - nlpdb
+  web:
+    restart: always
+    build: 
+      context: ./docker/nginx/
+    ports:
+      - "80:80"
+    networks:
+      - front-tier
+    depends_on:
+      - app
+    volumes:
+      - static_volume:/home/app/nlp4all/static
+networks:
+  front-tier: {}
+  back-tier: {}
+volumes:
+  postgres_data_prod:
+  static_volume:

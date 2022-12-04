@@ -71,3 +71,15 @@ class User(Base, UserMixin):
         """represents the user object
         without it print(User.query.get(user_id)) returns <user.id>"""
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
+
+
+def load_user(user_id):
+    """Loads a user from the database.
+
+    Args:
+        user_id (int): The id of the user to load.
+
+    Returns:
+    User: User object.
+    """
+    return User.query.get(int(user_id))

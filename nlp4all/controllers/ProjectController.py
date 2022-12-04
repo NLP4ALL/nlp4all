@@ -4,7 +4,8 @@ from random import sample, shuffle
 from flask import redirect, request, url_for
 from flask_login import current_user
 
-from nlp4all.models.database import db_session
+from nlp4all import db
+
 from nlp4all.models import BayesianAnalysis, Organization, TweetTagCategory, Project, BayesianRobot
 
 from nlp4all.forms.admin import AddProjectForm
@@ -100,8 +101,8 @@ class ProjectController(BaseController):
                 annotate=annotate,
                 shared_model=form.shared_model.data,
             )
-            db_session.add(bayes_analysis)
-            db_session.commit()
+            db.add(bayes_analysis)
+            db.session.commit()
             # this is where robot creation would go. Make one for everyone in
             # the org if it is a shared model, but not if it is a "shared",
             # meaning everyone tags the same tweets
@@ -111,9 +112,9 @@ class ProjectController(BaseController):
                 bayes_robot = BayesianRobot(
                     name=current_user.username + "s robot", analysis=bayes_analysis.id
                 )
-                db_session.add(bayes_robot)
-                db_session.flush()
-                db_session.commit()
+                db.add(bayes_robot)
+                db.flush()
+                db.session.commit()
             # return(redirect(url_for('project', project=project_id)))
         return cls.render_template(
             "project.html",

@@ -19,11 +19,11 @@ from sqlalchemy import (
     String,
     Table,
 )
-from sqlalchemy.ext.declarative import declarative_base
+
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.pool import NullPool
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import scoped_session, sessionmaker, mapper
+from sqlalchemy.orm import scoped_session, sessionmaker, registry
 
 
 class ColType(Enum):
@@ -81,7 +81,6 @@ class ColTypeSQL(Enum):
 
         return coltype_sql
 
-
 class DataSourceManager: # pylint: disable=too-many-instance-attributes
     """DataSourceManager: this allows a dynamic engine to be used
     for an individual user data source. It handles the creation of
@@ -89,14 +88,16 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
     """
 
     _engine: Union[Engine, None] = None
+    _session_maker: Union[sessionmaker, None] = None
     _session: Union[scoped_session, None] = None
     _table: Union[Table, None] = None
     _meta_table: Union[Table, None] = None
     _colspec: Union[Dict[str, ColType], None] = None
     _text_col_name: Union[str, None] = None
-    _orm_meta: Union[None, MetaData] = None
+    _orm_meta: MetaData
     _inspect: Union[Inspector, None] = None
-    _orm_base_class: Dict[str, object] = {}
+    _orm_base_class: object
+    _mapper_registry: registry = registry()
 
     _user_id: int
     _data_source_id: int
@@ -106,25 +107,32 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
 
     _connected: bool = False
 
+    UserDataSourceMeta = None
+    UserDataSource = None
+
     def _set_datasource_meta_class(self):
-        class UserDataSourceMeta(self._orm_base_class): # pylint: disable=too-few-public-methods
+        if self.UserDataSourceMeta is not None:
+            return
+        class UserDataSourceMetaBase(self._orm_base_class): # pylint: disable=too-few-public-methods
             """UserDataSourceMeta for table spec information"""
+            #__allow_unmapped__ = True
+            #__abstract__ = True
+            __table__  = self._meta_table
 
-            __abstract__ = True
-
-        self.UserDataSourceMeta = UserDataSourceMeta # pylint: disable=invalid-name
+        self.UserDataSourceMeta = UserDataSourceMetaBase # pylint: disable=invalid-name
 
     def _set_datasource_class(self):
-        class UserDataSource(self._orm_base_class): # pylint: disable=too-few-public-methods
+        if self.UserDataSource is not None:
+            return
+        class UserDataSourceBase(self._orm_base_class): # pylint: disable=too-few-public-methods
             """UserDataSource
             This class is for using with sqlalchemy mapper.
             It can't be declared outside this class because
             it needs to be unique per instance of DataSourceManager.
             """
+            __table__  = self._table
 
-            __abstract__ = True
-
-        self.UserDataSource = UserDataSource # pylint: disable=invalid-name
+        self.UserDataSource = UserDataSourceBase # pylint: disable=invalid-name
 
     def __init__(self, data_source_id: int, user_id: int) -> None:
         """Initialize the datasource manager"""
@@ -132,22 +140,23 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         self._data_source_id = data_source_id
         self._user_id = user_id
         self._set_base_class()
-        self._set_datasource_class()
-        self._set_datasource_meta_class()
+        # self._set_datasource_class()
+        # self._set_datasource_meta_class()
         self._datasource_filename()
 
     def _set_base_class(self):
         """Set the base class for the table and meta table"""
-        self._orm_base_class = declarative_base()
+        self._orm_base_class = self._mapper_registry.generate_base()
 
     def connect(self) -> None:
         """Connect to the datasource"""
         if self._engine is None:
             self._create_engine()
+        self._create_session_maker()
         self._inspect = inspect(self._engine)
-        if self._session is None:
-            self._create_session()
-        self._orm_meta = MetaData(self._engine)
+
+        self._orm_meta = self._mapper_registry.metadata
+        # self._orm_meta = MetaData(self._engine)
         self._connected = True
         self._load_tables()
 
@@ -156,8 +165,8 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
 
         if not self._connected:
             return
-
-        self._session.close()
+        #if self._session is not None:
+        #    self._session.close()
         self._session = None
         self._engine.dispose()
         self._engine = None
@@ -199,23 +208,26 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         created = self._create_datasource_table(columns)
         if created:
             self._map_datasource_table()
+        else:
+            self._colspec = columns
+
+        if self.UserDataSource is None:
+            self._map_datasource_table()
 
     def get_data_source_class(self) -> Union[None, type]:
         """Get the data source class for using with sqlalchemy"""
 
         self._ensure_connected()
 
-        if self._colspec is None:
-            return None
-
         return self.UserDataSource
 
-    def get_session(self) -> scoped_session:
+    @property
+    def session(self) -> sessionmaker:
         """Get the session"""
 
         self._ensure_connected()
 
-        return self._session
+        return self._session_maker
 
     def _ensure_connected(self) -> None:
         """Ensure we are connected to the datasource"""
@@ -242,9 +254,8 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         """Load the column spec from the datasource meta table"""
 
         self._ensure_connected()
-
-        colspec = self._session.query(self.UserDataSourceMeta).first()
-
+        with self._session_maker() as session:
+            colspec = session.query(self.UserDataSourceMeta).first()
         if colspec is not None:
             self._colspec = {}
 
@@ -260,11 +271,11 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         for colname, coltype in self._colspec.items():
             colspec[colname] = coltype.value
 
-        stmt = self._meta_table.insert().values(metaspec=colspec)
 
-        result = self._session.execute(stmt)
-        self._session.commit()
-        result.close()
+        stmt = self._meta_table.insert().values(metaspec=colspec)
+        with self._session_maker() as session:
+            session.execute(stmt)
+            session.commit()
 
     def _datasource_filename(self) -> None:
         """Get the filename for specified datasource and user"""
@@ -286,22 +297,20 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
             f"sqlite:///{self._filename}",
             connect_args={"check_same_thread": False},
             poolclass=NullPool,
+            future = True,
         )
 
-    def _create_session(self) -> None:
-        """Get a session for a user's datasource"""
 
-        db_session = scoped_session(
-            sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
-        )
+    def _create_session_maker(self) -> None:
+        """Create the session maker"""
+        self._session_maker = sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
 
-        self._session = db_session
 
     def _create_datasource_meta_table(self) -> None:
         """Create the datasource meta table"""
 
         self._ensure_connected()
-        if self._inspect.has_table(self._meta_table_name):
+        if self._inspect.has_table(self._meta_table_name, sqlite_include_internal=True):
             self._meta_table = Table(
                 self._meta_table_name, self._orm_meta, autoload_with=self._engine
             )
@@ -311,6 +320,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
             self._orm_meta,
             Column("id", Integer, primary_key=True),
             Column("metaspec", JSON, nullable=False),
+            extend_existing=True
         )
         self._orm_meta.create_all(self._engine, checkfirst=True)
 
@@ -320,7 +330,7 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
         """Create a table in a user's datasource"""
 
         self._ensure_connected()
-        if self._inspect.has_table(self._tablename):
+        if self._inspect.has_table(self._tablename, sqlite_include_internal=True):
             self._table = Table(
                 self._tablename, self._orm_meta, autoload_with=self._engine
             )
@@ -352,13 +362,19 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
 
     def _map_datasource_meta_table(self) -> None:
         """Map the table to the UserDataSourceMeta class"""
-
+        if self.UserDataSourceMeta is not None:
+            return
         self._ensure_connected()
-        mapper(self.UserDataSourceMeta, self._meta_table)
-        self.UserDataSourceMeta.query = self._session.query_property()
+        self._set_datasource_meta_class()
+        # self._mapper_registry.map_imperatively(
+        #     self.UserDataSourceMeta,
+        #     self._meta_table)
+        # self.UserDataSourceMeta.query = self._session.query_property()
 
     def _map_datasource_table(self) -> None:
         """Map the table to the UserDataSource"""
+        if self.UserDataSource is not None:
+            return
 
         def values_from_dict(sub_self, row: Dict[str, Any]) -> None:
             """Set the column values from a row dictionary"""
@@ -371,8 +387,11 @@ class DataSourceManager: # pylint: disable=too-many-instance-attributes
                 setattr(sub_self, col, val)
 
         self._ensure_connected()
-        mapper(self.UserDataSource, self._table)
-        self.UserDataSource.query = self._session.query_property()
+        self._set_datasource_class()
+        # self._mapper_registry.map_imperatively(
+        #     self.UserDataSource,
+        #     self._table)
+        # self.UserDataSource.query = self._session.query_property()
         self.UserDataSource.values_from_dict = values_from_dict
 
     def __del__(self):
