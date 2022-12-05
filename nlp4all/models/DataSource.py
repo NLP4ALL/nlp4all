@@ -5,6 +5,7 @@ This will be use to interface with individual users' data sources
 """
 
 from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 
 from .database import Base
 
@@ -15,4 +16,5 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
 
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    structure = Column(JSONB, nullable=False)
     data_source_name = Column(String(80), nullable=False)

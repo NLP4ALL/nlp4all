@@ -57,7 +57,7 @@ pip-upgrader==1.4.15
 platformdirs==2.5.3
 pluggy==1.0.0
 preshed==3.0.8
-psycopg2==2.9.5
+psycopg==3.1.4
 pycparser==2.21
 pydantic==1.10.2
 PyJWT==2.6.0

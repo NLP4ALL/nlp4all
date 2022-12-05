@@ -30,7 +30,7 @@ if DB_BACKEND == "postgres":
     pg_user = get_env_variable('POSTGRES_USER')
     pg_pass = get_env_variable('POSTGRES_PASSWORD')
     pg_db = get_env_variable('POSTGRES_DB')
-    URI_TEMPLATE = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'
+    URI_TEMPLATE = 'postgresql+psycopg://{user}:{pw}@{url}/{db}'
     DB_URI = URI_TEMPLATE.format(
         user=pg_user,
         pw=pg_pass,
