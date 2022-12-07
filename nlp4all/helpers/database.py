@@ -1,9 +1,119 @@
 """Database helpers."""
 
+import typing as t
 import click
+from genson import SchemaBuilder
 from flask import Flask, current_app
 from flask.cli import with_appcontext
 from nlp4all.models.database import Base
+
+
+def csv_row_to_json(row: t.List[str], headers: t.List[str]) -> dict:
+    """Converts a CSV row to a JSON object.
+
+    Args:
+        row: The CSV row to convert.
+        headers: The headers for the CSV.
+
+    Returns:
+        The JSON object.
+
+    Raises:
+        ValueError: If the row and headers are not the same length.
+    """
+    if len(row) != len(headers):
+        raise ValueError("Row and headers are not the same length.")
+
+    return {headers[i]: row[i] for i in range(len(row))}
+
+
+def csv_to_json(csv: t.List[t.List[str]], headers: t.Union[t.List[str], None]) -> t.List[dict]:
+    """Converts a CSV to a JSON array.
+
+    Args:
+        csv: The CSV data to convert.
+        headers: The headers for the CSV. If None, the first row of the CSV
+
+    Returns:
+        The JSON array.
+
+    Raises:
+        ValueError: If the CSV is empty.
+    """
+    if len(csv) == 0:
+        raise ValueError("CSV is empty.")
+
+    if headers is None:
+        headers = csv[0]
+    return [csv_row_to_json(row, headers) for row in csv[1:]]
+
+
+
+def generate_schema(
+    data: t.Union[dict, t.List[dict]],
+    builder: t.Union[SchemaBuilder, None] = None) -> dict:
+    """Generates a JSON schema from a (JSON) dictionary or list of (JSON) dictionaries.
+
+    Args:
+        data: The data to generate the schema from.
+        builder: The SchemaBuilder to use. If None, a new one will be created.
+                 Sending a builder allows you to generate add data to an existing
+                 schema.
+
+    Returns:
+        The generated schema.
+
+    **Note**: If sent a JSON array, the schema will be generated
+              based on the _contents_ of the array, not the array itself.
+
+    E.g. Normally if you generate a schema from:
+    [{ "a": 1 }, { "b": 2 }] you will get a schema that looks like this:
+
+    {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "integer"
+                },
+                "b": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+
+    However, if you send the same data to this function,
+    you will get a schema that looks like this:
+
+    {
+        "type": "object",
+        "properties": {
+            "a": {
+                "type": "integer"
+            },
+            "b": {
+                "type": "integer"
+            }
+        }
+    }
+
+    This is intentional, as this project should save data as
+    an item per row, not as an array of items.
+
+    """
+    if builder is None:
+        builder = SchemaBuilder()
+
+    if isinstance(data, list):
+        for item in data:
+            builder.add_object(item)
+    else:
+        builder.add_object(data)
+
+    return builder.to_schema()
+
 
 
 def init_db(): # pylint: disable=too-many-locals
