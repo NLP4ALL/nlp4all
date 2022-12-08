@@ -4,9 +4,7 @@ from .BayesianRobot import BayesianRobot
 from .BayesianAnalysis import BayesianAnalysis
 from .ConfusionMatrix import ConfusionMatrix
 from .DataSource import DataSource
-from .datasource_manager import DataSourceManager
-from .datasource_manager import ColType
-from .datasource_manager import ColTypeSQL
+from .Data import Data
 from .MatrixCategories import MatrixCategories
 from .Organization import Organization
 from .Project import Project

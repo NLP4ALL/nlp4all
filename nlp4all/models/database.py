@@ -17,3 +17,4 @@ Base = declarative_base(cls=Base)
 
 NestedMutableJSONB = mutable_json_type(dbtype=JSONB, nested=True)
 MutableJSONB = mutable_json_type(dbtype=JSONB, nested=False)
+

@@ -27,7 +27,6 @@ def create_app(env: Union[None, str] = None) -> Flask:
 
     app = Flask(__name__, template_folder="views")
     conf: Config = get_config(env)
-    app.secret_key = conf.get_secret()
     app.config.from_object(conf)
 
     db.init_app(app)
@@ -46,9 +45,18 @@ def create_app(env: Union[None, str] = None) -> Flask:
     nlp.init_app(app)
 
     # in non-production environments, we want to be able to get a list of routes
-    if env != "production":
+    if conf.env != "production":
         from .helpers import development # pylint: disable=import-outside-toplevel
         app.add_url_rule('/api/help', methods = ['GET'], view_func=development.help_route)
+
+    if conf.DB_BACKEND == "sqlite":
+        from .helpers.database import model_cols_jsonb_to_json # pylint: disable=import-outside-toplevel
+        app.logger.warning("{} {} {}".format(
+            "Converting JSONB to JSON for SQLite backend",
+            "This is ONLY for development purposes",
+            "because SQLite does not support JSONB"))
+        model_cols_jsonb_to_json()
+
 
     @app.route("/static/<path:filename>")
     def staticfiles(filename):

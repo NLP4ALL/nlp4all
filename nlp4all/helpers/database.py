@@ -187,3 +187,20 @@ def init_app(app: Flask):
     app.cli.add_command(init_db_command)
     app.cli.add_command(drop_db_command)
     
+
+def model_cols_jsonb_to_json():
+    """Converts a Postgres JSONB column to a SQLite JSON column.
+    Within the model itself, the column is defined as a JSONB column,
+    we only need to change this to JSON when we are using SQLite.
+
+    Currently only Data and DataSource use JSONB, and we only need to
+    change these when we're testing, or local dev (which both use sqlite).
+    """
+    from sqlalchemy.dialects.sqlite import JSON
+    from sqlalchemy_json import mutable_json_type
+    from nlp4all.models import Data
+    from nlp4all.models import DataSource
+
+    SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True)
+    Data.__table__.columns["document"].type = SQLiteNestedMutableJSON
+    DataSource.__table__.columns["structure"].type = SQLiteNestedMutableJSON

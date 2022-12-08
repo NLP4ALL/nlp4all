@@ -43,6 +43,7 @@ class Config: # pylint: disable=too-few-public-methods
     DEBUG = False
     TESTING = False
     SECRET_FILE_PATH = Path(".flask_secret")
+    DB_BACKEND = DB_BACKEND
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = DB_URI
@@ -79,6 +80,11 @@ class Config: # pylint: disable=too-few-public-methods
 
         return secret_key
 
+    def __init__(self, env=None):
+        """Initialize the configuration."""
+        self.SECRET_KEY = self.get_secret() # pylint: disable=invalid-name
+        self.env = env
+
 class DevelopmentConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in development."""
     SECRET_FILE_PATH = Path(".flask_secret_dev")
@@ -113,17 +119,17 @@ def get_config(env=None):
     if env == 'production':
         if DB_URI == "":
             raise EnvironmentError('Cannot use SQLite in production')
-        return ProductionConfig()
+        return ProductionConfig(env)
 
     if env == 'testing':
-        return TestConfig()
+        return TestConfig(env)
 
     if env == 'development':
         if DB_URI == "":
             raise EnvironmentError('Cannot use SQLite in production')
-        return DevelopmentConfig()
+        return DevelopmentConfig(env)
 
     if env == 'localdev':
-        return LocalDevelopmentConfig()
+        return LocalDevelopmentConfig(env)
 
     raise EnvironmentError(f'Unknown environment: {env}')
