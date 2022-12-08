@@ -21,8 +21,8 @@ from nlp4all.models import (
     Project,
     Tweet,
     TweetAnnotation,
-    TweetTag,
-    TweetTagCategory,
+    DataTag,
+    DataTagCategory,
     User,
 )
 
@@ -184,7 +184,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             twit = Tweet.query.get(tag.tweet)
             all_words.extend(twit.words)
             tweet_info[twit.id]["full_text"] = twit.full_text
-            tweet_info[twit.id]["category"] = TweetTagCategory.query.get(twit.category).name
+            tweet_info[twit.id]["category"] = DataTagCategory.query.get(twit.category).name
             if twit.category == tag.category:
                 tweet_info[twit.id]["correct"] = tweet_info[twit.id]["correct"] + 1
             else:
@@ -262,7 +262,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             tweet_id = tag_info[0]
             category_id = tag_info[1]
             the_tweet = Tweet.query.get(tweet_id)
-            category = TweetTagCategory.query.get(category_id)
+            category = DataTagCategory.query.get(category_id)
             the_tweet = Tweet.query.get(tweet_id)
             bayes_analysis.data = bayes_analysis.updated_data(the_tweet, category)
             # all this  stuff is necessary  because the database backend doesnt resgister
@@ -272,7 +272,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             db.merge(bayes_analysis)
             db.flush()
             db.session.commit()
-            tag = TweetTag(
+            tag = DataTag(
                 category=category.id,
                 analysis=bayes_analysis.id,
                 tweet=the_tweet.id,
@@ -294,8 +294,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         #     owned = True
         # if owned == False:
         #     return redirect(url_for('home'))
-        categories = TweetTagCategory.query.filter(
-            TweetTagCategory.id.in_(
+        categories = DataTagCategory.query.filter(
+            DataTagCategory.id.in_(
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # @TODO: pretty sure we can just get project.categories
@@ -339,7 +339,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         # data['pie_chart']['data_points']['pie_data']
 
         if form.validate_on_submit() and form.data:  # pylint: disable=no-member
-            category = TweetTagCategory.query.get(
+            category = DataTagCategory.query.get(
                 int(form.choices.data)
             )  # pylint: disable=no-member
             bayes_analysis.data = bayes_analysis.updated_data(the_tweet, category)
@@ -350,7 +350,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             db.merge(bayes_analysis)
             db.flush()
             db.session.commit()
-            tag = TweetTag(
+            tag = DataTag(
                 category=category.id,
                 analysis=bayes_analysis.id,
                 tweet=the_tweet.id,
@@ -370,8 +370,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 TweetAnnotation.analysis == analysis_id,
                 TweetAnnotation.user == current_user.id,
             ).all()
-            categories = TweetTagCategory.query.filter(
-                TweetTagCategory.id.in_(
+            categories = DataTagCategory.query.filter(
+                DataTagCategory.id.in_(
                     [p.id for p in a_project.categories]
                 )  # pylint: disable=no-member
             ).all()  # @TODO: pretty sure we can just get project.categories
@@ -424,7 +424,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         matrices = ConfusionMatrix.query.filter(
             ConfusionMatrix.user == userid
         ).all()  # all matrices for the other tabs
-        all_cats = TweetTagCategory.query.all()  # all cats for the other tabs
+        all_cats = DataTagCategory.query.all()  # all cats for the other tabs
 
         categories = c_matrix.categories
         cat_names = [c.name for c in categories]
@@ -696,7 +696,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user == userid).all()
 
         form = CreateMatrixForm()
-        form.categories.choices = [(str(s.id), s.name) for s in TweetTagCategory.query.all()]
+        form.categories.choices = [(str(s.id), s.name) for s in DataTagCategory.query.all()]
 
         # create a new matrix
         if form.validate_on_submit():
@@ -874,7 +874,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         """show all matrices"""
         userid = current_user.id  # get matrices for the user
         matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user == userid).all()
-        all_cats = TweetTagCategory.query.all()
+        all_cats = DataTagCategory.query.all()
 
         matrix_info = {
             m.id: {
@@ -1127,7 +1127,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
 
         cat_ids = [c.id for c in c_matrix.categories]
         cat_names = [c.name for c in c_matrix.categories]
-        all_cats = TweetTagCategory.query.all()
+        all_cats = DataTagCategory.query.all()
         new_cats = [[i.id, i.name] for i in all_cats if i.id not in cat_ids]
         return jsonify(cat_ids, cat_names, new_cats)
 
@@ -1141,8 +1141,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         alt_cat = args["alt_cat"]
         new_cat = args["new_cat"]
         c_matrix = ConfusionMatrix.query.get(int(m_id))
-        alt_cat = TweetTagCategory.query.get(int(alt_cat))
-        new_cat = TweetTagCategory.query.get(int(new_cat))
+        alt_cat = DataTagCategory.query.get(int(alt_cat))
+        new_cat = DataTagCategory.query.get(int(new_cat))
         # cat ids for the two matrices
         old_cats = [c.id for c in c_matrix.categories]
         cat_ids = [new_cat.id if x == alt_cat.id else x for x in old_cats]
@@ -1273,7 +1273,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         """Compare matrices."""
         # there you can try out the comparison templates
         userid = current_user.id
-        all_cats = TweetTagCategory.query.all()
+        all_cats = DataTagCategory.query.all()
         matrices = ConfusionMatrix.query.filter(ConfusionMatrix.user == userid).all()
         cat_names = [c.name for c in all_cats]
 
@@ -1650,7 +1650,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(int(args["analysis_id"]))
         a_project = Project.query.get(bayes_analysis.project)
         cat = str(args["category"])
-        category = TweetTagCategory.query.filter(TweetTagCategory.name == cat).first()
+        category = DataTagCategory.query.filter(DataTagCategory.name == cat).first()
 
         print("hep1")
 
@@ -1664,7 +1664,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         db.flush()
         db.session.commit()
         print("hep2")
-        tag = TweetTag(
+        tag = DataTag(
             category=category.id,
             analysis=bayes_analysis.id,
             tweet=this_tweet.id,
@@ -1674,8 +1674,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         db.session.commit()
 
         # show a new tweet
-        categories = TweetTagCategory.query.filter(
-            TweetTagCategory.id.in_(
+        categories = DataTagCategory.query.filter(
+            DataTagCategory.id.in_(
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # @TODO: pretty sure we can just get project.categories
@@ -1735,8 +1735,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         this_tweet = Tweet.query.get(t_id)
         bayes_analysis = BayesianAnalysis.query.get(int(args["analysis_id"]))
         a_project = Project.query.get(bayes_analysis.project)
-        categories = TweetTagCategory.query.filter(
-            TweetTagCategory.id.in_(
+        categories = DataTagCategory.query.filter(
+            DataTagCategory.id.in_(
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # project.categories
@@ -1764,8 +1764,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(int(args["analysis_id"]))
         a_project = Project.query.get(bayes_analysis.project)
         # show a new tweet
-        categories = TweetTagCategory.query.filter(
-            TweetTagCategory.id.in_(
+        categories = DataTagCategory.query.filter(
+            DataTagCategory.id.in_(
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # @TODO: pretty sure we can just get project.categories

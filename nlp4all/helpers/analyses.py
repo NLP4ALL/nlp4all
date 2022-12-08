@@ -15,7 +15,7 @@ from nlp4all.helpers.colors import (
     ann_assign_colors,
 )
 from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
-from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
+from nlp4all.models import DataTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
 
 # @TODO: this file needs to be broken out
 # some of these functions belong on the **models** not the **helpers**
@@ -103,7 +103,7 @@ def create_css_info(classifications, text, list_of_categories):
 
 def add_category(name, description):
     """add a category to the database"""
-    category = TweetTagCategory(name=name, description=description)
+    category = DataTagCategory(name=name, description=description)
     g.db.add(category)
     g.db.commit()
 
@@ -126,8 +126,8 @@ def get_user_projects(a_user):
 def add_project(name, description, org, cat_ids):
     """add a project to the database"""
     print(description)
-    cats_objs = TweetTagCategory.query.filter(
-        TweetTagCategory.id.in_(cat_ids)
+    cats_objs = DataTagCategory.query.filter(
+        DataTagCategory.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
     tweet_objs = [t for cat in cats_objs for t in cat.tweets]
     tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
@@ -150,8 +150,8 @@ def add_project(name, description, org, cat_ids):
 def add_matrix(cat_ids, ratio, userid):
     """add a matrix to the database"""
     ratio = round(ratio, 3)
-    cats_objs = TweetTagCategory.query.filter(
-        TweetTagCategory.id.in_(cat_ids)
+    cats_objs = DataTagCategory.query.filter(
+        DataTagCategory.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
     tweet_objs = [t for cat in cats_objs for t in cat.tweets]
     tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)

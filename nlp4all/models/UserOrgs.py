@@ -11,4 +11,4 @@ class UserOrgs(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "user_orgs"
     id = Column(Integer(), primary_key=True)
     user_id = Column(Integer(), ForeignKey("user.id", ondelete="CASCADE"))
-    role_id = Column(Integer(), ForeignKey("organization.id", ondelete="CASCADE"))
+    org_id = Column(Integer(), ForeignKey("organization.id", ondelete="CASCADE"))
