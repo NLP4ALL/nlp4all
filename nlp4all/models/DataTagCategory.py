@@ -1,9 +1,11 @@
 """Tweet tag category model""" # pylint: disable=invalid-name
 
-from sqlalchemy import Column, Integer, String
+from __future__ import annotations
+
+from sqlalchemy import String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .database import Base
+from .database import Base, project_categories_table
 from . import Data, DataTag, Project
 
 
@@ -16,5 +18,7 @@ class DataTagCategory(Base):  # pylint: disable=too-few-public-methods
     description: Mapped[str] = mapped_column(String(100))
     tweets: Mapped[list[Data]] = relationship()
     tags: Mapped[list[DataTag]] = relationship()
-    projects: Mapped[list[Project]] = relationship(secondary="project_categories", back_populates="categories")
+    projects: Mapped[list[Project]] = relationship(
+        secondary=project_categories_table,
+        back_populates="categories")
     # matrices = relationship('ConfusionMatrix', secondary='matrix_categories')

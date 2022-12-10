@@ -1,32 +1,31 @@
 """User Model""" # pylint: disable=invalid-name
 
+from __future__ import annotations
 from datetime import datetime, timezone, timedelta
 from typing import Union
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 import jwt
 
-from .database import Base
+from .database import Base, user_org_table, user_role_table
+from . import Organization, Role, BayesianAnalysis, DataSource
 
 
 class User(Base, UserMixin):
     """User model."""
 
     __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
-    username = Column(String(20), unique=True, nullable=False)
-    email = Column(String(120), unique=True, nullable=False)
-    image_file = Column(String(20), nullable=False, default="default.jpg")
-    password = Column(String(60), nullable=False)
-    organizations = relationship(
-        "Organization",
-        secondary="user_orgs",
-        back_populates="users")
-    admin = Column(Boolean, default=False)
-    roles = relationship("Role", secondary="user_roles")
-    analyses = relationship("BayesianAnalysis")
-    data_sources = relationship("DataSource")
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
+    password: Mapped[str] = mapped_column(String(60), nullable=False)
+    organizations: Mapped[Organization] = relationship(secondary=user_org_table, back_populates="users")
+    admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    roles: Mapped[Role] = relationship("Role", secondary=user_role_table)
+    analyses: Mapped[BayesianAnalysis] = relationship()
+    data_sources: Mapped[DataSource] = relationship()
 
     def get_reset_token(self, secret_key: str, expires_sec: int = 1800) -> str:
         """Get a reset token.

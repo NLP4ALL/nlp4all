@@ -128,7 +128,7 @@ def init_db(): # pylint: disable=too-many-locals
     from nlp4all.models import ProjectCategories
     from nlp4all.models import Role
     from nlp4all.models import Tweet
-    from nlp4all.models import TweetAnnotation
+    from nlp4all.models import DataAnnotation
     from nlp4all.models import TweetMatrix
     from nlp4all.models import TweetProject
     from nlp4all.models import DataTag
@@ -159,7 +159,7 @@ def drop_db(): # pylint: disable=too-many-locals
     from nlp4all.models import ProjectCategories
     from nlp4all.models import Role
     from nlp4all.models import Tweet
-    from nlp4all.models import TweetAnnotation
+    from nlp4all.models import DataAnnotation
     from nlp4all.models import TweetMatrix
     from nlp4all.models import TweetProject
     from nlp4all.models import DataTag

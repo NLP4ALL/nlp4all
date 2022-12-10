@@ -20,7 +20,7 @@ from nlp4all.models import (
     ConfusionMatrix,
     Project,
     Tweet,
-    TweetAnnotation,
+    DataAnnotation,
     DataTag,
     DataTagCategory,
     User,
@@ -365,10 +365,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         ann_tags = []
         if bayes_analysis.annotate == 2:
             ann_names = [cat.name for cat in a_project.categories]
-            ann_tags = TweetAnnotation.query.filter(
-                TweetAnnotation.annotation_tag.in_(ann_names),  # pylint: disable=no-member
-                TweetAnnotation.analysis == analysis_id,
-                TweetAnnotation.user == current_user.id,
+            ann_tags = DataAnnotation.query.filter(
+                DataAnnotation.annotation_tag.in_(ann_names),  # pylint: disable=no-member
+                DataAnnotation.analysis == analysis_id,
+                DataAnnotation.user == current_user.id,
             ).all()
             categories = DataTagCategory.query.filter(
                 DataTagCategory.id.in_(
@@ -376,8 +376,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 )  # pylint: disable=no-member
             ).all()  # @TODO: pretty sure we can just get project.categories
         if bayes_analysis.annotate == 3:
-            ann_tags = TweetAnnotation.query.filter(
-                TweetAnnotation.analysis == analysis_id, TweetAnnotation.user == current_user.id
+            ann_tags = DataAnnotation.query.filter(
+                DataAnnotation.analysis == analysis_id, DataAnnotation.user == current_user.id
             ).all()
         tag_list = list(
             set([a.annotation_tag for a in ann_tags]) # pylint: disable=consider-using-set-comprehension
@@ -1360,8 +1360,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             a_tag = all_tags[0]
 
         # relevant annotations for a_tag
-        tag_anns = TweetAnnotation.query.filter(
-            TweetAnnotation.annotation_tag == a_tag, TweetAnnotation.analysis == analysis_id
+        tag_anns = DataAnnotation.query.filter(
+            DataAnnotation.annotation_tag == a_tag, DataAnnotation.analysis == analysis_id
         ).all()
         tagged_tweets = list(
             set([t.tweet for t in tag_anns]) # pylint: disable=consider-using-set-comprehension
@@ -1370,8 +1370,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         tag_table = {t: {"tweet": t} for t in tagged_tweets}
         for twit in tagged_tweets:
             t_anns = (
-                TweetAnnotation.query.filter(TweetAnnotation.annotation_tag == a_tag.lower())
-                .filter(TweetAnnotation.tweet == twit)
+                DataAnnotation.query.filter(DataAnnotation.annotation_tag == a_tag.lower())
+                .filter(DataAnnotation.tweet == twit)
                 .all()
             )
             users = len(
@@ -1390,8 +1390,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         tagdict = {t: {"tag": t} for t in all_tags}
 
         for tag in all_tags:
-            tag_anns = TweetAnnotation.query.filter(
-                TweetAnnotation.annotation_tag == tag.lower()
+            tag_anns = DataAnnotation.query.filter(
+                DataAnnotation.annotation_tag == tag.lower()
             ).all()
             tagdict[tag]["tag_count"] = len(tag_anns)
             tagdict[tag]["users"] = len(
@@ -1420,7 +1420,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         tweets = tags[a_tag]["tweets"]
 
         # all annotations in the analysis, third tab
-        all_tag_anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == analysis_id).all()
+        all_tag_anns = DataAnnotation.query.filter(DataAnnotation.analysis == analysis_id).all()
         a_list = set( # pylint: disable=consider-using-set-comprehension
             [a.tweet for a in all_tag_anns]
         )
@@ -1457,10 +1457,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         a_project = Project.query.get(bayes_analysis.project)
         anns = []
         if shared:
-            anns = TweetAnnotation.query.filter(TweetAnnotation.analysis == analysis_id).all()
+            anns = DataAnnotation.query.filter(DataAnnotation.analysis == analysis_id).all()
         else:
-            anns = TweetAnnotation.query.filter(
-                TweetAnnotation.analysis == analysis_id, TweetAnnotation.user == current_user.id
+            anns = DataAnnotation.query.filter(
+                DataAnnotation.analysis == analysis_id, DataAnnotation.user == current_user.id
             ).all()
         a_list = set([a.tweet for a in anns])  # pylint: disable=consider-using-set-comprehension
         tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()  # pylint: disable=no-member
@@ -1483,13 +1483,13 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 ann_tags.append(tag)
         for a_tweet in tweets:
             mytagcounts = get_tags(bayes_analysis, set(a_tweet.words), a_tweet)
-            myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet == a_tweet.id).all()
+            myanns = DataAnnotation.query.filter(DataAnnotation.tweet == a_tweet.id).all()
             my_tuples = ann_create_css_info(mytagcounts, a_tweet.full_text, ann_tags, myanns)
             word_tuples.append(my_tuples)
 
         ann_list = (
-            Tweet.query.join(TweetAnnotation, (TweetAnnotation.tweet == Tweet.id))
-            .filter(TweetAnnotation.user == current_user.id)
+            Tweet.query.join(DataAnnotation, (DataAnnotation.tweet == Tweet.id))
+            .filter(DataAnnotation.user == current_user.id)
             .filter_by(analysis=analysis_id)
             .order_by(Tweet.id)
             .distinct()
@@ -1532,8 +1532,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
         a_tweet = Tweet.query.get(tweet_id)
         a_project = Project.query.get(bayes_analysis.project)
-        anns = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == tweet_id, TweetAnnotation.analysis == analysis_id
+        anns = DataAnnotation.query.filter(
+            DataAnnotation.tweet == tweet_id, DataAnnotation.analysis == analysis_id
         ).all()
         a_list = set([a.tweet for a in anns])  # pylint: disable=consider-using-set-comprehension
         tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()  # pylint: disable=no-member
@@ -1612,7 +1612,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             ]
         coordinates["txt_coords"] = coords
 
-        annotation = TweetAnnotation(
+        annotation = DataAnnotation(
             user=current_user.id,
             text=text,
             analysis=analysis_id,
@@ -1629,8 +1629,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             if tag not in ann_tags:
                 ann_tags.append(tag)
         mytagcounts = get_tags(bayes_analysis, set(twit.words), twit)
-        myanns = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == twit.id, TweetAnnotation.user == current_user.id
+        myanns = DataAnnotation.query.filter(
+            DataAnnotation.tweet == twit.id, DataAnnotation.user == current_user.id
         ).all()
         my_tuples = ann_create_css_info(
             mytagcounts, twit.full_text, ann_tags, myanns
@@ -1797,8 +1797,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         # data['analysis_data'] = analysis.data
         ann_tags = list(bayes_analysis.annotation_tags.keys())
         mytagcounts = get_tags(bayes_analysis, set(the_tweet.words), the_tweet)
-        myanns = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == the_tweet.id, TweetAnnotation.user == current_user.id
+        myanns = DataAnnotation.query.filter(
+            DataAnnotation.tweet == the_tweet.id, DataAnnotation.user == current_user.id
         ).all()
         # if there already are annotations
         if len(myanns) > 0:
@@ -1830,8 +1830,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         t_id = int(args["tweet_id"])
         the_tag = str(args["the_tag"])
 
-        the_tags = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == t_id, TweetAnnotation.annotation_tag == the_tag
+        the_tags = DataAnnotation.query.filter(
+            DataAnnotation.tweet == t_id, DataAnnotation.annotation_tag == the_tag
         ).all()
         pos_list = []
         for ann in the_tags:
@@ -1861,7 +1861,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         ann_tags = list(bayes_analysis.annotation_tags.keys())
 
         mytagcounts = get_tags(bayes_analysis, set(a_tweet.words), a_tweet)
-        myanns = TweetAnnotation.query.filter(TweetAnnotation.tweet == a_tweet.id).all()
+        myanns = DataAnnotation.query.filter(DataAnnotation.tweet == a_tweet.id).all()
         my_tuples = ann_create_css_info(mytagcounts, a_tweet.full_text, ann_tags, myanns)
 
         return jsonify(my_tuples)
@@ -1877,10 +1877,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
 
         # filter relevant annotations
-        myanns = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == the_tweet.id,
-            TweetAnnotation.user == current_user.id,
-            TweetAnnotation.analysis == bayes_analysis.id,
+        myanns = DataAnnotation.query.filter(
+            DataAnnotation.tweet == the_tweet.id,
+            DataAnnotation.user == current_user.id,
+            DataAnnotation.analysis == bayes_analysis.id,
         ).all()
         # if the key matches
 
@@ -1911,10 +1911,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         analysis_id = int(args["analysis"])
 
         # get all annotations
-        myanns = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == t_id,
-            TweetAnnotation.user == current_user.id,
-            TweetAnnotation.analysis == analysis_id,
+        myanns = DataAnnotation.query.filter(
+            DataAnnotation.tweet == t_id,
+            DataAnnotation.user == current_user.id,
+            DataAnnotation.analysis == analysis_id,
         ).all()
         print(myanns)
         if len(myanns) > 0:
@@ -1932,7 +1932,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         args = request.args.to_dict()
         span_id = str(args["span_id"])
         ann_id = str(args["ann_id"])
-        ann = TweetAnnotation.query.get(ann_id)
+        ann = DataAnnotation.query.get(ann_id)
         t_id = int(args["tweet_id"])
         the_tweet = Tweet.query.get(t_id)
         analysis_id = int(args["analysis_id"])
@@ -1944,10 +1944,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
 
         # make new table data
         # filter relevant annotations
-        myanns = TweetAnnotation.query.filter(
-            TweetAnnotation.tweet == the_tweet.id,
-            TweetAnnotation.user == current_user.id,
-            TweetAnnotation.analysis == bayes_analysis.id,
+        myanns = DataAnnotation.query.filter(
+            DataAnnotation.tweet == the_tweet.id,
+            DataAnnotation.user == current_user.id,
+            DataAnnotation.analysis == bayes_analysis.id,
         ).all()
         # if the key matches
         ann_list = [a for a in myanns if span_id in a.coordinates["txt_coords"].keys()]

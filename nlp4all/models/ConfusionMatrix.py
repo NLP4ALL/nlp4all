@@ -1,11 +1,15 @@
 """Confusion Matrix model""" # pylint: disable=invalid-name
 
-import operator
-from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
-from sqlalchemy.orm import relationship
+from __future__ import annotations
 
-from .database import Base
-from . import Tweet, DataTagCategory
+import operator
+from typing import Optional
+
+from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+
+from .database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
+from . import Tweet, DataTagCategory, Data
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -14,26 +18,24 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     """Confusion matrix."""
 
     __tablename__ = "confusion_matrix"
-    id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey("user.id"))
-    categories = relationship("TweetTagCategory", secondary="confusionmatrix_categories")
-    tweets = relationship("Tweet", secondary="tweet_confusionmatrix")
-    matrix_data = Column(JSON)  # here to save the TP/TN/FP/FN
-    train_data = Column(JSON)  # word counts from the training set
-    tf_idf = Column(JSON)
-    training_and_test_sets = Column(JSON)
-    threshold = Column(Float())
-    ratio = Column(Float())
-    data = Column(JSON)  # accuracy etc resuts from the matrix
-    parent = Column(
-        Integer, ForeignKey("confusion_matrix.id"), default=None
-    )  # for cloning purposes
-    child = Column(Integer, ForeignKey("confusion_matrix.id"), default=None)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    categories: Mapped[list[DataTagCategory]] = relationship(secondary=matrix_categories_table)
+    data: Mapped[list[Data]] = relationship(secondary=data_matrices_table)
+    matrix_data: Mapped[dict] = mapped_column(MutableJSONB)  # here to save the TP/TN/FP/FN
+    train_data: Mapped[dict] = mapped_column(MutableJSONB)  # word counts from the training set
+    tf_idf: Mapped[dict] = mapped_column(MutableJSONB)
+    training_and_test_sets: Mapped[dict] = mapped_column(MutableJSONB)
+    threshold: Mapped[float] = mapped_column()
+    ratio: Mapped[float] = mapped_column()
+    data: Mapped[dict] = mapped_column(MutableJSONB)  # accuracy etc resuts from the matrix
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("confusion_matrix.id"), default=None)  # for cloning purposes
+    child: Mapped[Optional[int]] = mapped_column(ForeignKey("confusion_matrix.id"), default=None)
 
     def clone(self):
         """Clone confusion matrix."""
         new_matrix = ConfusionMatrix()
-        new_matrix.parent = self.id
+        new_matrix.parent_id = self.id
         new_matrix.categories = self.categories
         new_matrix.tweets = self.tweets
         new_matrix.tf_idf = self.tf_idf

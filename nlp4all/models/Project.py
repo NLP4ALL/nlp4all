@@ -1,10 +1,12 @@
 """Project Model""" # pylint: disable=invalid-name
 
+from __future__ import annotations
+
 from random import sample
 from sqlalchemy import Column, Integer, String, ForeignKey, JSON
 from sqlalchemy.orm import relationship, load_only, Mapped, mapped_column
 
-from .database import Base, project_data_source_table
+from .database import Base, project_data_source_table, project_categories_table
 
 from . import Tweet, DataSource, BayesianAnalysis, DataTagCategory
 
@@ -19,9 +21,11 @@ class Project(Base):
     organization: Mapped[int] = mapped_column(Integer, ForeignKey("organization.id"))
     analyses: Mapped[list[BayesianAnalysis]] = relationship()
     categories: Mapped[list[DataTagCategory]] = relationship(
-        secondary="project_categories",
+        secondary=project_categories_table,
         back_populates="projects")
-    data_sources: Mapped[list[DataSource]] = relationship(secondary=project_data_source_table, back_populates="projects")
+    data_sources: Mapped[list[DataSource]] = relationship(
+        secondary=project_data_source_table,
+        back_populates="projects")
     tf_idf: Mapped[dict] = mapped_column(JSON) # what is this?
     tweets = relationship("Tweet", secondary="tweet_project", lazy="dynamic") # remove? or replace with data?
     training_and_test_sets: Mapped[dict] = mapped_column(JSON)

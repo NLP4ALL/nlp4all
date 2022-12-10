@@ -15,7 +15,7 @@ from nlp4all.helpers.colors import (
     ann_assign_colors,
 )
 from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
-from nlp4all.models import DataTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
+from nlp4all.models import DataTagCategory, Tweet, Project, Role, ConfusionMatrix, DataAnnotation
 
 # @TODO: this file needs to be broken out
 # some of these functions belong on the **models** not the **helpers**
@@ -331,8 +331,8 @@ def get_tags(analysis, words, a_tweet):  # set of tweet words
         if tag not in ann_tags:
             ann_tags.append(tag)
     mydict = {word.lower(): {a.lower(): 0 for a in ann_tags} for word in words}
-    annotations = TweetAnnotation.query.filter(
-        TweetAnnotation.tweet == a_tweet.id, TweetAnnotation.analysis == analysis.id
+    annotations = DataAnnotation.query.filter(
+        DataAnnotation.tweet == a_tweet.id, DataAnnotation.analysis == analysis.id
     ).all()
     for ann in annotations:
         if ann.text in a_tweet.full_text:

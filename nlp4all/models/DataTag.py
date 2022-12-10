@@ -1,19 +1,25 @@
 """Twee tag model""" # pylint: disable=invalid-name
 
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
+
+from . import User, Data, DataTagCategory
 
 
 class DataTag(Base):  # pylint: disable=too-few-public-methods
     """DataTag model."""
 
     __tablename__ = "data_tag"
-    id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey("user.id"))
-    category = Column(Integer, ForeignKey("data_tag_category.id"))
-    analysis = Column(Integer, ForeignKey("bayesian_analysis.id", ondelete="CASCADE"))
-    tweet = Column(Integer, ForeignKey("data.id", ondelete="CASCADE"))
-    time_created = Column(DateTime, nullable=False, default=datetime.utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    category: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
+    analysis: Mapped[int] = mapped_column(ForeignKey("bayesian_analysis.id", ondelete="CASCADE"))
+    data_id: Mapped[int] = mapped_column(ForeignKey("data.id", ondelete="CASCADE"))
+    data: Mapped[Data] = relationship(back_populates="tags")
+    time_created: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)
