@@ -15,7 +15,7 @@ from nlp4all.helpers.colors import (
     ann_assign_colors,
 )
 from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
-from nlp4all.models import DataTagCategory, Tweet, Project, Role, ConfusionMatrix, DataAnnotation
+from nlp4all.models import DataTagCategory, Data, Project, Role, ConfusionMatrix, DataAnnotation
 
 # @TODO: this file needs to be broken out
 # some of these functions belong on the **models** not the **helpers**
@@ -82,7 +82,7 @@ def create_css_info(classifications, text, list_of_categories):
 #         # no need to write for each file. Just append each dict to a big list,
 #         # then save that.
 #         for status in tweepy.Cursor(
-#             api.user_timeline, screen_name=twitter_handle, tweet_mode="extended"
+#             api.user_timeline, screen_name=twitter_handle, data_mode="extended"
 #         ).items():
 #             # outf.write(json.dumps(status._json, ensure_ascii=False))
 #             # outf.write("\n")
@@ -98,7 +98,7 @@ def create_css_info(classifications, text, list_of_categories):
 #                 outdict["full_text"] = indict["full_text"]
 #             outf.write(json.dumps(outdict, ensure_ascii=False))
 #             outf.write("\n")
-#             add_tweet_from_dict(outdict)
+#             add_data_from_dict(outdict)
 
 
 def add_category(name, description):
@@ -129,16 +129,16 @@ def add_project(name, description, org, cat_ids):
     cats_objs = DataTagCategory.query.filter(
         DataTagCategory.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
-    tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-    tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-    tweet_id_and_cat = {t.id: t.category for t in tweet_objs}
-    training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
+    data_objs = [t for cat in cats_objs for t in cat.data]
+    tf_idf = tf_idf_from_tweets_and_cats_objs(data_objs, cats_objs)
+    data_id_and_cat = {t.id: t.category for t in data_objs}
+    training_and_test_sets = create_n_train_and_test_sets(30, data_id_and_cat)
     project = Project(
         name=name,
         description=description,
         organization=org,
         categories=cats_objs,
-        tweets=tweet_objs,
+        tweets=data_objs,
         tf_idf=tf_idf,
         training_and_test_sets=training_and_test_sets,
     )
@@ -153,14 +153,14 @@ def add_matrix(cat_ids, ratio, userid):
     cats_objs = DataTagCategory.query.filter(
         DataTagCategory.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
-    tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-    tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-    tweet_id_and_cat = {t.id: t.category for t in tweet_objs}
-    training_and_test_sets = create_n_split_tnt_sets(30, ratio, tweet_id_and_cat)
+    data_objs = [t for cat in cats_objs for t in cat.data]
+    tf_idf = tf_idf_from_tweets_and_cats_objs(data_objs, cats_objs)
+    data_id_and_cat = {t.id: t.category for t in data_objs}
+    training_and_test_sets = create_n_split_tnt_sets(30, ratio, data_id_and_cat)
     matrix_data = {"matrix_classes": {}, "accuracy": 0}
     matrix = ConfusionMatrix(
         categories=cats_objs,
-        tweets=tweet_objs,
+        tweets=data_objs,
         tf_idf=tf_idf,
         training_and_test_sets=training_and_test_sets,
         train_data={"counts": 0, "words": {}},
@@ -198,19 +198,19 @@ def twitter_date_to_unix(date_str):
     return datetime.fromtimestamp(unix_time)
 
 
-def add_tweet_from_dict(indict, category=None):
+def add_data_from_dict(indict, category=None):
     """add a tweet to the database from a dict"""
     timestamp = twitter_date_to_unix(indict["time"])
     full_text = indict["full_text"]
     links = ([w for w in full_text.split() if "http" in w],)
     hashtags = ([w for w in full_text.split() if "#" in w],)
     mentions = ([w for w in full_text.split() if "@" in w],)
-    tweet_parts = [clean_word(w) for w in full_text.split()]
-    full_text = " ".join(tweet_parts)
+    data_parts = [clean_word(w) for w in full_text.split()]
+    full_text = " ".join(data_parts)
     text = indict["full_text"]
     text = clean_non_transparencynum(remove_hash_links_mentions(text))
     words = text.split()
-    a_tweet = Tweet(
+    a_tweet = Data(
         time_posted=timestamp,
         category=category.id if category else None,
         handle=indict["twitter_handle"],

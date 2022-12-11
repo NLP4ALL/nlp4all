@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone, timedelta
 from typing import Union
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import jwt
 
@@ -21,7 +21,9 @@ class User(Base, UserMixin):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
     password: Mapped[str] = mapped_column(String(60), nullable=False)
-    organizations: Mapped[Organization] = relationship(secondary=user_org_table, back_populates="users")
+    organizations: Mapped[Organization] = relationship(
+        secondary=user_org_table,
+        back_populates="users")
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
     roles: Mapped[Role] = relationship("Role", secondary=user_role_table)
     analyses: Mapped[BayesianAnalysis] = relationship()

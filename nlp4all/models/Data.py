@@ -6,7 +6,7 @@ Data imported into nlp4all, used in analyses
 
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base, NestedMutableJSONB

@@ -57,7 +57,7 @@ AnalysesRouter.route("/compare_matrices", methods=["GET", "POST"])(
     AnalysesController.compare_matrices
 )
 AnalysesRouter.route("/tweet_annotation", methods=["GET", "POST"])(
-    AnalysesController.tweet_annotation
+    AnalysesController.data_annotation
 )
 AnalysesRouter.route("/annotation_summary/<analysis_id>", methods=["GET", "POST"])(
     AnalysesController.annotation_summary
@@ -66,7 +66,7 @@ AnalysesRouter.route("/annotations", methods=["GET", "POST"])(
     AnalysesController.annotations
 )
 AnalysesRouter.route("/tweet_annotations", methods=["GET", "POST"])(
-    AnalysesController.tweet_annotations
+    AnalysesController.data_annotations
 )
 AnalysesRouter.route("/save_annotation", methods=["GET", "POST"])(
     AnalysesController.save_annotation

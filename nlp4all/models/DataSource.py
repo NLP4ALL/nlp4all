@@ -18,10 +18,12 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
     __tablename__ = 'data_source'
 
     id = Column(Integer, primary_key=True)
-    projects: Mapped[list[Project]] = relationship(secondary=project_data_source_table, back_populates="data_sources")    
+    projects: Mapped[list[Project]] = relationship(
+        secondary=project_data_source_table,
+        back_populates="data_sources")
     structure: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
     data_source_name: Mapped[str] = mapped_column(String(80), nullable=False)
-    data_id: Mapped[int] = mapped_column(ForeignKey("data.id"))
+    data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id"))
     data: Mapped[list[Data]] = relationship(back_populates="data_source")
     # shared
     # groups / projects /etc need to be implemented

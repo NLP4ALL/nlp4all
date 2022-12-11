@@ -16,7 +16,7 @@ class DataTagCategory(Base):  # pylint: disable=too-few-public-methods
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column(String(100))
-    tweets: Mapped[list[Data]] = relationship()
+    data: Mapped[list[Data]] = relationship()
     tags: Mapped[list[DataTag]] = relationship()
     projects: Mapped[list[Project]] = relationship(
         secondary=project_categories_table,

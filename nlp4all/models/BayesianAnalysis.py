@@ -1,9 +1,11 @@
 """Bayesian Analysis Model""" # pylint: disable=invalid-name
 
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON, Boolean
+from __future__ import annotations
+
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from .database import Base, MutableJSON
 from . import Project
 
 
@@ -14,16 +16,16 @@ class BayesianAnalysis(Base):
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))
     name = Column(String(50))
-    tags = relationship("TweetTag")  # this also tells us which tweets
-    data = Column(JSON)
+    tags = relationship("DataTag")  # this also tells us which tweets
+    data = Column(MutableJSON)
     project = Column(Integer, ForeignKey("project.id"))
     robots = relationship("BayesianRobot")
     shared = Column(Boolean, default=False)
     shared_model = Column(Boolean, default=False)
-    tweets = Column(JSON, default=[])
+    tweets = Column(MutableJSON, default=[])
     annotate = Column(Boolean, default=False)
     annotations = relationship("TweetAnnotation")
-    annotation_tags = Column(JSON)
+    annotation_tags = Column(MutableJSON)
     annotate = Column(Integer, default=1)
 
     def get_project(self):

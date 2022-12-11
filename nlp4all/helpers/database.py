@@ -118,25 +118,6 @@ def generate_schema(
 
 def init_db(): # pylint: disable=too-many-locals
     """Initializes the database."""
-    # pylint: disable=import-outside-toplevel, unused-import
-    from nlp4all.models import BayesianAnalysis
-    from nlp4all.models import BayesianRobot
-    from nlp4all.models import ConfusionMatrix
-    from nlp4all.models import MatrixCategories
-    from nlp4all.models import Organization
-    from nlp4all.models import Project
-    from nlp4all.models import ProjectCategories
-    from nlp4all.models import Role
-    from nlp4all.models import Tweet
-    from nlp4all.models import DataAnnotation
-    from nlp4all.models import TweetMatrix
-    from nlp4all.models import TweetProject
-    from nlp4all.models import DataTag
-    from nlp4all.models import DataTagCategory
-    from nlp4all.models import User
-    from nlp4all.models import UserOrgs
-    from nlp4all.models import UserRoles
-    # pylint: enable=wrong-import-position, unused-import
     engine = current_app.extensions["sqlalchemy"].engine
     Base.metadata.create_all(bind=engine)
 
@@ -149,25 +130,6 @@ def init_db_command():
 
 def drop_db(): # pylint: disable=too-many-locals
     """Drops all tables in the database."""
-    # pylint: disable=import-outside-toplevel, unused-import
-    from nlp4all.models import BayesianAnalysis
-    from nlp4all.models import BayesianRobot
-    from nlp4all.models import ConfusionMatrix
-    from nlp4all.models import MatrixCategories
-    from nlp4all.models import Organization
-    from nlp4all.models import Project
-    from nlp4all.models import ProjectCategories
-    from nlp4all.models import Role
-    from nlp4all.models import Tweet
-    from nlp4all.models import DataAnnotation
-    from nlp4all.models import TweetMatrix
-    from nlp4all.models import TweetProject
-    from nlp4all.models import DataTag
-    from nlp4all.models import DataTagCategory
-    from nlp4all.models import User
-    from nlp4all.models import UserOrgs
-    from nlp4all.models import UserRoles
-    # pylint: enable=wrong-import-position, unused-import
     engine = current_app.extensions["sqlalchemy"].get_engine()
     Base.metadata.drop_all(bind=engine)
 
@@ -186,9 +148,9 @@ def init_app(app: Flask):
     """
     app.cli.add_command(init_db_command)
     app.cli.add_command(drop_db_command)
-    
 
-def model_cols_jsonb_to_json():
+
+def model_cols_jsonb_to_json(app: Flask, cls: type): # pylint: disable=too-many-locals
     """Converts a Postgres JSONB column to a SQLite JSON column.
     Within the model itself, the column is defined as a JSONB column,
     we only need to change this to JSON when we are using SQLite.
@@ -196,11 +158,44 @@ def model_cols_jsonb_to_json():
     Currently only Data and DataSource use JSONB, and we only need to
     change these when we're testing, or local dev (which both use sqlite).
     """
+    # pylint: disable=import-outside-toplevel, unused-import
     from sqlalchemy.dialects.sqlite import JSON
-    from sqlalchemy_json import mutable_json_type
-    from nlp4all.models import Data
-    from nlp4all.models import DataSource
+    from sqlalchemy_json import mutable_json_type, NestedMutable
+    from sqlalchemy.ext.mutable import MutableDict
+    from nlp4all.models.database import N4AFlatJSON, N4ANestedJSON, N4AFlatJSONB, N4ANestedJSONB
 
-    SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True)
-    Data.__table__.columns["document"].type = SQLiteNestedMutableJSON
-    DataSource.__table__.columns["structure"].type = SQLiteNestedMutableJSON
+    SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True) # pylint: disable=invalid-name
+    SQLiteMutableJSON = mutable_json_type(dbtype=JSON, nested=False) # pylint: disable=invalid-name
+
+    tables = cls.__subclasses__()
+    for tbl in tables:
+        type_changed = False
+        app.logger.warning(">>> Converting table [%s] to SQLite JSON ===", tbl.__tablename__)
+        for col in tbl.__table__.columns:
+            if isinstance(col.type, (N4ANestedJSON, N4ANestedJSONB)):
+                app.logger.warning("      Converting column [%s] from %s to %s (DBTYPE: %s)",
+                    col.name,
+                    type(col.type),
+                    NestedMutable,
+                    JSON)
+                col.type = SQLiteNestedMutableJSON
+                type_changed = True
+                continue
+            if isinstance(col.type, (N4AFlatJSON, N4AFlatJSONB)):
+                app.logger.warning("      Converting column [%s] from %s to %s (DBTYPE: %s)",
+                    col.name,
+                    type(col.type),
+                    MutableDict,
+                    JSON)
+                col.type = SQLiteMutableJSON
+                type_changed = True
+                continue
+        if type_changed:
+            app.logger.warning(
+                "+++ Done converting table [%s] to SQLite JSON +++\n",
+                tbl.__tablename__)
+        else:
+            app.logger.warning(
+                "--- No changes to table [%s] ---\n",
+                tbl.__tablename__)
+    # pylint: enable=import-outside-toplevel, unused-import

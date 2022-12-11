@@ -19,7 +19,7 @@ from nlp4all.models import (
     BayesianRobot,
     ConfusionMatrix,
     Project,
-    Tweet,
+    Data,
     DataAnnotation,
     DataTag,
     DataTagCategory,
@@ -165,7 +165,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     def shared_analysis_view(cls):  # pylint: disable=too-many-locals
         """Shared analysis view page"""
         analysis_id = request.args.get("analysis", 0, type=int)
-        tweet_info = {}
+        data_info = {}
         all_words = []
         if analysis_id == 0:
             raise TypeError("No analysis id provided")
@@ -173,43 +173,43 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         # if not analysis.shared:
         #     return(redirect(url_for('home')))
         if bayes_analysis.shared:
-            tweet_info = {t: {"correct": 0, "incorrect": 0, "%": 0} for t in bayes_analysis.tweets}
+            data_info = {t: {"correct": 0, "incorrect": 0, "%": 0} for t in bayes_analysis.data}
         else:
-            tweet_info = {
+            data_info = {
                 t.tweet: {"correct": 0, "incorrect": 0, "%": 0} for t in bayes_analysis.tags
             }
         # for tag in analysis.tags:
         non_empty_tags = [t for t in bayes_analysis.tags if t.tweet is not None]
         for tag in non_empty_tags:
-            twit = Tweet.query.get(tag.tweet)
+            twit = Data.query.get(tag.tweet)
             all_words.extend(twit.words)
-            tweet_info[twit.id]["full_text"] = twit.full_text
-            tweet_info[twit.id]["category"] = DataTagCategory.query.get(twit.category).name
+            data_info[twit.id]["full_text"] = twit.full_text
+            data_info[twit.id]["category"] = DataTagCategory.query.get(twit.category).name
             if twit.category == tag.category:
-                tweet_info[twit.id]["correct"] = tweet_info[twit.id]["correct"] + 1
+                data_info[twit.id]["correct"] = data_info[twit.id]["correct"] + 1
             else:
-                tweet_info[twit.id]["incorrect"] = tweet_info[twit.id]["incorrect"] + 1
-        for tweet_id in list(tweet_info.keys()):
+                data_info[twit.id]["incorrect"] = data_info[twit.id]["incorrect"] + 1
+        for data_id in list(data_info.keys()):
             # if they haven't been categorized by anyone, remove them
-            if tweet_info[tweet_id]["correct"] == 0 and tweet_info[tweet_id]["incorrect"] == 0:
-                del tweet_info[tweet_id]
+            if data_info[data_id]["correct"] == 0 and data_info[data_id]["incorrect"] == 0:
+                del data_info[data_id]
             else:
-                tweet_info[tweet_id].update(
+                data_info[data_id].update(
                     {
                         "%": (
-                            tweet_info[tweet_id]["correct"]
-                            / (tweet_info[tweet_id]["incorrect"] + tweet_info[tweet_id]["correct"])
+                            data_info[data_id]["correct"]
+                            / (data_info[data_id]["incorrect"] + data_info[data_id]["correct"])
                         )
                         * 100
                     }
                 )
-        tweet_info = sorted(
-            [t for t in tweet_info.items()],  # pylint: disable=unnecessary-comprehension
+        data_info = sorted(
+            [t for t in data_info.items()],  # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["%"],
             reverse=True,
         )
         data = {}
-        percent_values = [d[1]["%"] for d in tweet_info]
+        percent_values = [d[1]["%"] for d in data_info]
         percent_counts = [
             {"label": str(percent), "estimate": percent_values.count(percent)}
             for percent in set(percent_values)
@@ -222,7 +222,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             )
         chart_data = {"title": "Antal korrekte", "data_points": percent_counts}
         data["chart_data"] = chart_data
-        # words = [word for x in tweet_info for word in x[1]["words"]]
+        # words = [word for x in data_info for word in x[1]["words"]]
         (
             pred_by_word,
             data["predictions"],
@@ -235,14 +235,14 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             for k, val in pred_by_word[wrd].items():
                 word_dict[k] = val
             word_info.append(word_dict)
-        tweet_info = [t[1] for t in tweet_info]
+        data_info = [t[1] for t in data_info]
         # we don't need to sort this since we put it in a datatable anyway
         # print(word_info)
         # sorted_word_info = sorted([w for w in word_info], key=lambda x: x['counts'], reverse=True)
         return render_template(
             "analyses/shared_analysis_view.html",
             title="Oversigt over analyse",
-            tweets=tweet_info,
+            tweets=data_info,
             word_info=word_info,
             analysis=bayes_analysis,
             **data,
@@ -257,13 +257,13 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
         a_project = Project.query.get(bayes_analysis.project)
         if "tag" in request.form.to_dict():
-            # category = TweetTagCategory.query.get(int(form.choices.data))
+            # category = DataTagCategory.query.get(int(form.choices.data))
             tag_info = ast.literal_eval(request.form["tag"])
-            tweet_id = tag_info[0]
+            data_id = tag_info[0]
             category_id = tag_info[1]
-            the_tweet = Tweet.query.get(tweet_id)
+            the_tweet = Data.query.get(data_id)
             category = DataTagCategory.query.get(category_id)
-            the_tweet = Tweet.query.get(tweet_id)
+            the_tweet = Data.query.get(data_id)
             bayes_analysis.data = bayes_analysis.updated_data(the_tweet, category)
             # all this  stuff is necessary  because the database backend doesnt resgister
             # changes on JSON
@@ -299,22 +299,22 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # @TODO: pretty sure we can just get project.categories
-        # tweets = project.tweets
+        # tweets = project.data
         the_tweet = None
         uncompleted_counts = 0
         if bayes_analysis.shared:
             completed_tweets = [t.tweet for t in bayes_analysis.tags if t.user == current_user.id]
-            uncompleted_tweets = [t for t in bayes_analysis.tweets if t not in completed_tweets]
+            uncompleted_tweets = [t for t in bayes_analysis.data if t not in completed_tweets]
             uncompleted_counts = len(uncompleted_tweets)
             if len(uncompleted_tweets) > 0:
-                the_tweet_id = uncompleted_tweets[0]
-                the_tweet = Tweet.query.get(the_tweet_id)
+                the_data_id = uncompleted_tweets[0]
+                the_tweet = Data.query.get(the_data_id)
             else:
                 flash(
                     "Well done! You finished all your tweets, wait for the rest of the group.",
                     "success",
                 )
-                the_tweet = Tweet(full_text="", words=[])
+                the_tweet = Data(full_text="", words=[])
         else:
             the_tweet = a_project.get_random_tweet()
         form = TaggingForm()
@@ -438,9 +438,9 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             a_tnt_set = tnt_sets[0]
             tnt_nr = 0
 
-        train_tweet_ids = a_tnt_set[0].keys()
+        train_data_ids = a_tnt_set[0].keys()
         train_set_size = len(a_tnt_set[0].keys())
-        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+        test_tweets = [Data.query.get(data_id) for data_id in a_tnt_set[1].keys()]
 
         # threshold and ratio accuracy
         if form.validate_on_submit():
@@ -459,12 +459,12 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 tnt_list = list(range(0, len(tnt_sets)))
                 tnt_nr = sample(tnt_list, 1)[0]
                 a_tnt_set = tnt_sets[tnt_nr]  # tnt_set id
-                train_tweet_ids = a_tnt_set[0].keys()
+                train_data_ids = a_tnt_set[0].keys()
                 train_set_size = len(a_tnt_set[0].keys())
-                test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+                test_tweets = [Data.query.get(data_id) for data_id in a_tnt_set[1].keys()]
 
                 # train on the training set:
-                c_matrix.train_data = c_matrix.train_model(train_tweet_ids)
+                c_matrix.train_data = c_matrix.train_model(train_data_ids)
                 flag_modified(c_matrix, "train_data")
 
                 # make matrix data
@@ -532,7 +532,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 return redirect(url_for("matrix", matrix_id=c_matrix.id, tnt_nr=tnt_nr))
 
             # train on the training set:
-            c_matrix.train_data = c_matrix.train_model(train_tweet_ids)
+            c_matrix.train_data = c_matrix.train_model(train_data_ids)
             flag_modified(c_matrix, "train_data")
 
             # make matrix data
@@ -638,7 +638,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         c_matrix = ConfusionMatrix.query.get(matrix_id)
         # request tweets from the correct quadrant
         cm_name = request.args.get("cm", type=str)
-        title = str("Tweets classified as " + cm_name)
+        title = str("Datas classified as " + cm_name)
         if cm_name in [c.name for c in c_matrix.categories]:
             id_c = [
                 {
@@ -651,8 +651,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                     if v["real_cat"] == cm_name and v["probability"] >= c_matrix.threshold
                 }
             ][0]
-            tweets = Tweet.query.filter(
-                Tweet.id.in_(id_c.keys())
+            tweets = Data.query.filter(
+                Data.id.in_(id_c.keys())
             ).all()  # pylint: disable=no-member
         else:
             id_c = [
@@ -666,8 +666,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                     if v["class"] == cm_name and v["probability"] >= c_matrix.threshold
                 }
             ][0]
-            tweets = Tweet.query.filter(
-                Tweet.id.in_(id_c.keys())
+            tweets = Data.query.filter(
+                Data.id.in_(id_c.keys())
             ).all()  # pylint: disable=no-member
 
         cm_info = {
@@ -711,12 +711,12 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
 
             cat_names = [c.name for c in c_matrix.categories]
             a_tnt_set = c_matrix.training_and_test_sets[0]  # as a default
-            train_tweet_ids = a_tnt_set[0].keys()
+            train_data_ids = a_tnt_set[0].keys()
             train_set_size = len(a_tnt_set[0].keys())
-            test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+            test_tweets = [Data.query.get(data_id) for data_id in a_tnt_set[1].keys()]
 
             # train on the training set:
-            c_matrix.train_data = c_matrix.train_model(train_tweet_ids)
+            c_matrix.train_data = c_matrix.train_model(train_data_ids)
             flag_modified(c_matrix, "train_data")
 
             # make matrix data
@@ -802,7 +802,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             }
         ][0]
 
-        tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()  # pylint: disable=no-member
+        tweets = Data.query.filter(Data.id.in_(id_c.keys())).all()  # pylint: disable=no-member
         # collect necessary data for the table
         cm_info = {
             t.id: {
@@ -843,7 +843,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             }
         ][0]
 
-        tweets = Tweet.query.filter(Tweet.id.in_(id_c.keys())).all()  # pylint: disable=no-member
+        tweets = Data.query.filter(Data.id.in_(id_c.keys())).all()  # pylint: disable=no-member
         # collect necessary data for the table
         cm_info = {
             t.id: {
@@ -944,12 +944,12 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             tnt_nr = sample(tnt_list, 1)[0]
             used_tnt_sets.append(tnt_nr)  # log used sets
             a_tnt_set = tnt_sets[tnt_nr]
-            train_tweet_ids = a_tnt_set[0].keys()
+            train_data_ids = a_tnt_set[0].keys()
             train_set_size = len(a_tnt_set[0].keys())
-            test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+            test_tweets = [Data.query.get(data_id) for data_id in a_tnt_set[1].keys()]
 
             # train on the training set:
-            new_mx.train_data = new_mx.train_model(train_tweet_ids)
+            new_mx.train_data = new_mx.train_model(train_data_ids)
             flag_modified(new_mx, "train_data")
             db.flush()
 
@@ -1164,12 +1164,12 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         ]
         tnt_nr = sample(tnt_list, 1)[0]
         a_tnt_set = tnt_sets[tnt_nr]
-        train_tweet_ids = a_tnt_set[0].keys()
+        train_data_ids = a_tnt_set[0].keys()
         train_set_size = len(a_tnt_set[0].keys())
-        test_tweets = [Tweet.query.get(tweet_id) for tweet_id in a_tnt_set[1].keys()]
+        test_tweets = [Data.query.get(data_id) for data_id in a_tnt_set[1].keys()]
 
         # train on the training set:
-        matrix2.train_data = matrix2.train_model(train_tweet_ids)
+        matrix2.train_data = matrix2.train_model(train_data_ids)
         flag_modified(matrix2, "train_data")
 
         # make matrix data
@@ -1288,47 +1288,47 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     # here you need the analysis in request args!
 
     @classmethod
-    def tweet_annotation(cls):
-        """Tweet annotation."""
+    def data_annotation(cls):
+        """Data annotation."""
         analysis_id = request.args.get("analysis", 0, type=int)  # pylint: disable=no-member
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
         a_project = Project.query.get(bayes_analysis.project)
-        tweets = a_project.tweets  # Tweet.query.all()
-        categories = a_project.categories  # TweetTagCategory.query.all()
-        tweet_table = {}
+        tweets = a_project.data  # Data.query.all()
+        categories = a_project.categories  # DataTagCategory.query.all()
+        data_table = {}
         # if category in request_dict_keys
 
         if "cat" in request.args.to_dict().keys():  # pylint: disable=no-member
             cat_id = request.args.get("cat", type=int)  # pylint: disable=no-member
-            tweets = Tweet.query.filter(Tweet.category == cat_id)
-            tweet_table = {
+            tweets = Data.query.filter(Data.category == cat_id)
+            data_table = {
                 t.id: {"tweet": t.full_text, "category": t.handle, "id": t.id} for t in tweets
             }
-            tweet_table = sorted(
-                [t for t in tweet_table.items()], # pylint: disable=unnecessary-comprehension
+            data_table = sorted(
+                [t for t in data_table.items()], # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["id"],
                 reverse=True,
             )
-            tweet_table = [t[1] for t in tweet_table]
+            data_table = [t[1] for t in data_table]
 
         if request.method == "POST" and "select-category" in request.form.to_dict():
             myargs = request.form.to_dict()
             cat_id = myargs["select-category"]
-            tweets = Tweet.query.filter(Tweet.category == cat_id)
-            tweet_table = {
+            tweets = Data.query.filter(Data.category == cat_id)
+            data_table = {
                 t.id: {"tweet": t.full_text, "category": t.handle, "id": t.id} for t in tweets
             }
-            tweet_table = sorted(
-                [t for t in tweet_table.items()], # pylint: disable=unnecessary-comprehension
+            data_table = sorted(
+                [t for t in data_table.items()], # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["id"],
                 reverse=True,
             )
-            tweet_table = [t[1] for t in tweet_table]
-            return redirect(url_for("tweet_annotation", analysis=bayes_analysis.id, cat=cat_id))
+            data_table = [t[1] for t in data_table]
+            return redirect(url_for("data_annotation", analysis=bayes_analysis.id, cat=cat_id))
 
         return render_template(
-            "analyses/tweet_annotate.html",
-            tweet_table=tweet_table,
+            "analyses/data_annotate.html",
+            data_table=data_table,
             categories=categories,
             analysis=bayes_analysis,
         )
@@ -1425,8 +1425,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             [a.tweet for a in all_tag_anns]
         )
         # list(set([t.tweet for t in all_tag_anns]))
-        all_tagged_tweets = Tweet.query.filter(
-            Tweet.id.in_(a_list)
+        all_tagged_tweets = Data.query.filter(
+            Data.id.in_(a_list)
         ).all()  # pylint: disable=no-member
 
         return render_template(
@@ -1463,7 +1463,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 DataAnnotation.analysis == analysis_id, DataAnnotation.user == current_user.id
             ).all()
         a_list = set([a.tweet for a in anns])  # pylint: disable=consider-using-set-comprehension
-        tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()  # pylint: disable=no-member
+        tweets = Data.query.filter(Data.id.in_(a_list)).all()  # pylint: disable=no-member
 
         ann_info = {
             a.id: {"annotation": a.text, "tag": a.annotation_tag, "user": a.user} for a in anns
@@ -1488,10 +1488,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             word_tuples.append(my_tuples)
 
         ann_list = (
-            Tweet.query.join(DataAnnotation, (DataAnnotation.tweet == Tweet.id))
+            Data.query.join(DataAnnotation, (DataAnnotation.tweet == Data.id))
             .filter(DataAnnotation.user == current_user.id)
             .filter_by(analysis=analysis_id)
-            .order_by(Tweet.id)
+            .order_by(Data.id)
             .distinct()
             .paginate(page, per_page=1)
         )
@@ -1522,36 +1522,36 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     # didn't get this to entirely work, not used now
 
     @classmethod
-    def tweet_annotations(
+    def data_annotations(
         cls,
     ):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         """Show all annotations by user."""
         args = request.args.to_dict()
         analysis_id = int(args["analysis_id"])
-        tweet_id = int(args["tweet_id"])
+        data_id = int(args["data_id"])
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
-        a_tweet = Tweet.query.get(tweet_id)
+        a_tweet = Data.query.get(data_id)
         a_project = Project.query.get(bayes_analysis.project)
         anns = DataAnnotation.query.filter(
-            DataAnnotation.tweet == tweet_id, DataAnnotation.analysis == analysis_id
+            DataAnnotation.tweet == data_id, DataAnnotation.analysis == analysis_id
         ).all()
         a_list = set([a.tweet for a in anns])  # pylint: disable=consider-using-set-comprehension
-        tweets = Tweet.query.filter(Tweet.id.in_(a_list)).all()  # pylint: disable=no-member
+        tweets = Data.query.filter(Data.id.in_(a_list)).all()  # pylint: disable=no-member
         ann_dict = bayes_analysis.annotation_counts(tweets, "all")
-        tweet_ids = []
+        data_ids = []
         ann_tags = [c.name for c in a_project.categories]
         for tag in list(bayes_analysis.annotation_tags.keys()):
             if tag not in ann_tags:
                 ann_tags.append(tag)
 
         mytagcounts = get_tags(bayes_analysis, set(a_tweet.words), a_tweet)
-        # TweetAnnotation.query.filter(TweetAnnotation.tweet==a_tweet.id).all()
+        # DataAnnotation.query.filter(DataAnnotation.tweet==a_tweet.id).all()
         myanns = anns
         my_tuples = ann_create_css_info(mytagcounts, a_tweet.full_text, ann_tags, myanns)
         # word_tuples.append(my_tuples)
-        tweet_ids.append(a_tweet.id)
+        data_ids.append(a_tweet.id)
 
-        return jsonify(my_tuples, tweet_ids, ann_dict)
+        return jsonify(my_tuples, data_ids, ann_dict)
 
     # saving the annotation by word position
     # @TODO: figure out a better way, now the word before gets saved sometimes..
@@ -1562,8 +1562,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     ):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         """Save annotation."""
         args = request.args.to_dict()  # pylint: disable=no-member
-        t_id = int(args["tweet_id"])
-        twit = Tweet.query.get(t_id)
+        t_id = int(args["data_id"])
+        twit = Data.query.get(t_id)
         text = str(args["text"])
         atag = str(args["atag"])
         print(atag)
@@ -1645,8 +1645,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         """Save draggable tweet."""
         args = request.args.to_dict()
         print(args)
-        t_id = int(args["tweet_id"])
-        this_tweet = Tweet.query.get(t_id)
+        t_id = int(args["data_id"])
+        this_tweet = Data.query.get(t_id)
         bayes_analysis = BayesianAnalysis.query.get(int(args["analysis_id"]))
         a_project = Project.query.get(bayes_analysis.project)
         cat = str(args["category"])
@@ -1679,20 +1679,20 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # @TODO: pretty sure we can just get project.categories
-        # tweets = project.tweets # AH: this is where we need to do something
+        # tweets = project.data # AH: this is where we need to do something
         # faster
         the_tweet = None
         print(the_tweet)
         if bayes_analysis.shared:
             completed_tweets = [t.tweet for t in bayes_analysis.tags if t.user == current_user.id]
-            uncompleted_tweets = [t for t in bayes_analysis.tweets if t not in completed_tweets]
+            uncompleted_tweets = [t for t in bayes_analysis.data if t not in completed_tweets]
             print(the_tweet.full_text)
             if len(uncompleted_tweets) > 0:
-                the_tweet_id = uncompleted_tweets[0]
-                the_tweet = Tweet.query.get(the_tweet_id)
+                the_data_id = uncompleted_tweets[0]
+                the_tweet = Data.query.get(the_data_id)
             else:
                 # create an alternative message
-                the_tweet = Tweet(full_text="", words=[])
+                the_tweet = Data(full_text="", words=[])
                 return jsonify("the end")
         else:
             print("trying to get a random tweet")
@@ -1720,7 +1720,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     @classmethod
     def tweet(cls, tid):
         """Show a tweet."""
-        twit = Tweet.query.get(tid)
+        twit = Data.query.get(tid)
         return jsonify(twit.full_text)
 
     # update the bar chart
@@ -1731,8 +1731,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     ):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         """Get bar chart data."""
         args = request.args.to_dict()  # pylint: disable=no-member
-        t_id = int(args["tweet_id"])
-        this_tweet = Tweet.query.get(t_id)
+        t_id = int(args["data_id"])
+        this_tweet = Data.query.get(t_id)
         bayes_analysis = BayesianAnalysis.query.get(int(args["analysis_id"]))
         a_project = Project.query.get(bayes_analysis.project)
         categories = DataTagCategory.query.filter(
@@ -1769,17 +1769,17 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 [p.id for p in a_project.categories]
             )  # pylint: disable=no-member
         ).all()  # @TODO: pretty sure we can just get project.categories
-        # tweets = project.tweets
+        # tweets = project.data
         the_tweet = None
         if bayes_analysis.shared:
             completed_tweets = [t.tweet for t in bayes_analysis.tags if t.user == current_user.id]
-            uncompleted_tweets = [t for t in bayes_analysis.tweets if t not in completed_tweets]
+            uncompleted_tweets = [t for t in bayes_analysis.data if t not in completed_tweets]
             if len(uncompleted_tweets) > 0:
-                the_tweet_id = uncompleted_tweets[0]
-                the_tweet = Tweet.query.get(the_tweet_id)
+                the_data_id = uncompleted_tweets[0]
+                the_tweet = Data.query.get(the_data_id)
             else:
                 # create an alternative message
-                the_tweet = Tweet(full_text="", words=[])
+                the_tweet = Data(full_text="", words=[])
                 return jsonify("the end")
         else:
             # sample(tweets, 1)[0] # so the same tweet might come again?
@@ -1827,7 +1827,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     def jq_highlight_tweet(cls):
         """Jquery highlight tweet."""
         args = request.args.to_dict()
-        t_id = int(args["tweet_id"])
+        t_id = int(args["data_id"])
         the_tag = str(args["the_tag"])
 
         the_tags = DataAnnotation.query.filter(
@@ -1853,10 +1853,10 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
     def show_highlights(cls):
         """Show highlights."""
         args = request.args.to_dict()
-        t_id = int(args["tweet_id"])
+        t_id = int(args["data_id"])
         analysis_id = int(args["analysis_id"])
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
-        a_tweet = Tweet.query.get(t_id)
+        a_tweet = Data.query.get(t_id)
 
         ann_tags = list(bayes_analysis.annotation_tags.keys())
 
@@ -1871,8 +1871,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         """Get annotations."""
         args = request.args.to_dict()  # pylint: disable=no-member
         span_id = str(args["span_id"])
-        t_id = int(args["tweet_id"])
-        the_tweet = Tweet.query.get(t_id)
+        t_id = int(args["data_id"])
+        the_tweet = Data.query.get(t_id)
         analysis_id = int(args["analysis_id"])
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
 
@@ -1907,7 +1907,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         """Delete last annotation."""
         print("delete last ")
         args = request.args.to_dict()  # pylint: disable=no-member
-        t_id = int(args["tweet_id"])
+        t_id = int(args["data_id"])
         analysis_id = int(args["analysis"])
 
         # get all annotations
@@ -1933,8 +1933,8 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         span_id = str(args["span_id"])
         ann_id = str(args["ann_id"])
         ann = DataAnnotation.query.get(ann_id)
-        t_id = int(args["tweet_id"])
-        the_tweet = Tweet.query.get(t_id)
+        t_id = int(args["data_id"])
+        the_tweet = Data.query.get(t_id)
         analysis_id = int(args["analysis_id"])
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
 

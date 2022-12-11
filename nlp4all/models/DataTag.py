@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
 
-from . import User, Data, DataTagCategory
-
+from . import Data
 
 class DataTag(Base):  # pylint: disable=too-few-public-methods
     """DataTag model."""
@@ -20,6 +19,6 @@ class DataTag(Base):  # pylint: disable=too-few-public-methods
     user: Mapped[int] = mapped_column(ForeignKey("user.id"))
     category: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
     analysis: Mapped[int] = mapped_column(ForeignKey("bayesian_analysis.id", ondelete="CASCADE"))
-    data_id: Mapped[int] = mapped_column(ForeignKey("data.id", ondelete="CASCADE"))
+    data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id", ondelete="CASCADE"))
     data: Mapped[Data] = relationship(back_populates="tags")
     time_created: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)

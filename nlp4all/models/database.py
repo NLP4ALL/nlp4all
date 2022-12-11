@@ -1,11 +1,14 @@
 """SQLAlchemy ORM setup"""
 
 from __future__ import annotations
+
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.dialects.postgresql import JSONB, JSON
+
+from sqlalchemy_json import NestedMutable
 from flask_sqlalchemy.query import Query
-from sqlalchemy_json import mutable_json_type
-from sqlalchemy.dialects.postgresql import JSONB
 
 
 # base model class
@@ -16,8 +19,46 @@ class Base: # pylint: disable=too-few-public-methods
 
 Base = declarative_base(cls=Base)
 
-NestedMutableJSONB = mutable_json_type(dbtype=JSONB, nested=True)
-MutableJSONB = mutable_json_type(dbtype=JSONB, nested=False)
+# Here we define some JSON column types
+# we could potentially limit the number
+# once we've settled on the final structure
+# and the main use of these custom
+# classes is to allow us to replace them
+# at runtime if we're using sqlite
+class N4ANestedJSONB(JSONB): # pylint: disable=too-many-ancestors
+    """Nested JSONB column type"""
+    nested = True
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.impl = JSONB
+
+class N4AFlatJSONB(JSONB): # pylint: disable=too-many-ancestors
+    """Flat JSONB column type"""
+    nested = False
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.impl = JSONB
+
+class N4ANestedJSON(JSON):
+    """Nested JSON column type"""
+    nested = True
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.impl = JSON
+
+class N4AFlatJSON(JSON):
+    """Nested JSON column type"""
+    nested = False
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.impl = JSON
+
+
+NestedMutableJSONB = NestedMutable.as_mutable(N4ANestedJSONB)
+MutableJSONB = MutableDict.as_mutable(N4AFlatJSONB)
+
+NestedMutableJSON = NestedMutable.as_mutable(N4ANestedJSON)
+MutableJSON = MutableDict.as_mutable(N4AFlatJSON)
 
 # Definitions for many-to-many relationships
 
@@ -42,7 +83,7 @@ project_categories_table = Table(
 data_matrices_table = Table(
     "data_matrices",
     Base.metadata,
-    Column("data_id", ForeignKey("data.id", ondelete="CASCADE"), primary_key=True),
+    Column("data_id", ForeignKey("nlp_data.id", ondelete="CASCADE"), primary_key=True),
     Column("confusion_matrix_id",
         ForeignKey("confusion_matrix.id", ondelete="CASCADE"),
         primary_key=True),
@@ -58,13 +99,6 @@ matrix_categories_table = Table(
         "confusion_matrix_id", ForeignKey("confusion_matrix.id", ondelete="CASCADE"),
         primary_key=True),
 )
-
-# data_confusionmatrix_table = Table(
-#     "tweet_confusionmatrix",
-#     Base.metadata,
-#     Column("data_id", ForeignKey("data.id", ondelete="CASCADE"), primary_key=True),
-#     Column("confusion_matrix_id", ForeignKey("confusion_matrix.id", ondelete="CASCADE"), primary_key=True),
-# )
 
 user_role_table = Table(
     "user_roles",

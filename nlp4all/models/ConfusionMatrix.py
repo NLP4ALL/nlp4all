@@ -5,11 +5,11 @@ from __future__ import annotations
 import operator
 from typing import Optional
 
-from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from .database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
-from . import Tweet, DataTagCategory, Data
+from . import DataTagCategory, Data
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -29,7 +29,9 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     threshold: Mapped[float] = mapped_column()
     ratio: Mapped[float] = mapped_column()
     data: Mapped[dict] = mapped_column(MutableJSONB)  # accuracy etc resuts from the matrix
-    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("confusion_matrix.id"), default=None)  # for cloning purposes
+    parent_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("confusion_matrix.id"),
+        default=None)  # for cloning purposes
     child: Mapped[Optional[int]] = mapped_column(ForeignKey("confusion_matrix.id"), default=None)
 
     def clone(self):
@@ -37,7 +39,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
         new_matrix = ConfusionMatrix()
         new_matrix.parent_id = self.id
         new_matrix.categories = self.categories
-        new_matrix.tweets = self.tweets
+        new_matrix.data = self.data
         new_matrix.tf_idf = self.tf_idf
         new_matrix.training_and_test_sets = self.training_and_test_sets
         new_matrix.ratio = self.ratio
@@ -61,7 +63,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
 
     def update_tnt_set(self):
         """Update the training and test sets."""
-        tweet_id_and_cat = {t.id: t.category for t in self.tweets}
+        tweet_id_and_cat = {t.id: t.category for t in self.data}
         self.training_and_test_sets = create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)
         return self.training_and_test_sets
 
@@ -111,7 +113,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
         train_data = self.train_data
         # trains the model with the training data tweets
         for tweet_id in train_tweet_ids:
-            tweet = Tweet.query.get(tweet_id)
+            tweet = Data.query.get(tweet_id)
             category_id = tweet.category
             category = DataTagCategory.query.get(category_id)
             train_data = self.updated_data(tweet, category)

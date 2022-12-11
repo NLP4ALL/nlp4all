@@ -20,7 +20,7 @@ class DataAnnotation(Base):  # pylint: disable=too-few-public-methods
     # dropdown: project categories, other
     annotation_tag: Mapped[str] = mapped_column(String(50))
     analysis: Mapped[int] = mapped_column(ForeignKey("bayesian_analysis.id", ondelete="CASCADE"))
-    data_id: Mapped[int] = mapped_column(ForeignKey("data.id", ondelete="CASCADE"))
+    data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id", ondelete="CASCADE"))
     data: Mapped[Data] = relationship(back_populates="annotations")
     words: Mapped[dict] = mapped_column(MutableJSONB)
     text: Mapped[str] = mapped_column(String(50))

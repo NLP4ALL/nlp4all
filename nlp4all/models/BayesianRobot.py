@@ -3,9 +3,9 @@
 import collections
 import functools
 import operator
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 
-from .database import Base
+from .database import Base, MutableJSON
 from . import BayesianAnalysis, Project
 
 
@@ -20,8 +20,8 @@ class BayesianRobot(Base):
     parent = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
     child = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
     analysis = Column(Integer, ForeignKey("bayesian_analysis.id"))
-    features = Column(JSON, default={})
-    accuracy = Column(JSON, default={})
+    features = Column(MutableJSON, default={})
+    accuracy = Column(MutableJSON, default={})
     retired = Column(Boolean, default=False)
     time_retired = Column(DateTime)
 

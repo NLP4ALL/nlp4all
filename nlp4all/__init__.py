@@ -51,11 +51,11 @@ def create_app(env: Union[None, str] = None) -> Flask:
 
     if conf.DB_BACKEND == "sqlite":
         from .helpers.database import model_cols_jsonb_to_json # pylint: disable=import-outside-toplevel
-        app.logger.warning("{} {} {}".format(
+        app.logger.warning("{} {} {}".format( # pylint: disable=consider-using-f-string
             "Converting JSONB to JSON for SQLite backend",
             "This is ONLY for development purposes",
             "because SQLite does not support JSONB"))
-        model_cols_jsonb_to_json()
+        model_cols_jsonb_to_json(app, Base)
 
 
     @app.route("/static/<path:filename>")

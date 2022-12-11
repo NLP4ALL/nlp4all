@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from random import sample
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON
+from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, load_only, Mapped, mapped_column
 
-from .database import Base, project_data_source_table, project_categories_table
+from .database import Base, project_data_source_table, project_categories_table, MutableJSON
 
-from . import Tweet, DataSource, BayesianAnalysis, DataTagCategory
+from . import DataSource, BayesianAnalysis, DataTagCategory, Data
 
 
 class Project(Base):
@@ -26,9 +26,10 @@ class Project(Base):
     data_sources: Mapped[list[DataSource]] = relationship(
         secondary=project_data_source_table,
         back_populates="projects")
-    tf_idf: Mapped[dict] = mapped_column(JSON) # what is this?
-    tweets = relationship("Tweet", secondary="tweet_project", lazy="dynamic") # remove? or replace with data?
-    training_and_test_sets: Mapped[dict] = mapped_column(JSON)
+    tf_idf: Mapped[dict] = mapped_column(MutableJSON) # what is this?
+    # remove? or replace with data?
+    # tweets = relationship("Tweet", secondary="tweet_project", lazy="dynamic")
+    training_and_test_sets: Mapped[dict] = mapped_column(MutableJSON)
 
     def get_tweets(self):
         """Get tweets."""
@@ -38,4 +39,4 @@ class Project(Base):
         """Get a random tweet."""
         tweet_ids = self.tweets.options(load_only("id")).all()  # pylint: disable=no-member
         the_tweet_id = sample(tweet_ids, 1)[0]
-        return Tweet.query.get(the_tweet_id.id)
+        return Data.query.get(the_tweet_id.id)
