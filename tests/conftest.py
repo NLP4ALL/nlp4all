@@ -4,6 +4,8 @@ Pytest configuration file for the tests.
 Shared fixtures go here.
 """
 
+# pylint: disable=line-too-long
+
 import os
 import pytest
 
@@ -35,7 +37,8 @@ def app():
 @pytest.fixture
 def csvdata():
     """Return a list of dicts with CSV data.
-    Excerpt from: https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_1.csv
+    Excerpt from:
+    https://github.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_1.csv
     """
     return r'''external_author_id,author,content,region,language,publish_date,harvested_date,following,followers,updates,post_type,account_type,retweet,account_category,new_june_2018,alt_external_id,tweet_id,article_url,tco1_step1,tco2_step1,tco3_step1
 906000000000000000,10_GOP,"""We have a sitting Democrat US Senator on trial for corruption and you've barely heard a peep from the mainstream media."" ~ @nedryun https://t.co/gh6g0D1oiC",Unknown,English,10/1/2017 19:58,10/1/2017 19:59,1052,9636,253,,Right,0,RightTroll,0,905874659358453760,914580356430536707,http://twitter.com/905874659358453760/statuses/914580356430536707,https://twitter.com/10_gop/status/914580356430536707/video/1,,

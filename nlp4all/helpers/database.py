@@ -27,7 +27,7 @@ class N4AObject(Object):
         for prop, schema_node in properties.items():
             schema_node.current_key = prop
             schema = schema_node.to_schema()
-            
+
             # remove empty objects
             try:
                 items = schema['items']
@@ -41,7 +41,7 @@ class N4AObject(Object):
                     continue
             except KeyError:
                 pass
-            
+
             # remove null types
             try:
                 stype = schema['type']
@@ -53,7 +53,7 @@ class N4AObject(Object):
                 pass
             schema_properties[prop] = schema
         return schema_properties
-    
+
 class N4AList(List):
     """List strategy for nlp4all.
     """
@@ -150,7 +150,7 @@ def csv_row_to_json(row: t.List[str], headers: t.List[str]) -> dict:
     """
     if len(row) != len(headers):
         raise ValueError(
-            "Row and headers are not the same length. Row: {}, Headers: {}".format(row, headers))
+            f"Row and headers are not the same length. Row: {row}, Headers: {headers}")
 
     return {headers[i]: row[i] for i in range(len(row))}
 
@@ -234,7 +234,7 @@ def generate_schema(
     """
     if builder is None:
         # add our custom list and object strategies
-        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
+        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject]) # pylint: disable=line-too-long
         N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
         N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
         builder = N4ASchemaBuilder()
