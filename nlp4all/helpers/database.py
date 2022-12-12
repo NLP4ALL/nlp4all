@@ -2,10 +2,137 @@
 
 import typing as t
 import click
-from genson import SchemaBuilder
+from genson import SchemaBuilder, SchemaNode
+from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
 from nlp4all.models.database import Base
+
+class N4AObject(Object):
+    """JSON Object strategy for nlp4all."""
+
+    current_key = None
+
+    def to_schema(self):
+        """Converts the strategy to a schema."""
+
+        schema =  super().to_schema()
+        if self.current_key is not None:
+            schema['title'] = self.current_key
+        return schema
+
+    def _properties_to_schema(self, properties):
+        """Overrides the super class method to add current_key"""
+        schema_properties = {}
+        for prop, schema_node in properties.items():
+            schema_node.current_key = prop
+            schema = schema_node.to_schema()
+            
+            # remove empty objects
+            try:
+                items = schema['items']
+                if items is None:
+                    if self._required is not None:
+                        self._required.remove(prop)
+                    continue
+                if len(items) == 1 and items[0] == {}:
+                    if self._required is not None:
+                        self._required.remove(prop)
+                    continue
+            except KeyError:
+                pass
+            
+            # remove null types
+            try:
+                stype = schema['type']
+                if stype == 'null':
+                    if self._required is not None:
+                        self._required.remove(prop)
+                    continue
+            except KeyError:
+                pass
+            schema_properties[prop] = schema
+        return schema_properties
+    
+class N4AList(List):
+    """List strategy for nlp4all.
+    """
+
+    current_key = None
+
+    def items_to_schema(self):
+        """Overrides the super class method to add current_key"""
+        self._items.current_key = self.current_key
+        return self._items.to_schema()
+
+class N4ATuple(Tuple):
+    """Tuple strategy for nlp4all."""
+
+    current_key = None
+
+    def items_to_schema(self):
+        """Overrides the super class method to add current_key"""
+        for item in self._items:
+            item.current_key = self.current_key
+        return [item.to_schema() for item in self._items]
+
+    # def items_to_schema(self):
+    #     schema = []
+    #     for item in self._items:
+    #         item.current_key = self.current_key
+    #         schema.append(item.to_schema())
+    #     return schema
+
+class N4ASchemaNode(SchemaNode):
+    """Schema node for nlp4all."""
+
+    STRATEGIES = None
+    current_key = None
+
+    def to_schema(self):
+        """Converts the node to a schema.
+        This is a modified version of the original to_schema method
+        in order to remove the anyOf field from the schema.
+        Icky, but in the specific case of two types, "null" and <something else>,
+        the anyOf field is not needed, as we treat pretty much everything as optional.
+        """
+
+        if self.current_key is not None:
+            for active_strategy in self._active_strategies:
+                if isinstance(active_strategy, (N4AObject, N4AList, N4ATuple)):
+                    active_strategy.current_key = self.current_key
+
+        schema = super().to_schema()
+        try:
+            types = schema['anyOf']
+            if types is None:
+                return schema
+            if len(types) == 2:
+                if types[0]['type'] == 'null':
+                    return types[1]
+                if types[1]['type'] == 'null':
+                    return types[0]
+        except KeyError:
+            pass
+
+        return schema
+
+class N4ASchemaBuilder(SchemaBuilder):
+    """Schema builder for nlp4all."""
+
+    # set to none, assigning here doesn't work
+    NODE_CLASS = None
+    STRATEGIES = None
+
+    def to_schema(self):
+        """Overrides the default to_schema method to
+        add a top level title field.
+        """
+        schema = super().to_schema()
+        schema['title'] = 'nlp4all'
+        return schema
+
+
 
 
 def csv_row_to_json(row: t.List[str], headers: t.List[str]) -> dict:
@@ -22,7 +149,8 @@ def csv_row_to_json(row: t.List[str], headers: t.List[str]) -> dict:
         ValueError: If the row and headers are not the same length.
     """
     if len(row) != len(headers):
-        raise ValueError("Row and headers are not the same length.")
+        raise ValueError(
+            "Row and headers are not the same length. Row: {}, Headers: {}".format(row, headers))
 
     return {headers[i]: row[i] for i in range(len(row))}
 
@@ -45,7 +173,8 @@ def csv_to_json(csv: t.List[t.List[str]], headers: t.Union[t.List[str], None]) -
 
     if headers is None:
         headers = csv[0]
-    return [csv_row_to_json(row, headers) for row in csv[1:]]
+        csv = csv[1:]
+    return [csv_row_to_json(row, headers) for row in csv]
 
 
 
@@ -104,7 +233,11 @@ def generate_schema(
 
     """
     if builder is None:
-        builder = SchemaBuilder()
+        # add our custom list and object strategies
+        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
+        N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
+        N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
+        builder = N4ASchemaBuilder()
 
     if isinstance(data, list):
         for item in data:
@@ -112,7 +245,11 @@ def generate_schema(
     else:
         builder.add_object(data)
 
-    return builder.to_schema()
+    schema = builder.to_schema()
+    # Mapping for "$id" to "$schema" for compatibility with
+    # python_jsonschema_objects
+    # schema["$id"] = schema["$schema"]
+    return schema
 
 
 

@@ -9,7 +9,9 @@ markers = [
     "unit: marks tests as unit tests (deselect with '-m \"not unit\"')",
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
     "functional: marks tests as functional tests (deselect with '-m \"not functional\"')",
-    "data: marks tests as data-related tests (deselect with '-m \"not data\"')"
+    "data: marks tests as data-related tests (deselect with '-m \"not data\"')",
+    "model: marks tests as model-related tests (deselect with '-m \"not model\"')",
+    "helper: marks tests as helper-related tests (deselect with '-m \"not helper\"')"
 ]
 
 [tool.pylint.main]
