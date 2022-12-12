@@ -195,7 +195,14 @@ def generate_schema(
     **Note**: If sent a JSON array, the schema will be generated
               based on the _contents_ of the array, not the array itself.
 
-    E.g. Normally if you generate a schema from:
+              Additionally, any null schemas will be removed, and if there
+              are cases of anyOf types with "null" and another type, the
+              "null" will be removed, and the other type will be used as
+              the schema.
+
+              Finally, this also applies to empty arrays, they will be removed.
+
+    E.g. Normally if you generate a schema from a top level json array:
     [{ "a": 1 }, { "b": 2 }] you will get a schema that looks like this:
 
     {

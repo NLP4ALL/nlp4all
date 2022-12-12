@@ -11,6 +11,8 @@ import pytest
 
 from nlp4all import create_app
 from nlp4all.helpers import database
+from nlp4all.models import User
+
 
 # hook for debugging
 if os.getenv('_PYTEST_RAISE', "0") != "0":
@@ -75,6 +77,7 @@ def jsondata():
 @pytest.fixture
 def jsonschema():
     """Returns a JSON schema for the Twitter data."""
+
     return {
     "$schema": "http://json-schema.org/schema#",
     "type": "object",

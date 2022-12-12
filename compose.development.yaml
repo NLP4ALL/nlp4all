@@ -14,13 +14,15 @@ services:
     restart: always
     build: 
       context: .
-      dockerfile: ./docker/python/Dockerfile.development
-    command: flask --debug --app nlp4all run --host=0.0.0.0
+      target: nlpapp-dev
+      dockerfile: ./docker/python/Dockerfile
+    command: python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m flask --debug --app nlp4all run --host=0.0.0.0 --port=5000
     volumes:
       - static_volume_dev:/home/app/nlp4all/static
       - ./nlp4all:/home/app/nlp4all
     ports:
       - "5000:5000"
+      - "5678:5678"
     env_file:
       - ./db.dev.env
       - ./app.dev.env
