@@ -92,4 +92,4 @@ Werkzeug==2.2.2
 wincertstore==0.2
 wrapt==1.14.1
 WTForms==3.0.1
-zipp==3.10.0
+zipp==3.11.0
