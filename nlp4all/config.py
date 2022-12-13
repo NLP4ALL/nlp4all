@@ -1,6 +1,7 @@
 """Flask configuration"""
 
 import os
+import logging
 import secrets
 from pathlib import Path
 # from dotenv import load_dotenv
@@ -44,10 +45,11 @@ class Config: # pylint: disable=too-few-public-methods
     TESTING = False
     SECRET_FILE_PATH = Path(".flask_secret")
     DB_BACKEND = DB_BACKEND
+    LOG_LEVEL = logging.WARNING
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = DB_URI
-    STATIC_DIR = Path(__file__).parent / "static"
+    STATIC_DIR = "static"
 
     SPACY_MODEL_TYPES = {
         "small": "sm",
@@ -84,23 +86,31 @@ class Config: # pylint: disable=too-few-public-methods
         """Initialize the configuration."""
         self.SECRET_KEY = self.get_secret() # pylint: disable=invalid-name
         self.env = env
+        self._set_log_level()
+
+    def _set_log_level(self):
+        """Set the log level."""
+        logging.basicConfig(level=self.LOG_LEVEL)
 
 class DevelopmentConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in development."""
     SECRET_FILE_PATH = Path(".flask_secret_dev")
     DEBUG = True
+    LOG_LEVEL = logging.DEBUG
 
 class LocalDevelopmentConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in testing."""
     SECRET_FILE_PATH = Path(".flask_secret_localdev")
     SQLALCHEMY_DATABASE_URI = "sqlite:///../data/nlp4all_dev.db"
-    TESTING = True
+    DEBUG = True
+    LOG_LEVEL = logging.DEBUG
 
 class TestConfig(Config): # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in testing."""
     SECRET_FILE_PATH = Path(".flask_secret_test")
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     TESTING = True
+    LOG_LEVEL = logging.DEBUG
 
 
 class ProductionConfig(Config): # pylint: disable=too-few-public-methods

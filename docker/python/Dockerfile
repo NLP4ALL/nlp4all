@@ -76,6 +76,10 @@ RUN pip install --progress-bar off --no-cache-dir -r requirements-dev.txt
 # install debugpy for remote debug listening
 RUN pip install debugpy
 
+COPY ./docker/python/run-nlp4all.sh $HOME
+RUN chmod +x $HOME/run-nlp4all.sh
+RUN chown app:app $HOME/run-nlp4all.sh
+
 # change to the app user
 USER app
 

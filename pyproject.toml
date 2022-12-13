@@ -30,4 +30,4 @@ disable = [
 ]
 
 [tool.mypy]
-plugins = "sqlmypy"
+# plugins = "sqlmypy"

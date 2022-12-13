@@ -11,8 +11,6 @@ import pytest
 
 from nlp4all import create_app
 from nlp4all.helpers import database
-from nlp4all.models import User
-
 
 # hook for debugging
 if os.getenv('_PYTEST_RAISE', "0") != "0":

@@ -5,7 +5,7 @@ nlp4all module
 import os
 from typing import Union
 
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask_login import LoginManager
 from flask_cors import CORS
 # from flask_bcrypt import Bcrypt
@@ -25,7 +25,7 @@ migrate = Migrate()
 def create_app(env: Union[None, str] = None) -> Flask:
     """Create the Flask app."""
 
-    app = Flask(__name__, template_folder="views")
+    app = Flask(__name__, template_folder="views", static_folder=None)
     conf: Config = get_config(env)
     app.config.from_object(conf)
 
@@ -56,11 +56,5 @@ def create_app(env: Union[None, str] = None) -> Flask:
             "This is ONLY for development purposes",
             "because SQLite does not support JSONB"))
         model_cols_jsonb_to_json(app, Base)
-
-
-    @app.route("/static/<path:filename>")
-    def staticfiles(filename):
-        """Static file router"""
-        return send_from_directory(app.config["STATIC_DIR"], filename)
 
     return app

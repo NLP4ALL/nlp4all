@@ -1,5 +1,6 @@
 """Site controller, general pages, about us, etc.""" # pylint: disable=invalid-name
 
+from flask import send_from_directory, current_app
 from .BaseController import BaseController
 
 class SiteController(BaseController): # pylint: disable=too-few-public-methods
@@ -16,3 +17,8 @@ class SiteController(BaseController): # pylint: disable=too-few-public-methods
     def about(cls):
         """About page"""
         return cls.render_template("about.html", title="About")
+
+    @classmethod
+    def static_files(cls, filename):
+        """Static file router"""
+        return send_from_directory(current_app.config["STATIC_DIR"], filename)
