@@ -253,11 +253,58 @@ def generate_schema(
         builder.add_object(data)
 
     schema = builder.to_schema()
-    # Mapping for "$id" to "$schema" for compatibility with
-    # python_jsonschema_objects
-    # schema["$id"] = schema["$schema"]
+
     return schema
 
+def schema_aliased_path_dict(schema: dict, depth: t.Union[None, int] = None) -> t.Dict[str, t.Tuple[str, ...]]:
+    """Gets a dictionary of all paths in a schema, with their aliases.
+    This recursively goes through a json schema and returns a list of paths to
+    all properties that can contain data (i.e. not objects or arrays).
+
+    Aliases are the contents of the "title" field of a schema.
+
+    Args:
+        schema: The schema to get the paths from.
+        depth: The depth to go to. If None, will go to the end.
+
+    Returns:
+        A dictionary of paths to aliases. The format is:
+        {
+            "namespaced.field.alias": ("full", "path", "to", "field"),
+            ...
+        }
+    """
+    paths = {}
+
+    def _schema_aliased_path_dict(
+        schema: dict,
+        path: t.List[str],
+        title_prefix: t.List[str] = [],
+        depth: t.Union[None, int] = None):
+        """Recursive function to get the paths."""
+        if depth is not None and depth <= 0:
+            return
+        
+        new_path = None
+        new_title_prefix = []
+
+        if "properties" in schema:
+            for key, value in schema["properties"].items():
+                new_path = path + [key]
+                new_title_prefix = title_prefix + [schema["properties"][key].get("title", key)]
+                _schema_aliased_path_dict(value, new_path, new_title_prefix, depth=depth - 1 if depth is not None else None)
+        elif "items" in schema:
+            new_path = path + ["items"]
+            new_title_prefix = title_prefix + [schema.get("title", "items")]
+            _schema_aliased_path_dict(schema["items"], new_path, new_title_prefix, depth=depth - 1 if depth is not None else None)
+        
+        if new_path is not None:
+            paths[".".join(new_title_prefix)] = tuple(new_path)
+        
+    _schema_aliased_path_dict(schema, [], depth=depth)
+
+    return paths
+    
 
 
 def init_db(): # pylint: disable=too-many-locals

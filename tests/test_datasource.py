@@ -3,8 +3,30 @@
 # import json
 # import pytest
 # import python_jsonschema_objects as pjs
-# from nlp4all.helpers.database import generate_schema
+from nlp4all.helpers.database import schema_aliased_path_dict
 
+
+def test_schema_to_path_dict(jsonschema):
+    """Test schema to path dict."""
+    schema = {
+        "type": "object",
+        "properties": {
+            "user": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "age": {"type": "number"},
+                },
+            },
+            "text": {"type": "string"},
+        },
+    }
+    assert schema_aliased_path_dict(jsonschema) == {
+        "user": ("user",),
+        "user.name": ("user", "name"),
+        "user.age": ("user", "age"),
+        "text": ("text",),
+    }
 
 # @pytest.mark.data
 # # @pytest.mark.model

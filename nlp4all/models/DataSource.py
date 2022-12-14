@@ -7,7 +7,7 @@ This will be use to interface with individual users' data sources
 from __future__ import annotations
 
 import typing as t
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from .database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
@@ -19,7 +19,7 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
 
     __tablename__ = 'data_source'
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     projects: Mapped[list[Project]] = relationship(
         secondary=project_data_source_table,
         back_populates="data_sources")
@@ -39,8 +39,9 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
         return {
             # this would be how to access the Data.document text property
             # e.g. ('text'), ('user', 'description'), this has to be valid within the schema
-            'document_text_path': t.Tuple,
-            'filterable': t.List[t.Dict]
+            'document_text_path': t.Tuple[str, ...], # main text of the document used for NLP
+            'filterable': t.Dict[str, t.Dict[str, t.Any]], # Name, Filterable
+            'aliased_paths': t.Dict[str, t.Tuple[str, ...]], # Name, Path: all available data paths
         }
 
     def _filterable_required_keys(self) -> dict[str, t.Type]:
@@ -50,7 +51,8 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
         """
         return {
             'name': str,
-            'type': str,
-            'path': t.Tuple,
-            'options': t.List[str]
+            'type': str, # FilterableType.value
+            'path': t.Tuple[str, ...], # Used for accessing the value from the document
+            'options': t.Dict[str, t.Any] # See: Filterable
         }
+
