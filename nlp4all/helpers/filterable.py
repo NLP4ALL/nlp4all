@@ -84,7 +84,7 @@ class Filterable(ABC):
 
         self._validate_options(options)
 
-        self.options = options
+        self.options = options.copy()
         self.options["nullable"] = self.options.get("nullable", False)
         self.nullable = self.options["nullable"]
 
@@ -189,12 +189,15 @@ class Filterable(ABC):
 
         handler = Filterable._type_handlers[tipe]
 
-        handler._validate_options(data['options']) # pylint: disable=protected-access
+        # don't want to modify the original dictionary
+        opts = data['options'].copy()
+
+        handler._validate_options(opts) # pylint: disable=protected-access
 
         return handler(
             data['name'],
             tuple(data['path']),
-            handler._modify_options_from_dict(data['options'])) # pylint: disable=protected-access
+            handler._modify_options_from_dict(opts)) # pylint: disable=protected-access
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the FilterableString object"""
@@ -202,7 +205,7 @@ class Filterable(ABC):
             'name': self.name,
             'type': self._type.value,
             'path': list(self.path),
-            'options': self._modify_options_to_dict(self.options)
+            'options': self._modify_options_to_dict(self.options.copy())
         }
 
     @abstractmethod
@@ -279,9 +282,9 @@ class FilterableNumber(Filterable):
 
         super().__init__(name, path, options)
 
-        self.min_val = options['min']
-        self.max_val = options['max']
-        self.is_float = options.get('is_float', False)
+        self.min_val = self.options['min']
+        self.max_val = self.options['max']
+        self.is_float = self.options.get('is_float', False)
 
     def min(self) -> t.Union[float,int]:
         """Returns the minimum value"""
@@ -391,8 +394,8 @@ class FilterableDate(Filterable):
 
         super().__init__(name, path, options)
 
-        self.min_val = options['min']
-        self.max_val = options['max']
+        self.min_val = self.options['min']
+        self.max_val = self.options['max']
 
     def min(self) -> datetime:
         """Returns the minimum value"""
