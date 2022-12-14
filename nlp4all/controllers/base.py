@@ -7,7 +7,7 @@ from flask import Blueprint, render_template
 class BaseController:  # pylint: disable=too-few-public-methods
     """Base controller for all controllers to inherit from."""
 
-    view_subdir = None
+    view_subdir: t.Optional[str] = None
     blueprint: Blueprint
 
     @classmethod

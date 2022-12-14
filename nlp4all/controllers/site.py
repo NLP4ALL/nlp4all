@@ -1,7 +1,7 @@
 """Site controller, general pages, about us, etc."""  # pylint: disable=invalid-name
 
 from flask import send_from_directory, current_app
-from .BaseController import BaseController
+from .base import BaseController
 
 
 class SiteController(BaseController):  # pylint: disable=too-few-public-methods

@@ -2,17 +2,18 @@
 
 import typing as t
 import click
-from genson import SchemaBuilder, SchemaNode
+from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
+from sqlalchemy.orm import DeclarativeBase
 from nlp4all.models.database import Base
 
 
 class N4AObject(Object):
     """JSON Object strategy for nlp4all."""
 
-    current_key = None
+    current_key: t.Optional[str] = None
 
     def to_schema(self):
         """Converts the strategy to a schema."""
@@ -60,7 +61,7 @@ class N4AList(List):
     """List strategy for nlp4all.
     """
 
-    current_key = None
+    current_key: t.Optional[str] = None
 
     def items_to_schema(self):
         """Overrides the super class method to add current_key"""
@@ -71,7 +72,7 @@ class N4AList(List):
 class N4ATuple(Tuple):
     """Tuple strategy for nlp4all."""
 
-    current_key = None
+    current_key: t.Optional[str] = None
 
     def items_to_schema(self):
         """Overrides the super class method to add current_key"""
@@ -90,8 +91,8 @@ class N4ATuple(Tuple):
 class N4ASchemaNode(SchemaNode):
     """Schema node for nlp4all."""
 
-    STRATEGIES = None
-    current_key = None
+    STRATEGIES: t.Optional[t.Tuple[t.Type[SchemaStrategy], ...]] = None
+    current_key: t.Optional[str] = None
 
     def to_schema(self):
         """Converts the node to a schema.
@@ -126,8 +127,8 @@ class N4ASchemaBuilder(SchemaBuilder):
     """Schema builder for nlp4all."""
 
     # set to none, assigning here doesn't work
-    NODE_CLASS = None
-    STRATEGIES = None
+    NODE_CLASS: t.Optional[t.Type[SchemaNode]] = None
+    STRATEGIES: t.Optional[t.Tuple[t.Type[SchemaStrategy], ...]] = None
 
     def to_schema(self):
         """Overrides the default to_schema method to
@@ -243,8 +244,9 @@ def generate_schema(
     """
     if builder is None:
         # add our custom list and object strategies
-        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [
-                                         Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
+        strats = [s for s in SchemaBuilder.STRATEGIES if s not in [Object, List, Tuple]]
+        strats.extend([N4AList, N4ATuple, N4AObject])
+        N4ASchemaNode.STRATEGIES = tuple(strats)
         N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
         N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
         builder = N4ASchemaBuilder()
@@ -352,7 +354,7 @@ def init_app(app: Flask):
     app.cli.add_command(drop_db_command)
 
 
-def model_cols_jsonb_to_json(app: Flask, cls: type):  # pylint: disable=too-many-locals
+def model_cols_jsonb_to_json(app: Flask, cls: t.Type[DeclarativeBase]):  # pylint: disable=too-many-locals
     """Converts a Postgres JSONB column to a SQLite JSON column.
     Within the model itself, the column is defined as a JSONB column,
     we only need to change this to JSON when we are using SQLite.

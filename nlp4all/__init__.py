@@ -18,7 +18,7 @@ from .models.database import Base
 from .models import load_user
 from .routes import Router
 
-db = SQLAlchemy(model_class=Base, engine_options={"future": True})
+db: SQLAlchemy = SQLAlchemy(model_class=Base, engine_options={"future": True})  # type: ignore
 migrate = Migrate()
 
 

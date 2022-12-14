@@ -1,14 +1,14 @@
 """Database and models for NLP4ALL."""
 
-from .BayesianRobot import BayesianRobot
-from .BayesianAnalysis import BayesianAnalysis
-from .ConfusionMatrix import ConfusionMatrix
-from .DataSource import DataSource
-from .Data import Data
-from .Organization import Organization
-from .Project import Project
-from .Role import Role
-from .DataAnnotation import DataAnnotation
-from .DataTag import DataTag
-from .DataTagCategory import DataTagCategory
-from .User import User, load_user
+from .bayesian_robot import BayesianRobot
+from .bayesian_analysis import BayesianAnalysis
+from .confusion_matrix import ConfusionMatrix
+from .data_source import DataSource
+from .data import Data
+from .organization import Organization
+from .project import Project
+from .role import Role
+from .data_annotation import DataAnnotation
+from .data_tag import DataTag
+from .data_tag_category import DataTagCategory
+from .user import User, load_user

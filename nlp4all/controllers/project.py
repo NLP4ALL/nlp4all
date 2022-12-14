@@ -16,7 +16,7 @@ from nlp4all.helpers.analyses import (
     get_user_projects,
 )  # @TODO: this add_project CLEARLY belongs on the model, not in helpers
 
-from .BaseController import BaseController
+from .base import BaseController
 
 # from flask_mail import Message
 

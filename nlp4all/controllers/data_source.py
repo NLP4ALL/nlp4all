@@ -3,7 +3,7 @@
 # @todo: SKELETON, NOT IMPLEMENTED
 from flask import redirect, url_for
 
-from .BaseController import BaseController
+from .base import BaseController
 
 
 class DataSourceController(BaseController):  # pylint: disable=too-few-public-methods

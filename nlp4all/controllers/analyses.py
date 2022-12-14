@@ -40,7 +40,7 @@ from nlp4all.helpers.analyses import (
 
 from nlp4all.forms.analyses import BayesianRobotForms, CreateMatrixForm, TaggingForm, ThresholdForm
 
-from .BaseController import BaseController
+from .base import BaseController
 
 
 class AnalysesController(BaseController):  # pylint: disable=too-many-public-methods

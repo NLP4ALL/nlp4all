@@ -21,7 +21,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     id: Mapped[int] = mapped_column(primary_key=True)
     user: Mapped[int] = mapped_column(ForeignKey("user.id"))
     categories: Mapped[list[DataTagCategory]] = relationship(secondary=matrix_categories_table)
-    data: Mapped[list[Data]] = relationship(secondary=data_matrices_table)
+    source_data: Mapped[list[Data]] = relationship(secondary=data_matrices_table)
     matrix_data: Mapped[dict] = mapped_column(MutableJSONB)  # here to save the TP/TN/FP/FN
     train_data: Mapped[dict] = mapped_column(MutableJSONB)  # word counts from the training set
     tf_idf: Mapped[dict] = mapped_column(MutableJSONB)

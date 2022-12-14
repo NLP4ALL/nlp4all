@@ -1,9 +1,10 @@
 """SQLAlchemy ORM setup"""
 
-from __future__ import annotations
+import typing as t
 
 from sqlalchemy import Column, ForeignKey, Table
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.types import TypeEngine
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.dialects.postgresql import JSONB, JSON
 
@@ -12,13 +13,13 @@ from flask_sqlalchemy.query import Query
 
 
 # base model class
-class Base:  # pylint: disable=too-few-public-methods
+class Base(DeclarativeBase):  # pylint: disable=too-few-public-methods
     """Base model class"""
     __allow_unmapped__ = True
     query: Query
 
 
-Base = declarative_base(cls=Base)
+# Base: t.Type[N4ABase] = declarative_base(cls=N4ABase)
 
 # Here we define some JSON column types
 # we could potentially limit the number
@@ -64,11 +65,11 @@ class N4AFlatJSON(JSON):
         self.impl = JSON
 
 
-NestedMutableJSONB = NestedMutable.as_mutable(N4ANestedJSONB)
-MutableJSONB = MutableDict.as_mutable(N4AFlatJSONB)
+NestedMutableJSONB: TypeEngine[JSONB] = NestedMutable.as_mutable(N4ANestedJSONB)  # type: ignore
+MutableJSONB: TypeEngine[JSONB] = MutableDict.as_mutable(N4AFlatJSONB)  # type: ignore
 
-NestedMutableJSON = NestedMutable.as_mutable(N4ANestedJSON)
-MutableJSON = MutableDict.as_mutable(N4AFlatJSON)
+NestedMutableJSON: t.Type[JSON] = NestedMutable.as_mutable(N4ANestedJSON)  # type: ignore
+MutableJSON: TypeEngine[JSON] = MutableDict.as_mutable(N4AFlatJSON)  # type: ignore
 
 # Definitions for many-to-many relationships
 

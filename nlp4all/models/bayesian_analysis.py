@@ -1,7 +1,5 @@
 """Bayesian Analysis Model"""  # pylint: disable=invalid-name
 
-from __future__ import annotations
-
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
@@ -26,7 +24,7 @@ class BayesianAnalysis(Base):
     annotate = Column(Boolean, default=False)
     annotations = relationship("TweetAnnotation")
     annotation_tags = Column(MutableJSON)
-    annotate = Column(Integer, default=1)
+    annotate = Column(Integer, default=1)  # type: ignore
 
     def get_project(self):
         """Get project."""

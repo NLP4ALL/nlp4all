@@ -31,7 +31,7 @@ class DataSource(Base):  # pylint: disable=too-few-public-methods
     # shared
     # groups / projects /etc need to be implemented
 
-    def _meta_required_keys(self) -> dict[str, t.Type]:
+    def _meta_required_keys(self) -> dict[str, object]:
         """Returns a list of required keys for meta
 
         This is mainly for documentation purposes, but can be used to validate.
@@ -44,7 +44,7 @@ class DataSource(Base):  # pylint: disable=too-few-public-methods
             'aliased_paths': t.Dict[str, t.Tuple[str, ...]],  # Name, Path: all available data paths
         }
 
-    def _filterable_required_keys(self) -> dict[str, t.Type]:
+    def _filterable_required_keys(self) -> dict[str, object]:
         """Returns a list of required keys for filterable
 
         This is mainly for documentation purposes, but can be used to validate.

@@ -8,7 +8,7 @@ from nlp4all.forms.admin import AddOrgForm
 from nlp4all.forms.analyses import AddTweetCategoryForm
 from nlp4all.helpers.tweets import add_tweets_from_account
 
-from .BaseController import BaseController
+from .base import BaseController
 
 
 class AdminController(BaseController):

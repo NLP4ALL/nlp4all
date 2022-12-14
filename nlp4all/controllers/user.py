@@ -25,7 +25,7 @@ from nlp4all.forms.user import (
     IMCRegistrationForm,
 )
 
-from .BaseController import BaseController
+from .base import BaseController
 
 
 class UserController(BaseController):

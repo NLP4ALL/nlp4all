@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base, MutableJSONB
 from . import User, Data
@@ -26,5 +26,5 @@ class DataAnnotation(Base):  # pylint: disable=too-few-public-methods
     data: Mapped[Data] = relationship(back_populates="annotations")
     words: Mapped[dict] = mapped_column(MutableJSONB)
     text: Mapped[str] = mapped_column(String(50))
-    coordinates: Mapped[dict] = Column(MutableJSONB)
+    coordinates: Mapped[dict] = mapped_column(MutableJSONB)
     time_created: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)
