@@ -50,6 +50,7 @@ class Filterable(ABC):
 
     _type: FilterableType
     _type_handlers: t.Dict[FilterableType, t.Type['Filterable']] = {}
+    nullable: bool
 
     def __init__(self, name: str, path: t.Tuple[str, ...], options: t.Dict[str, t.Any]):
         """Initializes a Filterable object
@@ -58,6 +59,9 @@ class Filterable(ABC):
             name (str): The name of the filterable option
             path (t.Tuple[str, ...]): The path to the filterable option
             options (t.Dict[str, t.Any]): The options for the filterable option
+                Keys:
+                    - nullable: Whether the option can be null (default: False)
+                    - ...
         """
         if not isinstance(name, str):
             raise TypeError("name must be a string")
@@ -81,6 +85,8 @@ class Filterable(ABC):
         self._validate_options(options)
 
         self.options = options
+        self.options["nullable"] = self.options.get("nullable", False)
+        self.nullable = self.options["nullable"]
 
     @staticmethod
     def register_type_handler(klass: t.Type['Filterable']):
@@ -165,6 +171,10 @@ class Filterable(ABC):
         """
         if not isinstance(options, dict):
             raise TypeError(f"Options must be a dictionary, not {type(options)}")
+
+        nullable = options.get('nullable', False)
+        if not isinstance(nullable, bool):
+            raise TypeError(f"Nullable must be a boolean, not {type(nullable)}")
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Filterable':

@@ -93,7 +93,7 @@ def test_filterablenumber():
     assert filterable._type == FilterableType.NUMBER # pylint: disable=protected-access
     assert filterable.path == path
     assert filterable.options == options
-
+    print(filterable.options)
     dict_out = filterable.to_dict()
     assert dict_out['name'] == name
     assert dict_out['type'] == FilterableType.NUMBER.value
