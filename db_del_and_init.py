@@ -35,7 +35,7 @@ with app.app_context():
         password=hp,
         admin=True,
     )
-    user.roles = [
+    user.roles = [  # type: ignore
         admin_role,
     ]
     db_session.add(user)
@@ -55,7 +55,7 @@ with app.app_context():
             org,
         ],
     )
-    user.roles = [
+    user.roles = [  # type: ignore
         teacher_role,
     ]
     db_session.add(user)
@@ -67,7 +67,7 @@ with app.app_context():
             org,
         ],
     )
-    user.roles = [
+    user.roles = [  # type: ignore
         student_role,
     ]
     db_session.add(user)

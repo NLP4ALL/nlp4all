@@ -21,6 +21,9 @@ jobs:
     - name: Analysing the code with Flake8
       run: |
         flake8
+    - name: Typer checking with mypy
+      run: |
+        mypy .
     - name: Run tests with pytest
       run: |
         pytest
