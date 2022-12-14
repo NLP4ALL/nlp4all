@@ -1,4 +1,4 @@
-"""Twee tag model""" # pylint: disable=invalid-name
+"""Twee tag model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
 from . import Data
+
 
 class DataTag(Base):  # pylint: disable=too-few-public-methods
     """DataTag model."""

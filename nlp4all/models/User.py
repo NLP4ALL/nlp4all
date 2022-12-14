@@ -1,4 +1,4 @@
-"""User Model""" # pylint: disable=invalid-name
+"""User Model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 from datetime import datetime, timezone, timedelta

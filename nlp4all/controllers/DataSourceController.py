@@ -1,11 +1,12 @@
-"""Data sources.""" # pylint: disable=invalid-name
+"""Data sources."""  # pylint: disable=invalid-name
 
 # @todo: SKELETON, NOT IMPLEMENTED
 from flask import redirect, url_for
 
 from .BaseController import BaseController
 
-class DataSourceController(BaseController): # pylint: disable=too-few-public-methods
+
+class DataSourceController(BaseController):  # pylint: disable=too-few-public-methods
     """Data Source Controller"""
 
     view_subdir = "datasource"
@@ -19,6 +20,7 @@ class DataSourceController(BaseController): # pylint: disable=too-few-public-met
     def create(cls):
         """Upload / create page"""
         return cls.render_template("create_data_source.html", title="New Data Source")
+
     @classmethod
     def configure(cls):
         """Specify data fields"""

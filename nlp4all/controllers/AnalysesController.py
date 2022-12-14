@@ -1,4 +1,4 @@
-"""Analyses controller""" # pylint: disable=invalid-name, too-many-lines
+"""Analyses controller"""  # pylint: disable=invalid-name, too-many-lines
 
 # @TODO: this module is way too big.  Break it up into smaller modules.
 
@@ -42,7 +42,8 @@ from nlp4all.forms.analyses import BayesianRobotForms, CreateMatrixForm, Tagging
 
 from .BaseController import BaseController
 
-class AnalysesController(BaseController): # pylint: disable=too-many-public-methods
+
+class AnalysesController(BaseController):  # pylint: disable=too-many-public-methods
     """Analyses Controller"""
 
     # @TODO break out (probably)
@@ -56,7 +57,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         bayes_analysis = BayesianAnalysis.query.get(analysis_id)
         robots = [r for r in bayes_analysis.robots if r.retired and r.user == current_user.id]
         return render_template("analyses/robot_summary.html",
-                                analysis=bayes_analysis, robots=robots)
+                               analysis=bayes_analysis, robots=robots)
 
     @classmethod
     def robot(cls):
@@ -122,7 +123,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 db.session.commit()
                 return redirect(url_for("robot", robot=bayes_robot.id))
         table_data = acc_dict["table_data"]
-        table_data = [d for d in table_data if not "*" in d["word"]]
+        table_data = [d for d in table_data if "*" not in d["word"]]
         acc_dict["table_data"] = table_data
         print(table_data)
         return render_template(
@@ -380,7 +381,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 DataAnnotation.analysis == analysis_id, DataAnnotation.user == current_user.id
             ).all()
         tag_list = list(
-            set([a.annotation_tag for a in ann_tags]) # pylint: disable=consider-using-set-comprehension
+            set([a.annotation_tag for a in ann_tags])  # pylint: disable=consider-using-set-comprehension
         )
         for i in categories:
             if i.name not in tag_list:
@@ -616,7 +617,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         index_list = matrix_css_info(index_list)
 
         metrics = sorted(
-            [t for t in c_matrix.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
+            [t for t in c_matrix.data["metrics"].items()],  # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["recall"],
             reverse=True,
         )
@@ -687,7 +688,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         )
         cm_info = [t[1] for t in cm_info]
         return render_template("analyses/matrix_tweets.html",
-                                cm_info=cm_info, matrix=c_matrix, title=title)
+                               cm_info=cm_info, matrix=c_matrix, title=title)
 
     @classmethod
     def my_matrices(cls):  # pylint: disable=too-many-locals
@@ -822,7 +823,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         )
         cm_info = [t[1] for t in cm_info]
         return render_template("analyses/matrix_tweets.html",
-                                cm_info=cm_info, matrix=c_matrix, title=title)
+                               cm_info=cm_info, matrix=c_matrix, title=title)
 
     @classmethod
     def excluded_tweets(cls, matrix_id):
@@ -889,7 +890,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             for m in matrices
         }
         matrix_info = sorted(
-            [t for t in matrix_info.items()], # pylint: disable=unnecessary-comprehension
+            [t for t in matrix_info.items()],  # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["accuracy"],
             reverse=True,
         )
@@ -997,7 +998,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
 
             true_keys = [str("Pred_" + i + "_Real_" + i) for i in cat_names]
             true_dict = dict(
-                filter(lambda item: item[0] in true_keys, matrix_classes.items()) # pylint: disable=cell-var-from-loop
+                filter(lambda item: item[0] in true_keys, matrix_classes.items())  # pylint: disable=cell-var-from-loop
             )
 
             # accuracy = sum(correct predictions)/sum(all matrix points)
@@ -1023,7 +1024,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             db.session.commit()
             metrix = new_mx.data["metrics"].items()
             metrix = sorted(
-                [t for t in new_mx.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
+                [t for t in new_mx.data["metrics"].items()],  # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["recall"],
                 reverse=True,
             )
@@ -1099,7 +1100,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         count_sum = [
             [
                 [counts_list[j][l][i] + counts_list[j][l][i] for i in range(len(counts_list[0]))]
-                for l in range(len(counts_list[0]))
+                for l in range(len(counts_list[0]))  # noqa: E741
             ]
             for j in range(len(counts_list))
         ][0]
@@ -1159,7 +1160,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         tnt_sets = matrix2.training_and_test_sets
 
         # select a new
-        tnt_list = [ # pylint: disable=unnecessary-comprehension
+        tnt_list = [  # pylint: disable=unnecessary-comprehension
             x for x in list(range(0, len(matrix2.training_and_test_sets)))
         ]
         tnt_nr = sample(tnt_list, 1)[0]
@@ -1305,7 +1306,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 t.id: {"tweet": t.full_text, "category": t.handle, "id": t.id} for t in tweets
             }
             data_table = sorted(
-                [t for t in data_table.items()], # pylint: disable=unnecessary-comprehension
+                [t for t in data_table.items()],  # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["id"],
                 reverse=True,
             )
@@ -1319,7 +1320,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 t.id: {"tweet": t.full_text, "category": t.handle, "id": t.id} for t in tweets
             }
             data_table = sorted(
-                [t for t in data_table.items()], # pylint: disable=unnecessary-comprehension
+                [t for t in data_table.items()],  # pylint: disable=unnecessary-comprehension
                 key=lambda x: x[1]["id"],
                 reverse=True,
             )
@@ -1364,7 +1365,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             DataAnnotation.annotation_tag == a_tag, DataAnnotation.analysis == analysis_id
         ).all()
         tagged_tweets = list(
-            set([t.tweet for t in tag_anns]) # pylint: disable=consider-using-set-comprehension
+            set([t.tweet for t in tag_anns])  # pylint: disable=consider-using-set-comprehension
         )
 
         tag_table = {t: {"tweet": t} for t in tagged_tweets}
@@ -1375,7 +1376,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
                 .all()
             )
             users = len(
-                set([i.user for i in t_anns]) # pylint: disable=consider-using-set-comprehension
+                set([i.user for i in t_anns])  # pylint: disable=consider-using-set-comprehension
             )
             tag_table[twit]["tag_count"] = len(t_anns)
             tag_table[twit]["users"] = users
@@ -1395,14 +1396,14 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
             ).all()
             tagdict[tag]["tag_count"] = len(tag_anns)
             tagdict[tag]["users"] = len(
-                set([an.user for an in tag_anns]) # pylint: disable=consider-using-set-comprehension
+                set([an.user for an in tag_anns])  # pylint: disable=consider-using-set-comprehension
             )
             tagged_tweets = list(
-                set([t.tweet for t in tag_anns]) # pylint: disable=consider-using-set-comprehension
+                set([t.tweet for t in tag_anns])  # pylint: disable=consider-using-set-comprehension
             )
             tagdict[tag]["nr_tweets"] = len(tagged_tweets)
         alltag_table = sorted(
-            [t for t in tagdict.items()], # pylint: disable=unnecessary-comprehension
+            [t for t in tagdict.items()],  # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["nr_tweets"],
             reverse=True,
         )
@@ -1421,7 +1422,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
 
         # all annotations in the analysis, third tab
         all_tag_anns = DataAnnotation.query.filter(DataAnnotation.analysis == analysis_id).all()
-        a_list = set( # pylint: disable=consider-using-set-comprehension
+        a_list = set(  # pylint: disable=consider-using-set-comprehension
             [a.tweet for a in all_tag_anns]
         )
         # list(set([t.tweet for t in all_tag_anns]))
@@ -1835,7 +1836,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         ).all()
         pos_list = []
         for ann in the_tags:
-            pos_list = pos_list + [ # pylint: disable=unnecessary-comprehension
+            pos_list = pos_list + [  # pylint: disable=unnecessary-comprehension
                 k for k in ann.coordinates["txt_coords"].keys()
             ]
         pos_dict = {}
@@ -1977,7 +1978,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         c_matrix = ConfusionMatrix.query.get(int(m_id))
 
         counts = c_matrix.make_table_data(cat_names)
-        for i in range(len(counts)): # pylint: disable=consider-using-enumerate
+        for i in range(len(counts)):  # pylint: disable=consider-using-enumerate
             counts[i].insert(0, cat_names[i])
         index_list = []
         for i in range(len(counts)):
@@ -1993,7 +1994,7 @@ class AnalysesController(BaseController): # pylint: disable=too-many-public-meth
         index_list = matrix_css_info(index_list)
 
         metrics = sorted(
-            [t for t in c_matrix.data["metrics"].items()], # pylint: disable=unnecessary-comprehension
+            [t for t in c_matrix.data["metrics"].items()],  # pylint: disable=unnecessary-comprehension
             key=lambda x: x[1]["recall"],
             reverse=True,
         )

@@ -1,4 +1,4 @@
-"""Bayesian Analysis Model""" # pylint: disable=invalid-name
+"""Bayesian Analysis Model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 
@@ -63,7 +63,8 @@ class BayesianAnalysis(Base):
         """Get predictions and words."""
         # take each word  and  calculate a probabilty for each category
         categories = Project.query.get(self.project).categories
-        category_names = [c.name for c in categories if c.name in self.data.keys()]  # type: ignore # pylint: disable=no-member
+        # type: ignore # pylint: disable=no-member
+        category_names = [c.name for c in categories if c.name in self.data.keys()]
         preds = {}
         predictions = {}
         if self.data["counts"] == 0:  # type: ignore
@@ -77,7 +78,7 @@ class BayesianAnalysis(Base):
                     prob_ba = self.data[cat]["words"].get(word, 0) / self.data[cat]["counts"]
                     prob_a = self.data[cat]["counts"] / self.data["counts"]  # type: ignore
                     prob_b = (
-                        sum( # pylint: disable=consider-using-generator
+                        sum(  # pylint: disable=consider-using-generator
                             [self.data[c]["words"].get(word, 0) for c in category_names]
                         )  # pylint: disable=consider-using-generator
                         / self.data["counts"]  # type: ignore

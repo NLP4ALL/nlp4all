@@ -1,4 +1,4 @@
-"""Tweet Annotation model""" # pylint: disable=invalid-name
+"""Tweet Annotation model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ from .database import Base, MutableJSONB
 from . import User, Data
 
 # isn't this just a duplicate of Data (formerly, Tweet)?
+
+
 class DataAnnotation(Base):  # pylint: disable=too-few-public-methods
     """Data annotation."""
 

@@ -23,6 +23,8 @@ from nlp4all.models import DataTagCategory, Data, Project, Role, ConfusionMatrix
 # return a list of tuples with
 # (word, tag, number, color)
 # for the tag and number that is highest
+
+
 def create_css_info(classifications, text, list_of_categories):
     """create a list of tuples for the tag and number that is highest"""
     category_color_dict = assign_colors(list_of_categories)
@@ -282,7 +284,7 @@ def ann_create_css_info(
     word_list = [(v, k) for k, v in ann[0].coordinates["word_locs"].items()]
     # print( category_color_dict)
     tups = [(word_list[w][0], w, "none", 0) for w in range(len(word_list))]
-    for i in range( # pylint: disable=consider-using-enumerate, too-many-nested-blocks
+    for i in range(  # pylint: disable=consider-using-enumerate, too-many-nested-blocks
         len(word_list)
     ):
         word = word_list[i]
@@ -395,7 +397,7 @@ def matrix_metrics(cat_names, matrix_classes):
         selected_cat = i
         tp_key = str("Pred_" + selected_cat + "_Real_" + selected_cat)
         recall_keys = [str("Pred_" + selected_cat + "_Real_" + i) for i in cat_names]
-        if ( # pylint: disable=consider-using-generator
+        if (  # pylint: disable=consider-using-generator
             sum([matrix_classes[x] for x in recall_keys]) > 0
         ):
             metrics[i]["recall"] = round(
@@ -405,10 +407,11 @@ def matrix_metrics(cat_names, matrix_classes):
 
         precision_keys = [str("Pred_" + i + "_Real_" + selected_cat) for i in cat_names]
         if (
-            sum([matrix_classes[x] for x in precision_keys]) > 0 # pylint: disable=consider-using-generator
+            sum([matrix_classes[x] for x in precision_keys]) > 0  # pylint: disable=consider-using-generator
         ):
             metrics[i]["precision"] = round(
-                matrix_classes[tp_key] / sum([matrix_classes[x] for x in precision_keys]), # pylint: disable=consider-using-generator
+                matrix_classes[tp_key] / sum([matrix_classes[x] for x in precision_keys]
+                                             ),  # pylint: disable=consider-using-generator
                 2,
             )
     return metrics

@@ -1,4 +1,4 @@
-"""User / Login related controller.""" # pylint: disable=invalid-name
+"""User / Login related controller."""  # pylint: disable=invalid-name
 
 import os
 from random import randint
@@ -27,6 +27,7 @@ from nlp4all.forms.user import (
 
 from .BaseController import BaseController
 
+
 class UserController(BaseController):
     """User Controller"""
 
@@ -50,7 +51,7 @@ class UserController(BaseController):
             form.email.data = current_user.email
         image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
         return cls.render_template("account.html", title="Account",
-                                image_file=image_file, form=form)
+                                   image_file=image_file, form=form)
 
     @classmethod
     def save_picture(cls, form_picture):

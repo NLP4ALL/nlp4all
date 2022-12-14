@@ -1,4 +1,4 @@
-"""Bayesian Robot Model""" # pylint: disable=invalid-name
+"""Bayesian Robot Model"""  # pylint: disable=invalid-name
 
 import collections
 import functools

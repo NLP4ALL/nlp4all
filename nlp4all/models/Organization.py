@@ -1,4 +1,4 @@
-"""Organization model""" # pylint: disable=invalid-name
+"""Organization model"""  # pylint: disable=invalid-name
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship

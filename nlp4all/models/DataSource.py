@@ -14,7 +14,7 @@ from .database import Base, NestedMutableJSONB, MutableJSONB, project_data_sourc
 from . import Data, Project
 
 
-class DataSource(Base): # pylint: disable=too-few-public-methods
+class DataSource(Base):  # pylint: disable=too-few-public-methods
     """DataSource class manages users' data sources"""
 
     __tablename__ = 'data_source'
@@ -39,9 +39,9 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
         return {
             # this would be how to access the Data.document text property
             # e.g. ('text'), ('user', 'description'), this has to be valid within the schema
-            'document_text_path': t.Tuple[str, ...], # main text of the document used for NLP
-            'filterable': t.Dict[str, t.Dict[str, t.Any]], # Name, Filterable
-            'aliased_paths': t.Dict[str, t.Tuple[str, ...]], # Name, Path: all available data paths
+            'document_text_path': t.Tuple[str, ...],  # main text of the document used for NLP
+            'filterable': t.Dict[str, t.Dict[str, t.Any]],  # Name, Filterable
+            'aliased_paths': t.Dict[str, t.Tuple[str, ...]],  # Name, Path: all available data paths
         }
 
     def _filterable_required_keys(self) -> dict[str, t.Type]:
@@ -51,8 +51,7 @@ class DataSource(Base): # pylint: disable=too-few-public-methods
         """
         return {
             'name': str,
-            'type': str, # FilterableType.value
-            'path': t.Tuple[str, ...], # Used for accessing the value from the document
-            'options': t.Dict[str, t.Any] # See: Filterable
+            'type': str,  # FilterableType.value
+            'path': t.Tuple[str, ...],  # Used for accessing the value from the document
+            'options': t.Dict[str, t.Any]  # See: Filterable
         }
-

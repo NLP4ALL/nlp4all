@@ -12,6 +12,7 @@ from nlp4all.helpers.filterable import (
     FilterableBoolean
 )
 
+
 @pytest.mark.helper
 def test_filterabletype_fromstring():
     """Test the FilterableType class."""
@@ -29,7 +30,8 @@ def test_filterable():
 
     # ensure filterable cannot be instantiated directly
     with pytest.raises(TypeError):
-        filterable = Filterable('test', ('invalid'), {}) # pylint: disable=unused-variable, abstract-class-instantiated
+        filterable = Filterable('test', ('invalid'), {})  # noqa: F841
+
 
 def test_filterablestring():
     """Test the FilterableString class."""
@@ -43,7 +45,7 @@ def test_filterablestring():
 
     filterable = FilterableString(name, path, options)
     assert filterable.name == name
-    assert filterable._type == FilterableType.STRING # pylint: disable=protected-access
+    assert filterable._type == FilterableType.STRING  # pylint: disable=protected-access
     assert filterable.path == path
     # make sure options dict we passed in is a subset of the one in the object
     assert options.items() <= filterable.options.items()
@@ -60,7 +62,7 @@ def test_filterablestring():
     filterable = FilterableString.from_dict(dict_out)
     assert isinstance(filterable, FilterableString)
     assert filterable.name == name
-    assert filterable._type == FilterableType.STRING # pylint: disable=protected-access
+    assert filterable._type == FilterableType.STRING  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -70,10 +72,9 @@ def test_filterablestring():
     filterable = Filterable.from_dict(dict_out)
     assert isinstance(filterable, FilterableString)
     assert filterable.name == name
-    assert filterable._type == FilterableType.STRING # pylint: disable=protected-access
+    assert filterable._type == FilterableType.STRING  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
-
 
     assert filterable.validate("test")
     assert not filterable.validate(1)
@@ -92,10 +93,10 @@ def test_filterablenumber():
 
     filterable = FilterableNumber(name, path, options)
     assert filterable.name == name
-    assert filterable._type == FilterableType.NUMBER # pylint: disable=protected-access
+    assert filterable._type == FilterableType.NUMBER  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
-    
+
     dict_out = filterable.to_dict()
     assert dict_out['name'] == name
     assert dict_out['type'] == FilterableType.NUMBER.value
@@ -108,7 +109,7 @@ def test_filterablenumber():
     filterable = FilterableNumber.from_dict(dict_out)
     assert isinstance(filterable, FilterableNumber)
     assert filterable.name == name
-    assert filterable._type == FilterableType.NUMBER # pylint: disable=protected-access
+    assert filterable._type == FilterableType.NUMBER  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -118,7 +119,7 @@ def test_filterablenumber():
     filterable = Filterable.from_dict(dict_out)
     assert isinstance(filterable, FilterableNumber)
     assert filterable.name == name
-    assert filterable._type == FilterableType.NUMBER # pylint: disable=protected-access
+    assert filterable._type == FilterableType.NUMBER  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -135,7 +136,7 @@ def test_filterablenumber():
 
     filterable = FilterableNumber(name, path, options)
     assert filterable.name == name
-    assert filterable._type == FilterableType.NUMBER # pylint: disable=protected-access
+    assert filterable._type == FilterableType.NUMBER  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -174,7 +175,7 @@ def test_filterabledate():
 
     filterable = FilterableDate(name, path, options)
     assert filterable.name == name
-    assert filterable._type == FilterableType.DATE # pylint: disable=protected-access
+    assert filterable._type == FilterableType.DATE  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -190,7 +191,7 @@ def test_filterabledate():
     filterable = Filterable.from_dict(dict_out)
     assert isinstance(filterable, FilterableDate)
     assert filterable.name == name
-    assert filterable._type == FilterableType.DATE # pylint: disable=protected-access
+    assert filterable._type == FilterableType.DATE  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -213,7 +214,7 @@ def test_filterableboolean():
 
     filterable = FilterableBoolean(name, path, options)
     assert filterable.name == name
-    assert filterable._type == FilterableType.BOOLEAN # pylint: disable=protected-access
+    assert filterable._type == FilterableType.BOOLEAN  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
 
@@ -229,10 +230,9 @@ def test_filterableboolean():
     filterable = FilterableBoolean.from_dict(dict_out)
     assert isinstance(filterable, FilterableBoolean)
     assert filterable.name == name
-    assert filterable._type == FilterableType.BOOLEAN # pylint: disable=protected-access
+    assert filterable._type == FilterableType.BOOLEAN  # pylint: disable=protected-access
     assert filterable.path == path
     assert options.items() <= filterable.options.items()
-
 
     assert filterable.validate(True)
     assert filterable.validate(False)

@@ -1,4 +1,4 @@
-"""Tweet tag category model""" # pylint: disable=invalid-name
+"""Tweet tag category model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 

@@ -1,9 +1,9 @@
-"""Router""" # pylint: disable=invalid-name
+"""Router"""  # pylint: disable=invalid-name
 
 from flask import Flask
 
 
-class Router: # pylint: disable=too-few-public-methods
+class Router:  # pylint: disable=too-few-public-methods
     """Router"""
 
     @staticmethod

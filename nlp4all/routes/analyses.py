@@ -8,10 +8,12 @@ from nlp4all.controllers import AnalysesController
 
 AnalysesRouter = Blueprint("analyses_controller", __name__)
 
+
 @AnalysesRouter.before_request
 @login_required
 def before_request():
     """ Protect all of the analyses endpoints."""
+
 
 AnalysesRouter.route("/robot_summary", methods=["GET", "POST"])(
     AnalysesController.robot_summary

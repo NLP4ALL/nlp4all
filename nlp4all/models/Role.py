@@ -1,4 +1,4 @@
-"""Role model""" # pylint: disable=invalid-name
+"""Role model"""  # pylint: disable=invalid-name
 
 from sqlalchemy import Column, Integer, String
 

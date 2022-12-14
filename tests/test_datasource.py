@@ -6,7 +6,7 @@
 from nlp4all.helpers.database import schema_aliased_path_dict
 
 
-def test_schema_to_path_dict(jsonschema):
+def test_schema_to_path_dict(jsonschema, schema_paths):
     """Test schema to path dict."""
     schema = {
         "type": "object",
@@ -21,12 +21,18 @@ def test_schema_to_path_dict(jsonschema):
             "text": {"type": "string"},
         },
     }
-    assert schema_aliased_path_dict(jsonschema) == {
-        "user": ("user",),
+
+    paths = {
         "user.name": ("user", "name"),
         "user.age": ("user", "age"),
         "text": ("text",),
     }
+
+    # simple example
+    assert schema_aliased_path_dict(schema) == paths
+
+    # complex example
+    assert schema_aliased_path_dict(jsonschema) == schema_paths
 
 # @pytest.mark.data
 # # @pytest.mark.model

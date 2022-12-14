@@ -17,6 +17,7 @@ from datetime import datetime
 from enum import Enum
 import typing as t
 
+
 class FilterableType(Enum):
     """An enum to represent the type of filterable options"""
     STRING = 'string'
@@ -45,11 +46,12 @@ class FilterableType(Enum):
 
         raise ValueError(f"Invalid FilterableType: {string}")
 
+
 class Filterable(ABC):
     """An abstract class to represent filterable options"""
 
     _type: FilterableType
-    _type_handlers: t.Dict[FilterableType, t.Type['Filterable']] = {}
+    _type_handlers: t.Dict[str, t.Type['Filterable']] = {}
     nullable: bool
 
     def __init__(self, name: str, path: t.Tuple[str, ...], options: t.Dict[str, t.Any]):
@@ -98,7 +100,7 @@ class Filterable(ABC):
         if not issubclass(klass, Filterable):
             raise TypeError("Class must be a subclass of Filterable")
 
-        filter_type = klass._type # pylint: disable=protected-access
+        filter_type = klass._type  # pylint: disable=protected-access
         if filter_type.value in Filterable._type_handlers:
             raise ValueError(f"Filterable for type {filter_type.value} already registered")
 
@@ -147,7 +149,7 @@ class Filterable(ABC):
         except KeyError as err:
             raise KeyError(f"Missing required key {err}") from err
 
-        if not 'options' in data:
+        if 'options' not in data:
             raise KeyError("Missing required key 'options'")
 
         if not isinstance(name, str):
@@ -192,12 +194,12 @@ class Filterable(ABC):
         # don't want to modify the original dictionary
         opts = data['options'].copy()
 
-        handler._validate_options(opts) # pylint: disable=protected-access
+        handler._validate_options(opts)  # pylint: disable=protected-access
 
         return handler(
             data['name'],
             tuple(data['path']),
-            handler._modify_options_from_dict(opts)) # pylint: disable=protected-access
+            handler._modify_options_from_dict(opts))  # pylint: disable=protected-access
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the FilterableString object"""
@@ -226,7 +228,7 @@ class FilterableString(Filterable):
     _type = FilterableType.STRING
 
     def __init__(self, name: str, path: t.Tuple[str, ...],
-                    options: t.Optional[t.Union[None, t.Dict[str, t.Any]]] = None):
+                 options: t.Optional[t.Union[None, t.Dict[str, t.Any]]] = None):
         """Initializes a new FilterableString object
 
         Args:
@@ -255,7 +257,9 @@ class FilterableString(Filterable):
 
         return True
 
+
 Filterable.register_type_handler(FilterableString)
+
 
 class FilterableNumber(Filterable):
     """A class to represent filterable numbers"""
@@ -286,11 +290,11 @@ class FilterableNumber(Filterable):
         self.max_val = self.options['max']
         self.is_float = self.options.get('is_float', False)
 
-    def min(self) -> t.Union[float,int]:
+    def min(self) -> t.Union[float, int]:
         """Returns the minimum value"""
         return self.min_val if self.is_float else int(self.min_val)
 
-    def max(self) -> t.Union[float,int]:
+    def max(self) -> t.Union[float, int]:
         """Returns the maximum value"""
         return self.max_val if self.is_float else int(self.max_val)
 
@@ -342,9 +346,8 @@ class FilterableNumber(Filterable):
         if not isinstance(max_val, (int, float)):
             raise TypeError(f"Expected max to be a number, got {type(max_val)}")
 
-        if min_val > max_val: # type: ignore
+        if min_val > max_val:  # type: ignore
             raise ValueError(f"min ({min_val}) cannot be greater than max ({max_val})")
-
 
     @classmethod
     def _modify_options_from_dict(cls, options: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
@@ -370,7 +373,9 @@ class FilterableNumber(Filterable):
 
         return options
 
+
 Filterable.register_type_handler(FilterableNumber)
+
 
 class FilterableDate(Filterable):
     """A class to represent filterable dates"""
@@ -462,7 +467,7 @@ class FilterableDate(Filterable):
             except Exception as exc:
                 raise TypeError(f"{max_val} is not a valid isoformat string") from exc
 
-        if min_val > max_val: # type: ignore
+        if min_val > max_val:  # type: ignore
             raise ValueError(f"min ({min_val}) cannot be greater than max ({max_val})")
 
     @classmethod
@@ -520,5 +525,6 @@ class FilterableBoolean(Filterable):
             return False
 
         return True
+
 
 Filterable.register_type_handler(FilterableBoolean)

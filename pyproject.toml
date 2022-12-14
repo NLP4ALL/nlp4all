@@ -31,3 +31,33 @@ disable = [
 
 [tool.mypy]
 # plugins = "sqlmypy"
+
+[tool.flake8]
+# ignore = ['E231', 'E241']
+per-file-ignores = [
+  '__init__.py:F401',
+  'tests/conftest.py:E501',
+  'nlp4all/controllers/AnalysesController.py:W503',
+  'nlp4all/models/BayesianAnalysis.py:W503',
+  'nlp4all/models/ConfusionMatrix.py:W503, W504'
+]
+exclude = [
+  '.git',
+  '__pycache__',
+  'migrations'
+]
+max-line-length = 120
+count = true
+ignore = "D"
+
+[tool.autoflake]
+check = true
+recursive = true
+
+[tool.yapfignore]
+ignore_patterns = [
+  "migrations/*"
+]
+
+[tool.yapf]
+based_on_style = 'pep8'

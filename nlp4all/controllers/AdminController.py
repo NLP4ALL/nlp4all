@@ -1,4 +1,4 @@
-"""Admin controller.""" # pylint: disable=invalid-name
+"""Admin controller."""  # pylint: disable=invalid-name
 
 from flask import flash, redirect, url_for
 

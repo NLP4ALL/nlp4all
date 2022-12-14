@@ -1,4 +1,4 @@
-"""Project Model""" # pylint: disable=invalid-name
+"""Project Model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class Project(Base):
     data_sources: Mapped[list[DataSource]] = relationship(
         secondary=project_data_source_table,
         back_populates="projects")
-    tf_idf: Mapped[dict] = mapped_column(MutableJSON) # what is this?
+    tf_idf: Mapped[dict] = mapped_column(MutableJSON)  # what is this?
     # remove? or replace with data?
     # tweets = relationship("Tweet", secondary="tweet_project", lazy="dynamic")
     training_and_test_sets: Mapped[dict] = mapped_column(MutableJSON)

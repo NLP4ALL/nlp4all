@@ -8,6 +8,7 @@ from flask import Flask, current_app
 from flask.cli import with_appcontext
 from nlp4all.models.database import Base
 
+
 class N4AObject(Object):
     """JSON Object strategy for nlp4all."""
 
@@ -16,7 +17,7 @@ class N4AObject(Object):
     def to_schema(self):
         """Converts the strategy to a schema."""
 
-        schema =  super().to_schema()
+        schema = super().to_schema()
         if self.current_key is not None:
             schema['title'] = self.current_key
         return schema
@@ -54,6 +55,7 @@ class N4AObject(Object):
             schema_properties[prop] = schema
         return schema_properties
 
+
 class N4AList(List):
     """List strategy for nlp4all.
     """
@@ -64,6 +66,7 @@ class N4AList(List):
         """Overrides the super class method to add current_key"""
         self._items.current_key = self.current_key
         return self._items.to_schema()
+
 
 class N4ATuple(Tuple):
     """Tuple strategy for nlp4all."""
@@ -82,6 +85,7 @@ class N4ATuple(Tuple):
     #         item.current_key = self.current_key
     #         schema.append(item.to_schema())
     #     return schema
+
 
 class N4ASchemaNode(SchemaNode):
     """Schema node for nlp4all."""
@@ -117,6 +121,7 @@ class N4ASchemaNode(SchemaNode):
 
         return schema
 
+
 class N4ASchemaBuilder(SchemaBuilder):
     """Schema builder for nlp4all."""
 
@@ -131,8 +136,6 @@ class N4ASchemaBuilder(SchemaBuilder):
         schema = super().to_schema()
         schema['title'] = 'nlp4all'
         return schema
-
-
 
 
 def csv_row_to_json(row: t.List[str], headers: t.List[str]) -> dict:
@@ -177,10 +180,9 @@ def csv_to_json(csv: t.List[t.List[str]], headers: t.Union[t.List[str], None]) -
     return [csv_row_to_json(row, headers) for row in csv]
 
 
-
 def generate_schema(
-    data: t.Union[dict, t.List[dict]],
-    builder: t.Union[SchemaBuilder, None] = None) -> dict:
+        data: t.Union[dict, t.List[dict]],
+        builder: t.Union[SchemaBuilder, None] = None) -> dict:
     """Generates a JSON schema from a (JSON) dictionary or list of (JSON) dictionaries.
 
     Args:
@@ -241,7 +243,8 @@ def generate_schema(
     """
     if builder is None:
         # add our custom list and object strategies
-        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject]) # pylint: disable=line-too-long
+        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [
+                                         Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
         N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
         N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
         builder = N4ASchemaBuilder()
@@ -255,6 +258,7 @@ def generate_schema(
     schema = builder.to_schema()
 
     return schema
+
 
 def schema_aliased_path_dict(schema: dict, depth: t.Union[None, int] = None) -> t.Dict[str, t.Tuple[str, ...]]:
     """Gets a dictionary of all paths in a schema, with their aliases.
@@ -277,40 +281,44 @@ def schema_aliased_path_dict(schema: dict, depth: t.Union[None, int] = None) -> 
     paths = {}
 
     def _schema_aliased_path_dict(
-        schema: dict,
-        path: t.List[str],
-        title_prefix: t.List[str] = [],
-        depth: t.Union[None, int] = None):
+            schema: dict,
+            path: t.List[str],
+            title_prefix: t.List[str],
+            depth: t.Union[None, int] = None):
         """Recursive function to get the paths."""
         if depth is not None and depth <= 0:
             return
-        
-        new_path = None
-        new_title_prefix = []
+
+        new_path = path
+        new_title_prefix = title_prefix
 
         if "properties" in schema:
             for key, value in schema["properties"].items():
                 new_path = path + [key]
                 new_title_prefix = title_prefix + [schema["properties"][key].get("title", key)]
-                _schema_aliased_path_dict(value, new_path, new_title_prefix, depth=depth - 1 if depth is not None else None)
+                _schema_aliased_path_dict(
+                    value,
+                    new_path,
+                    new_title_prefix,
+                    depth=depth - 1 if depth is not None else None)
         elif "items" in schema:
             new_path = path + ["items"]
             new_title_prefix = title_prefix + [schema.get("title", "items")]
-            _schema_aliased_path_dict(schema["items"], new_path, new_title_prefix, depth=depth - 1 if depth is not None else None)
-        
-        if new_path is not None:
-            paths[".".join(new_title_prefix)] = tuple(new_path)
-        
-    _schema_aliased_path_dict(schema, [], depth=depth)
+            _schema_aliased_path_dict(schema["items"], new_path, new_title_prefix,
+                                      depth=depth - 1 if depth is not None else None)
+
+        paths[".".join(new_title_prefix)] = tuple(new_path)
+
+    _schema_aliased_path_dict(schema, [], title_prefix=[], depth=depth)
 
     return paths
-    
 
 
-def init_db(): # pylint: disable=too-many-locals
+def init_db():  # pylint: disable=too-many-locals
     """Initializes the database."""
     engine = current_app.extensions["sqlalchemy"].engine
     Base.metadata.create_all(bind=engine)
+
 
 @click.command("init-db")
 @with_appcontext
@@ -319,10 +327,12 @@ def init_db_command():
     init_db()
     print("Initialized database.")
 
-def drop_db(): # pylint: disable=too-many-locals
+
+def drop_db():  # pylint: disable=too-many-locals
     """Drops all tables in the database."""
     engine = current_app.extensions["sqlalchemy"].get_engine()
     Base.metadata.drop_all(bind=engine)
+
 
 @click.command("drop-db")
 @with_appcontext
@@ -330,6 +340,7 @@ def drop_db_command():
     """Drops the database."""
     drop_db()
     print("Dropped database.")
+
 
 def init_app(app: Flask):
     """Initializes the database for the Flask app.
@@ -341,7 +352,7 @@ def init_app(app: Flask):
     app.cli.add_command(drop_db_command)
 
 
-def model_cols_jsonb_to_json(app: Flask, cls: type): # pylint: disable=too-many-locals
+def model_cols_jsonb_to_json(app: Flask, cls: type):  # pylint: disable=too-many-locals
     """Converts a Postgres JSONB column to a SQLite JSON column.
     Within the model itself, the column is defined as a JSONB column,
     we only need to change this to JSON when we are using SQLite.
@@ -355,8 +366,8 @@ def model_cols_jsonb_to_json(app: Flask, cls: type): # pylint: disable=too-many-
     from sqlalchemy.ext.mutable import MutableDict
     from nlp4all.models.database import N4AFlatJSON, N4ANestedJSON, N4AFlatJSONB, N4ANestedJSONB
 
-    SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True) # pylint: disable=invalid-name
-    SQLiteMutableJSON = mutable_json_type(dbtype=JSON, nested=False) # pylint: disable=invalid-name
+    SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True)  # pylint: disable=invalid-name
+    SQLiteMutableJSON = mutable_json_type(dbtype=JSON, nested=False)  # pylint: disable=invalid-name
 
     tables = cls.__subclasses__()
     for tbl in tables:
@@ -365,19 +376,19 @@ def model_cols_jsonb_to_json(app: Flask, cls: type): # pylint: disable=too-many-
         for col in tbl.__table__.columns:
             if isinstance(col.type, (N4ANestedJSON, N4ANestedJSONB)):
                 app.logger.warning("      Converting column [%s] from %s to %s (DBTYPE: %s)",
-                    col.name,
-                    type(col.type),
-                    NestedMutable,
-                    JSON)
+                                   col.name,
+                                   type(col.type),
+                                   NestedMutable,
+                                   JSON)
                 col.type = SQLiteNestedMutableJSON
                 type_changed = True
                 continue
             if isinstance(col.type, (N4AFlatJSON, N4AFlatJSONB)):
                 app.logger.warning("      Converting column [%s] from %s to %s (DBTYPE: %s)",
-                    col.name,
-                    type(col.type),
-                    MutableDict,
-                    JSON)
+                                   col.name,
+                                   type(col.type),
+                                   MutableDict,
+                                   JSON)
                 col.type = SQLiteMutableJSON
                 type_changed = True
                 continue

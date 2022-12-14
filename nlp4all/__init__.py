@@ -2,7 +2,6 @@
 nlp4all module
 """
 
-import os
 from typing import Union
 
 from flask import Flask
@@ -19,8 +18,9 @@ from .models.database import Base
 from .models import load_user
 from .routes import Router
 
-db = SQLAlchemy(model_class = Base, engine_options={"future": True})
+db = SQLAlchemy(model_class=Base, engine_options={"future": True})
 migrate = Migrate()
+
 
 def create_app(env: Union[None, str] = None) -> Flask:
     """Create the Flask app."""
@@ -46,12 +46,12 @@ def create_app(env: Union[None, str] = None) -> Flask:
 
     # in non-production environments, we want to be able to get a list of routes
     if conf.env != "production":
-        from .helpers import development # pylint: disable=import-outside-toplevel
-        app.add_url_rule('/api/help', methods = ['GET'], view_func=development.help_route)
+        from .helpers import development  # pylint: disable=import-outside-toplevel
+        app.add_url_rule('/api/help', methods=['GET'], view_func=development.help_route)
 
     if conf.DB_BACKEND == "sqlite":
-        from .helpers.database import model_cols_jsonb_to_json # pylint: disable=import-outside-toplevel
-        app.logger.warning("{} {} {}".format( # pylint: disable=consider-using-f-string
+        from .helpers.database import model_cols_jsonb_to_json  # pylint: disable=import-outside-toplevel
+        app.logger.warning("{} {} {}".format(  # pylint: disable=consider-using-f-string
             "Converting JSONB to JSON for SQLite backend",
             "This is ONLY for development purposes",
             "because SQLite does not support JSONB"))

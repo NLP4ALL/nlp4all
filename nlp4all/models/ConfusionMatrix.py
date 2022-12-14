@@ -1,4 +1,4 @@
-"""Confusion Matrix model""" # pylint: disable=invalid-name
+"""Confusion Matrix model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
 
@@ -87,9 +87,9 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
                     )
                     prob_a = (
                         self.train_data[cat]["counts"] /
-                        self.train_data["counts"]) # type: ignore
+                        self.train_data["counts"])  # type: ignore
                     prob_b = (
-                        sum( # pylint: disable=consider-using-generator
+                        sum(  # pylint: disable=consider-using-generator
                             [self.train_data[c]["words"].get(word, 0) for c in category_names]
                         )
                         / self.train_data["counts"]  # type: ignore
@@ -185,8 +185,10 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     def make_table_data(self, cat_names):
         """Make table data."""
         # this function is a manual way to create confusion matrix data rows
-        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()]  # type: ignore # pylint: disable=unsubscriptable-object, no-member
-        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()]  # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()]
+        # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()]
         number_list = list(range(len(cat_names)))
         # change cat names to numbers 1,2,...
         for i in number_list:

@@ -7,6 +7,7 @@ from nlp4all.controllers import AdminController
 
 AdminRouter = Blueprint("admin_controller", __name__)
 
+
 @AdminRouter.before_request
 @login_required
 def before_request():

@@ -6,6 +6,7 @@ import secrets
 from pathlib import Path
 # from dotenv import load_dotenv
 
+
 def get_env_variable(name: str) -> str:
     """Get the environment variable or raise exception."""
     try:
@@ -18,6 +19,7 @@ def get_env_variable(name: str) -> str:
 # basedir = os.path.abspath(os.path.dirname(__file__))
 # load_dotenv(os.path.join(basedir, ".flaskenv"))
 # load_dotenv(os.path.join(basedir, ".env"))
+
 
 DB_URI = ""
 
@@ -38,7 +40,8 @@ if DB_BACKEND == "postgres":
         url=pg_host,
         db=pg_db)
 
-class Config: # pylint: disable=too-few-public-methods
+
+class Config:  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app."""
     SQLALCHEMY_WARN_20 = 1
     DEBUG = False
@@ -53,11 +56,11 @@ class Config: # pylint: disable=too-few-public-methods
 
     SPACY_MODEL_TYPES = {
         "small": "sm",
-        #"medium": "md",
-        #"large": "lg",
+        # "medium": "md",
+        # "large": "lg",
 
         # Note: Transformer versions require GPU
-        #"transformer": "trf",
+        # "transformer": "trf",
     }
     SPACY_MODEL_LANGUAGES = {
         "en": "en_core_web",
@@ -84,7 +87,7 @@ class Config: # pylint: disable=too-few-public-methods
 
     def __init__(self, env=None):
         """Initialize the configuration."""
-        self.SECRET_KEY = self.get_secret() # pylint: disable=invalid-name
+        self.SECRET_KEY = self.get_secret()  # pylint: disable=invalid-name
         self.env = env
         self._set_log_level()
 
@@ -92,20 +95,23 @@ class Config: # pylint: disable=too-few-public-methods
         """Set the log level."""
         logging.basicConfig(level=self.LOG_LEVEL)
 
-class DevelopmentConfig(Config): # pylint: disable=too-few-public-methods
+
+class DevelopmentConfig(Config):  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in development."""
     SECRET_FILE_PATH = Path(".flask_secret_dev")
     DEBUG = True
     LOG_LEVEL = logging.DEBUG
 
-class LocalDevelopmentConfig(Config): # pylint: disable=too-few-public-methods
+
+class LocalDevelopmentConfig(Config):  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in testing."""
     SECRET_FILE_PATH = Path(".flask_secret_localdev")
     SQLALCHEMY_DATABASE_URI = "sqlite:///../data/nlp4all_dev.db"
     DEBUG = True
     LOG_LEVEL = logging.DEBUG
 
-class TestConfig(Config): # pylint: disable=too-few-public-methods
+
+class TestConfig(Config):  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in testing."""
     SECRET_FILE_PATH = Path(".flask_secret_test")
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
@@ -113,7 +119,7 @@ class TestConfig(Config): # pylint: disable=too-few-public-methods
     LOG_LEVEL = logging.DEBUG
 
 
-class ProductionConfig(Config): # pylint: disable=too-few-public-methods
+class ProductionConfig(Config):  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in production."""
 
 

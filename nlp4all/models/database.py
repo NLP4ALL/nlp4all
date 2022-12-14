@@ -12,10 +12,11 @@ from flask_sqlalchemy.query import Query
 
 
 # base model class
-class Base: # pylint: disable=too-few-public-methods
+class Base:  # pylint: disable=too-few-public-methods
     """Base model class"""
     __allow_unmapped__ = True
     query: Query
+
 
 Base = declarative_base(cls=Base)
 
@@ -25,30 +26,39 @@ Base = declarative_base(cls=Base)
 # and the main use of these custom
 # classes is to allow us to replace them
 # at runtime if we're using sqlite
-class N4ANestedJSONB(JSONB): # pylint: disable=too-many-ancestors
+
+
+class N4ANestedJSONB(JSONB):  # pylint: disable=too-many-ancestors
     """Nested JSONB column type"""
     nested = True
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.impl = JSONB
 
-class N4AFlatJSONB(JSONB): # pylint: disable=too-many-ancestors
+
+class N4AFlatJSONB(JSONB):  # pylint: disable=too-many-ancestors
     """Flat JSONB column type"""
     nested = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.impl = JSONB
+
 
 class N4ANestedJSON(JSON):
     """Nested JSON column type"""
     nested = True
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.impl = JSON
 
+
 class N4AFlatJSON(JSON):
     """Nested JSON column type"""
     nested = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.impl = JSON
@@ -85,16 +95,16 @@ data_matrices_table = Table(
     Base.metadata,
     Column("data_id", ForeignKey("nlp_data.id", ondelete="CASCADE"), primary_key=True),
     Column("confusion_matrix_id",
-        ForeignKey("confusion_matrix.id", ondelete="CASCADE"),
-        primary_key=True),
+           ForeignKey("confusion_matrix.id", ondelete="CASCADE"),
+           primary_key=True),
 )
 
 matrix_categories_table = Table(
     "matrix_categories",
     Base.metadata,
     Column("data_tag_category_id",
-    ForeignKey("data_tag_category.id",ondelete="CASCADE"),
-    primary_key=True),
+           ForeignKey("data_tag_category.id", ondelete="CASCADE"),
+           primary_key=True),
     Column(
         "confusion_matrix_id", ForeignKey("confusion_matrix.id", ondelete="CASCADE"),
         primary_key=True),

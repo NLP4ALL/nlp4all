@@ -1,4 +1,4 @@
-"""Project controller""" # pylint: disable=invalid-name
+"""Project controller"""  # pylint: disable=invalid-name
 
 from random import sample, shuffle
 from flask import redirect, request, url_for
