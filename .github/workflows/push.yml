@@ -23,7 +23,7 @@ jobs:
         echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
         python -m pip install --progress-bar off --upgrade pip
         pip install --progress-bar off wheel
-        pip install --progress-bar off requirements-dev.txt
+        pip install --progress-bar off -r requirements-dev.txt
     - name: Print python os env for debugging, and pip freeze
       run: |
         printenv
