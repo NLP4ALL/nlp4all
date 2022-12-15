@@ -38,7 +38,8 @@ exclude = [
 ]
 show_error_codes = true
 pretty = true
-namespace-packages = true
+namespace_packages = true
+explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [
