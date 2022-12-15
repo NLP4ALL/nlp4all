@@ -30,7 +30,6 @@ disable = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
 exclude = [
   '.git',
   '__pycache__',
@@ -41,9 +40,9 @@ pretty = true
 files = [
   ".",
 ]
-mypy_path = "."
-namespace_packages = true
-explicit_package_bases = true
+#mypy_path = "."
+#namespace_packages = true
+#explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [
