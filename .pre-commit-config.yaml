@@ -6,3 +6,8 @@ repos:
         entry: flake8
         language: python
         types: [python]
+    -   id: mypy
+        name: mypy
+        entry: mypy -v
+        language: python
+        types: [python]
