@@ -23,7 +23,8 @@ jobs:
         flake8
     - name: Typer checking with mypy
       run: |
-        python -m mypy --no-incremental -v -p nlp4all tests
+        python -m mypy --no-incremental -v -p nlp4all
+        python -m mypy --no-incremental -v tests
     - name: Run tests with pytest
       run: |
         pytest
