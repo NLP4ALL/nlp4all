@@ -26,7 +26,7 @@ jobs:
     # - name: Type checking with mypy
     #   run: |
     #     mypy
-    # - name: Run tests with pytest
+    - name: Run tests with pytest
       run: |
         pytest
   failure_notification:
