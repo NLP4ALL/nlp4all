@@ -24,7 +24,8 @@ jobs:
         flake8
     - name: Type checking with mypy
       run: |
-        python -m mypy
+        ls -la
+        mypy
     - name: Run tests with pytest
       run: |
         pytest

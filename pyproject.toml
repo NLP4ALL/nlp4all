@@ -41,7 +41,7 @@ pretty = true
 files = [
   ".",
 ]
-mypy_path = ".:./tests:./nlp4all"
+mypy_path = "."
 
 [[tool.mypy.overrides]]
 module = [
