@@ -43,6 +43,8 @@ files = [
   "tests",
 ]
 mypy_path = "."
+no_namespace_packages = true
+no_explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [
