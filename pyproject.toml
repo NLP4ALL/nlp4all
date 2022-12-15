@@ -39,10 +39,9 @@ exclude = [
 show_error_codes = true
 pretty = true
 files = [
-  "nlp4all",
-  "tests",
+  ".",
 ]
-mypy_path = "."
+mypy_path = ".:./nlp4all:./nlp4all/controllers:./nlp4all/forms:./nlp4all/helpers:./nlp4all/models:./nlp4all/routes:./tests"
 no_namespace_packages = true
 no_explicit_package_bases = true
 
