@@ -38,8 +38,10 @@ exclude = [
 ]
 show_error_codes = true
 pretty = true
-namespace_packages = true
-explicit_package_bases = true
+files = [
+  ".",
+]
+mypy_path = ".:./tests:./nlp4all"
 
 [[tool.mypy.overrides]]
 module = [
