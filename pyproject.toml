@@ -39,7 +39,8 @@ exclude = [
 show_error_codes = true
 pretty = true
 files = [
-  ".",
+  "nlp4all",
+  "tests",
 ]
 mypy_path = "."
 
