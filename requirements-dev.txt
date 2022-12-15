@@ -10,7 +10,6 @@ pycodestyle==2.10.0
 pyflakes==3.0.1
 pytest==7.2.0
 python-dotenv==0.21.0
-# sqlalchemy-stubs==0.4
 yapf==0.32.0
 pydocstyle==6.1.1
 snowballstemmer==2.2.0
