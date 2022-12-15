@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base, MutableJSON
 
 
-class BayesianAnalysis(Base):
+class BayesianAnalysisModel(Base):
     """BayesianAnalysis model."""
 
     __tablename__ = "bayesian_analysis"

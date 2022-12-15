@@ -10,7 +10,7 @@ from wtforms import (
 )
 
 from wtforms.validators import DataRequired, ValidationError
-from nlp4all.models import Project
+from nlp4all.models import ProjectModel
 
 
 class AddOrgForm(FlaskForm):
@@ -41,6 +41,6 @@ class AddProjectForm(FlaskForm):
         """
         Validate title.
         """
-        title = Project.query.filter_by(name=title.data).first()
+        title = ProjectModel.query.filter_by(name=title.data).first()
         if title:
             raise ValidationError("That project name is taken. Please choose a different one.")

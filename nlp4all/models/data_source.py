@@ -13,24 +13,24 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
 
 if t.TYPE_CHECKING:
-    from .data import Data
-    from .project import Project
+    from .data import DataModel
+    from .project import ProjectModel
 
 
-class DataSource(Base):  # pylint: disable=too-few-public-methods
+class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
     """DataSource class manages users' data sources"""
 
     __tablename__ = 'data_source'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    projects: Mapped[list['Project']] = relationship(
+    projects: Mapped[list['ProjectModel']] = relationship(
         secondary=project_data_source_table,
         back_populates="data_sources")
     meta: Mapped[dict] = mapped_column(MutableJSONB, nullable=False)
     schema: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
     data_source_name: Mapped[str] = mapped_column(String(80), nullable=False)
     data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id"))
-    data: Mapped[list[Data]] = relationship(back_populates="data_source")
+    data: Mapped[list[DataModel]] = relationship(back_populates="data_source")
     # shared
     # groups / projects /etc need to be implemented
 

@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base, MutableJSON
 
 
-class BayesianRobot(Base):
+class BayesianRobotModel(Base):
     """BayesianRobot model."""
 
     __tablename__ = "bayesian_robot"
@@ -32,7 +32,7 @@ class BayesianRobot(Base):
         Returns:
             BayesianRobot: A new BayesianRobot object.
         """
-        new_robot = BayesianRobot()
+        new_robot = BayesianRobotModel()
         new_robot.name = self.name
         new_robot.analysis = self.analysis
         new_robot.features = self.features
@@ -88,7 +88,7 @@ class BayesianRobot(Base):
         feature_words = {}
         for feature in self.features:
             feature_words[feature] = [
-                word for word in tf_idf.get("words") if BayesianRobot.matches(word, feature)
+                word for word in tf_idf.get("words") if BayesianRobotModel.matches(word, feature)
             ]
         # relevant_words = [w for words in feature_words.values() for w in words]
         # first calculate the predictions, based on the training sets.

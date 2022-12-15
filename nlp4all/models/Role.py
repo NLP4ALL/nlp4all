@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String
 from ..database import Base
 
 
-class Role(Base):  # pylint: disable=too-few-public-methods
+class RoleModel(Base):  # pylint: disable=too-few-public-methods
     """Role model."""
 
     __tablename__ = "role"

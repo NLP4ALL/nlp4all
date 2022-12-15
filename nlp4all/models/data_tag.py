@@ -11,10 +11,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
 
 if TYPE_CHECKING:
-    from .data import Data
+    from .data import DataModel
 
 
-class DataTag(Base):  # pylint: disable=too-few-public-methods
+class DataTagModel(Base):  # pylint: disable=too-few-public-methods
     """DataTag model."""
 
     __tablename__ = "data_tag"
@@ -23,5 +23,5 @@ class DataTag(Base):  # pylint: disable=too-few-public-methods
     category: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
     analysis: Mapped[int] = mapped_column(ForeignKey("bayesian_analysis.id", ondelete="CASCADE"))
     data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id", ondelete="CASCADE"))
-    data: Mapped[Data] = relationship(back_populates="tags")
+    data: Mapped[DataModel] = relationship(back_populates="tags")
     time_created: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)

@@ -15,7 +15,14 @@ from nlp4all.helpers.colors import (
     ann_assign_colors,
 )
 from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
-from nlp4all.models import DataTagCategory, Data, Project, Role, ConfusionMatrix, DataAnnotation
+from nlp4all.models import (
+    DataTagCategoryModel,
+    DataModel,
+    ProjectModel,
+    RoleModel,
+    ConfusionMatrixModel,
+    DataAnnotationModel
+)
 
 # @TODO: this file needs to be broken out
 # some of these functions belong on the **models** not the **helpers**
@@ -105,7 +112,7 @@ def create_css_info(classifications, text, list_of_categories):
 
 def add_category(name, description):
     """add a category to the database"""
-    category = DataTagCategory(name=name, description=description)
+    category = DataTagCategoryModel(name=name, description=description)
     g.db.add(category)
     g.db.commit()
 
@@ -116,11 +123,11 @@ def get_user_projects(a_user):
     # projects, or  because the user is an admiin
     my_projects = []
     if a_user.admin:
-        my_projects = Project.query.all()
+        my_projects = ProjectModel.query.all()
     else:
         user_orgs = [org.id for org in a_user.organizations]
-        my_projects = Project.query.filter(
-            Project.organization.in_(user_orgs)
+        my_projects = ProjectModel.query.filter(
+            ProjectModel.organization.in_(user_orgs)
         ).all()  # pylint: disable=no-member
     return my_projects
 
@@ -128,14 +135,14 @@ def get_user_projects(a_user):
 def add_project(name, description, org, cat_ids):
     """add a project to the database"""
     print(description)
-    cats_objs = DataTagCategory.query.filter(
-        DataTagCategory.id.in_(cat_ids)
+    cats_objs = DataTagCategoryModel.query.filter(
+        DataTagCategoryModel.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
     data_objs = [t for cat in cats_objs for t in cat.data]
     tf_idf = tf_idf_from_tweets_and_cats_objs(data_objs, cats_objs)
     data_id_and_cat = {t.id: t.category for t in data_objs}
     training_and_test_sets = create_n_train_and_test_sets(30, data_id_and_cat)
-    project = Project(
+    project = ProjectModel(
         name=name,
         description=description,
         organization=org,
@@ -152,15 +159,15 @@ def add_project(name, description, org, cat_ids):
 def add_matrix(cat_ids, ratio, userid):
     """add a matrix to the database"""
     ratio = round(ratio, 3)
-    cats_objs = DataTagCategory.query.filter(
-        DataTagCategory.id.in_(cat_ids)
+    cats_objs = DataTagCategoryModel.query.filter(
+        DataTagCategoryModel.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
     data_objs = [t for cat in cats_objs for t in cat.data]
     tf_idf = tf_idf_from_tweets_and_cats_objs(data_objs, cats_objs)
     data_id_and_cat = {t.id: t.category for t in data_objs}
     training_and_test_sets = create_n_split_tnt_sets(30, ratio, data_id_and_cat)
     matrix_data = {"matrix_classes": {}, "accuracy": 0}
-    matrix = ConfusionMatrix(
+    matrix = ConfusionMatrixModel(
         categories=cats_objs,
         tweets=data_objs,
         tf_idf=tf_idf,
@@ -212,7 +219,7 @@ def add_data_from_dict(indict, category=None):
     text = indict["full_text"]
     text = clean_non_transparencynum(remove_hash_links_mentions(text))
     words = text.split()
-    a_tweet = Data(
+    a_tweet = DataModel(
         time_posted=timestamp,
         category=category.id if category else None,
         handle=indict["twitter_handle"],
@@ -230,14 +237,14 @@ def add_data_from_dict(indict, category=None):
 
 def add_role(role_name):
     """add a role to the database"""
-    role = Role(name=role_name)
+    role = RoleModel(name=role_name)
     g.db.add(role)
     g.db.commit()
 
 
 def get_role(role_name):
     """get a role from the database"""
-    return Role.query.filter_by(name=role_name).first()
+    return RoleModel.query.filter_by(name=role_name).first()
 
 
 def create_bar_chart_data(predictions, title=""):
@@ -328,13 +335,13 @@ def ann_create_css_info(
 def get_tags(analysis, words, a_tweet):  # set of tweet words
     """get tags for a tweet"""
     # take each word  and  calculate a proportion for each tag
-    ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
+    ann_tags = [c.name for c in ProjectModel.query.get(analysis.project).categories]
     for tag in list(analysis.annotation_tags.keys()):
         if tag not in ann_tags:
             ann_tags.append(tag)
     mydict = {word.lower(): {a.lower(): 0 for a in ann_tags} for word in words}
-    annotations = DataAnnotation.query.filter(
-        DataAnnotation.tweet == a_tweet.id, DataAnnotation.analysis == analysis.id
+    annotations = DataAnnotationModel.query.filter(
+        DataAnnotationModel.tweet == a_tweet.id, DataAnnotationModel.analysis == analysis.id
     ).all()
     for ann in annotations:
         if ann.text in a_tweet.full_text:

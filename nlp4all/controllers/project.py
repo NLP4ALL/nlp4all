@@ -6,7 +6,13 @@ from flask_login import current_user
 
 from nlp4all import db
 
-from nlp4all.models import BayesianAnalysis, Organization, DataTagCategory, Project, BayesianRobot
+from nlp4all.models import (
+    BayesianAnalysisModel,
+    OrganizationModel,
+    DataTagCategoryModel,
+    ProjectModel,
+    BayesianRobotModel
+)
 
 from nlp4all.forms.admin import AddProjectForm
 from nlp4all.forms.analyses import AddBayesianAnalysisForm
@@ -37,12 +43,12 @@ class ProjectController(BaseController):
         """Add project page"""
         form = AddProjectForm()
         # find forst alle mulige organizations
-        form.organization.choices = [(str(o.id), o.name) for o in Organization.query.all()]
-        form.categories.choices = [(str(s.id), s.name) for s in DataTagCategory.query.all()]
+        form.organization.choices = [(str(o.id), o.name) for o in OrganizationModel.query.all()]
+        form.categories.choices = [(str(s.id), s.name) for s in DataTagCategoryModel.query.all()]
         if form.validate_on_submit():
             # orgs = [int(n) for n in form.organization.data]
             # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
-            org = Organization.query.get(int(form.organization.data))
+            org = OrganizationModel.query.get(int(form.organization.data))
             cats = [int(n) for n in form.categories.data]
             a_project = add_project(
                 name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats
@@ -56,7 +62,7 @@ class ProjectController(BaseController):
     @classmethod
     def get_user_project_analyses(cls, a_user, a_project):  # pylint: disable=unused-argument
         """Get user project analyses"""
-        analyses = BayesianAnalysis.query.filter_by(project=a_project.id)
+        analyses = BayesianAnalysisModel.query.filter_by(project=a_project.id)
         if current_user.admin:
             return analyses
         return [a for a in analyses if a.shared or a.shared_model or a.user == a_user.id]
@@ -65,10 +71,10 @@ class ProjectController(BaseController):
     def project(cls):  # pylint: disable=too-many-locals
         """Project page"""
         project_id = request.args.get("project", None, type=int)
-        a_project = Project.query.get(project_id)
+        a_project = ProjectModel.query.get(project_id)
         form = AddBayesianAnalysisForm()
         analyses = (
-            BayesianAnalysis.query.filter_by(user=current_user.id)
+            BayesianAnalysisModel.query.filter_by(user=current_user.id)
             .filter_by(project=project_id)
             .all()
         )
@@ -90,7 +96,7 @@ class ProjectController(BaseController):
             # make sure all students see tweets in the same order. So shuffle them now, and then
             # put them in the database
             shuffle(analysis_tweets)
-            bayes_analysis = BayesianAnalysis(
+            bayes_analysis = BayesianAnalysisModel(
                 user=userid,
                 name=name,
                 project=a_project.id,
@@ -107,9 +113,9 @@ class ProjectController(BaseController):
             # the org if it is a shared model, but not if it is a "shared",
             # meaning everyone tags the same tweets
             # @TODO: pretty sure this is broken
-            org = Organization.query.get(a_project.organization)
+            org = OrganizationModel.query.get(a_project.organization)
             for _ in org.users:
-                bayes_robot = BayesianRobot(
+                bayes_robot = BayesianRobotModel(
                     name=current_user.username + "s robot", analysis=bayes_analysis.id
                 )
                 db.add(bayes_robot)

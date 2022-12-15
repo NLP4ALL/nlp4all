@@ -8,13 +8,13 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, project_data_source_table, project_categories_table, MutableJSON
 
-from .data_source import DataSource
-from .bayesian_analysis import BayesianAnalysis
-from .data_tag_category import DataTagCategory
+from .data_source import DataSourceModel
+from .bayesian_analysis import BayesianAnalysisModel
+from .data_tag_category import DataTagCategoryModel
 # from .data import Data
 
 
-class Project(Base):
+class ProjectModel(Base):
     """Project model."""
 
     __tablename__ = "project"
@@ -22,11 +22,11 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column()
     organization: Mapped[int] = mapped_column(Integer, ForeignKey("organization.id"))
-    analyses: Mapped[list[BayesianAnalysis]] = relationship()
-    categories: Mapped[list[DataTagCategory]] = relationship(
+    analyses: Mapped[list[BayesianAnalysisModel]] = relationship()
+    categories: Mapped[list[DataTagCategoryModel]] = relationship(
         secondary=project_categories_table,
         back_populates="projects")
-    data_sources: Mapped[list[DataSource]] = relationship(
+    data_sources: Mapped[list[DataSourceModel]] = relationship(
         secondary=project_data_source_table,
         back_populates="projects")
     tf_idf: Mapped[dict] = mapped_column(MutableJSON)  # what is this?

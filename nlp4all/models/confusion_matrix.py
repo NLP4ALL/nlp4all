@@ -10,22 +10,22 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
-from .data_tag_category import DataTagCategory
+from .data_tag_category import DataTagCategoryModel
 
 if TYPE_CHECKING:
-    from .data import Data
+    from .data import DataModel
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
 
-class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
+class ConfusionMatrixModel(Base):  # pylint: disable=too-many-instance-attributes
     """Confusion matrix."""
 
     __tablename__ = "confusion_matrix"
     id: Mapped[int] = mapped_column(primary_key=True)
     user: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    categories: Mapped[list[DataTagCategory]] = relationship(secondary=matrix_categories_table)
-    source_data: Mapped[list[Data]] = relationship(secondary=data_matrices_table)
+    categories: Mapped[list[DataTagCategoryModel]] = relationship(secondary=matrix_categories_table)
+    source_data: Mapped[list[DataModel]] = relationship(secondary=data_matrices_table)
     matrix_data: Mapped[dict] = mapped_column(MutableJSONB)  # here to save the TP/TN/FP/FN
     train_data: Mapped[dict] = mapped_column(MutableJSONB)  # word counts from the training set
     tf_idf: Mapped[dict] = mapped_column(MutableJSONB)
@@ -40,7 +40,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
 
     def clone(self):
         """Clone confusion matrix."""
-        new_matrix = ConfusionMatrix()
+        new_matrix = ConfusionMatrixModel()
         new_matrix.parent_id = self.id
         new_matrix.categories = self.categories
         new_matrix.data = self.data
@@ -117,9 +117,9 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
         train_data = self.train_data
         # trains the model with the training data tweets
         for tweet_id in train_tweet_ids:
-            tweet = Data.query.get(tweet_id)
+            tweet = DataModel.query.get(tweet_id)
             category_id = tweet.category
-            category = DataTagCategory.query.get(category_id)
+            category = DataTagCategoryModel.query.get(category_id)
             train_data = self.updated_data(tweet, category)
         return train_data
 
