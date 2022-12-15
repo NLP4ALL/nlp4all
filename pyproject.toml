@@ -42,8 +42,8 @@ files = [
   ".",
 ]
 mypy_path = ".:./nlp4all:./nlp4all/controllers:./nlp4all/forms:./nlp4all/helpers:./nlp4all/models:./nlp4all/routes:./tests"
-no_namespace_packages = true
-no_explicit_package_bases = true
+namespace_packages = true
+explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [
