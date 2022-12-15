@@ -19,13 +19,17 @@ jobs:
         python -m pip install --progress-bar off --no-cache-dir --upgrade pip
         pip install --progress-bar off --no-cache-dir wheel
         pip install --progress-bar off --no-cache-dir -r requirements-dev.txt
+    - name: Print python os env for debugging, and pip freeze
+      run: |
+        printenv
+        pip freeze
     - name: Analysing the code with Flake8
       run: |
         flake8
     # figure out why mypy doesn't work on github later
-    # - name: Type checking with mypy
-    #   run: |
-    #     mypy
+    - name: Type checking with mypy
+      run: |
+        mypy
     - name: Run tests with pytest
       run: |
         pytest
