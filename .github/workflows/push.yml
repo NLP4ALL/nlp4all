@@ -23,6 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
+        echo ${{ steps.cp310.outputs.python-path }}
         ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off --upgrade pip
         ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off wheel
         ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off -r requirements-dev.txt
