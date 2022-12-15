@@ -23,24 +23,24 @@ jobs:
     - name: Install dependencies
       run: |
         echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
-        echo ${{ steps.cp310.outputs.python-path }}
-        ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off --upgrade pip
-        ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off wheel
-        ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off -r requirements-dev.txt
+        echo ${{ steps.cpmat.outputs.python-path }}
+        ${{ steps.cpmat.outputs.python-path }} -m pip install --progress-bar off --upgrade pip
+        ${{ steps.cpmat.outputs.python-path }} -m pip install --progress-bar off wheel
+        ${{ steps.cpmat.outputs.python-path }} -m pip install --progress-bar off -r requirements-dev.txt
     - name: Print python os env for debugging, and pip freeze
       run: |
         printenv
-        ${{ steps.cp310.outputs.python-path }} -m pip freeze
+        ${{ steps.cpmat.outputs.python-path }} -m pip freeze
     - name: Analysing the code with Flake8
       run: |
-        ${{ steps.cp310.outputs.python-path }} -m flake8
+        ${{ steps.cpmat.outputs.python-path }} -m flake8
     # figure out why mypy doesn't work on github later
     - name: Type checking with mypy
       run: |
-        ${{ steps.cp310.outputs.python-path }} -m mypy
+        ${{ steps.cpmat.outputs.python-path }} -m mypy
     - name: Run tests with pytest
       run: |
-        ${{ steps.cp310.outputs.python-path }} -m pytest
+        ${{ steps.cpmat.outputs.python-path }} -m pytest
   failure_notification:
     needs: build
     runs-on: ubuntu-latest
