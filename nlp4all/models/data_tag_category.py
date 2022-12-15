@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from sqlalchemy import String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .database import Base, project_categories_table
-from . import Data, DataTag, Project
+from ..database import Base, project_categories_table
+
+if TYPE_CHECKING:
+    from .data import Data
+    from .data_tag import DataTag
+    from .project import Project
 
 
 class DataTagCategory(Base):  # pylint: disable=too-few-public-methods

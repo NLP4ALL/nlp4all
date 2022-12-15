@@ -3,7 +3,7 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
-from .database import Base, user_org_table
+from ..database import Base, user_org_table
 
 
 class Organization(Base):  # pylint: disable=too-few-public-methods

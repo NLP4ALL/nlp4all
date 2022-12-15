@@ -2,20 +2,22 @@
 
 import typing as t
 
-from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy import Column, ForeignKey, Table, MetaData
 from sqlalchemy.types import TypeEngine
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Query
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.dialects.postgresql import JSONB, JSON
 
 from sqlalchemy_json import NestedMutable
-from flask_sqlalchemy.query import Query
+
+nlp_sa_meta = MetaData()
 
 
 # base model class
 class Base(DeclarativeBase):  # pylint: disable=too-few-public-methods
     """Base model class"""
     __allow_unmapped__ = True
+    metadata = nlp_sa_meta
     query: Query
 
 

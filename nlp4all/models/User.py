@@ -1,15 +1,21 @@
 """User Model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
-from datetime import datetime, timezone, timedelta
+from typing import TYPE_CHECKING
 from typing import Union
+from datetime import datetime, timezone, timedelta
 from flask_login import UserMixin
 from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import jwt
 
-from .database import Base, user_org_table, user_role_table
-from . import Organization, Role, BayesianAnalysis, DataSource
+from ..database import Base, user_org_table, user_role_table
+
+if TYPE_CHECKING:
+    from .organization import Organization
+    from .role import Role
+    from .bayesian_analysis import BayesianAnalysis
+    from .data_source import DataSource
 
 
 class User(Base, UserMixin):

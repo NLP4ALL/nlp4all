@@ -4,6 +4,7 @@ nlp4all module
 
 from typing import Union
 
+from sqlalchemy.orm import Query
 from flask import Flask
 from flask_login import LoginManager
 from flask_cors import CORS
@@ -14,11 +15,11 @@ from flask_migrate import Migrate
 from .helpers import database as dbhelper
 from .helpers import nlp
 from .config import get_config, Config
-from .models.database import Base
-from .models import load_user
+from .database import Base, nlp_sa_meta
+from .models.user import load_user
 from .routes import Router
 
-db: SQLAlchemy = SQLAlchemy(model_class=Base, engine_options={"future": True})  # type: ignore
+db: SQLAlchemy = SQLAlchemy(query_class=Query, metadata=nlp_sa_meta, engine_options={"future": True})  # type: ignore
 migrate = Migrate()
 
 

@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from datetime import datetime
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from ..database import Base
 
-from . import Data
+if TYPE_CHECKING:
+    from .data import Data
 
 
 class DataTag(Base):  # pylint: disable=too-few-public-methods

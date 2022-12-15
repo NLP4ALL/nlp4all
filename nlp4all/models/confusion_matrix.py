@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import operator
+from typing import TYPE_CHECKING
 from typing import Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
-from . import DataTagCategory, Data
+from ..database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
+from .data_tag_category import DataTagCategory
+
+if TYPE_CHECKING:
+    from .data import Data
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -64,7 +68,7 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     def update_tnt_set(self):
         """Update the training and test sets."""
         tweet_id_and_cat = {t.id: t.category for t in self.data}
-        self.training_and_test_sets = create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)
+        self.training_and_test_sets = create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)  # type: ignore
         return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):

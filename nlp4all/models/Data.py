@@ -6,12 +6,17 @@ Data imported into nlp4all, used in analyses
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base, NestedMutableJSONB
+from ..database import Base, NestedMutableJSONB
 
-from . import DataSource, DataAnnotation, DataTag, DataTagCategory
+if TYPE_CHECKING:
+    from .data_source import DataSource
+    from .data_annotation import DataAnnotation
+    from .data_tag import DataTag
+    from .data_tag_category import DataTagCategory
 
 
 class Data(Base):  # pylint: disable=too-few-public-methods

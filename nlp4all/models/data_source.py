@@ -10,8 +10,11 @@ import typing as t
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from .database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
-from . import Data, Project
+from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
+
+if t.TYPE_CHECKING:
+    from .data import Data
+    from .project import Project
 
 
 class DataSource(Base):  # pylint: disable=too-few-public-methods
@@ -20,7 +23,7 @@ class DataSource(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = 'data_source'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    projects: Mapped[list[Project]] = relationship(
+    projects: Mapped[list['Project']] = relationship(
         secondary=project_data_source_table,
         back_populates="data_sources")
     meta: Mapped[dict] = mapped_column(MutableJSONB, nullable=False)

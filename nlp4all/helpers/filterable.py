@@ -12,6 +12,8 @@ Classes:
 
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
@@ -26,7 +28,7 @@ class FilterableType(Enum):
     BOOLEAN = 'boolean'
 
     @staticmethod
-    def from_string(string: str) -> 'FilterableType':
+    def from_string(string: str) -> FilterableType:
         """Returns a FilterableType from a string
 
         Args:
@@ -51,7 +53,7 @@ class Filterable(ABC):
     """An abstract class to represent filterable options"""
 
     _type: FilterableType
-    _type_handlers: t.Dict[str, t.Type['Filterable']] = {}
+    _type_handlers: t.Dict[str, t.Type[Filterable]] = {}
     nullable: bool
 
     def __init__(self, name: str, path: t.Tuple[str, ...], options: t.Dict[str, t.Any]):
@@ -91,7 +93,7 @@ class Filterable(ABC):
         self.nullable = self.options["nullable"]
 
     @staticmethod
-    def register_type_handler(klass: t.Type['Filterable']):
+    def register_type_handler(klass: t.Type[Filterable]):
         """Registers a new type handler for a Filterable object
 
         Args:
@@ -179,7 +181,7 @@ class Filterable(ABC):
             raise TypeError(f"Nullable must be a boolean, not {type(nullable)}")
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'Filterable':
+    def from_dict(cls, data: dict) -> Filterable:
         """Creates a new Filterable object from a dictionary"""
 
         cls._validate_dict(data)

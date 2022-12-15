@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .database import Base, MutableJSONB
-from . import User, Data
+from ..database import Base, MutableJSONB
+
+if TYPE_CHECKING:
+    from .user import User
+    from .data import Data
 
 # isn't this just a duplicate of Data (formerly, Tweet)?
 

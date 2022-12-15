@@ -1,5 +1,7 @@
 """Database helpers."""
 
+from __future__ import annotations
+
 import typing as t
 import click
 from genson import SchemaBuilder, SchemaNode, SchemaStrategy
@@ -7,7 +9,7 @@ from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
 from sqlalchemy.orm import DeclarativeBase
-from nlp4all.models.database import Base
+from nlp4all.database import Base
 
 
 class N4AObject(Object):
@@ -244,9 +246,8 @@ def generate_schema(
     """
     if builder is None:
         # add our custom list and object strategies
-        strats = [s for s in SchemaBuilder.STRATEGIES if s not in [Object, List, Tuple]]
-        strats.extend([N4AList, N4ATuple, N4AObject])
-        N4ASchemaNode.STRATEGIES = tuple(strats)
+        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [
+                                         Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
         N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
         N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
         builder = N4ASchemaBuilder()
@@ -262,7 +263,8 @@ def generate_schema(
     return schema
 
 
-def schema_aliased_path_dict(schema: dict, depth: t.Union[None, int] = None) -> t.Dict[str, t.Tuple[str, ...]]:
+def schema_aliased_path_dict(schema: dict,
+                             depth: t.Union[None, int] = None) -> t.Dict[str, t.Tuple[str, ...]]:
     """Gets a dictionary of all paths in a schema, with their aliases.
     This recursively goes through a json schema and returns a list of paths to
     all properties that can contain data (i.e. not objects or arrays).
@@ -366,7 +368,7 @@ def model_cols_jsonb_to_json(app: Flask, cls: t.Type[DeclarativeBase]):  # pylin
     from sqlalchemy.dialects.sqlite import JSON
     from sqlalchemy_json import mutable_json_type, NestedMutable
     from sqlalchemy.ext.mutable import MutableDict
-    from nlp4all.models.database import N4AFlatJSON, N4ANestedJSON, N4AFlatJSONB, N4ANestedJSONB
+    from nlp4all.database import N4AFlatJSON, N4ANestedJSON, N4AFlatJSONB, N4ANestedJSONB
 
     SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True)  # pylint: disable=invalid-name
     SQLiteMutableJSON = mutable_json_type(dbtype=JSON, nested=False)  # pylint: disable=invalid-name

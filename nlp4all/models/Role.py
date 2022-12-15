@@ -2,7 +2,7 @@
 
 from sqlalchemy import Column, Integer, String
 
-from .database import Base
+from ..database import Base
 
 
 class Role(Base):  # pylint: disable=too-few-public-methods
