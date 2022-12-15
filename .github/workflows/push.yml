@@ -25,7 +25,7 @@ jobs:
     - name: Type checking with mypy
       run: |
         ls -la
-        mypy
+        mypy -v
     - name: Run tests with pytest
       run: |
         pytest
