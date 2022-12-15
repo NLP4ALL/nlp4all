@@ -7,15 +7,15 @@ from datetime import datetime
 
 from flask import g
 
-from nlp4all.helpers.datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
-from nlp4all.helpers.colors import (
+from .datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
+from .colors import (
     assign_colors,
     generate_n_hsl_colors,
     hsl_color_to_string,
     ann_assign_colors,
 )
-from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
-from nlp4all.models import (
+from .nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
+from ..models import (
     DataTagCategoryModel,
     DataModel,
     ProjectModel,

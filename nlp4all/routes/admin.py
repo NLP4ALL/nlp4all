@@ -3,7 +3,7 @@
 from flask import Blueprint
 from flask_login import login_required
 
-from nlp4all.controllers import AdminController
+from ..controllers import AdminController
 
 AdminRouter = Blueprint("admin_controller", __name__)
 

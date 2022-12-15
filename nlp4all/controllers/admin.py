@@ -3,10 +3,10 @@
 from flask import flash, redirect, url_for
 
 from nlp4all import db
-from nlp4all.models import OrganizationModel, DataTagCategoryModel
-from nlp4all.forms.admin import AddOrgForm
-from nlp4all.forms.analyses import AddTweetCategoryForm
-from nlp4all.helpers.tweets import add_tweets_from_account
+from ..models import OrganizationModel, DataTagCategoryModel
+from ..forms.admin import AddOrgForm
+from ..forms.analyses import AddTweetCategoryForm
+from ..helpers.tweets import add_tweets_from_account
 
 from .base import BaseController
 

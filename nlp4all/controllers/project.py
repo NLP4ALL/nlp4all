@@ -6,7 +6,7 @@ from flask_login import current_user
 
 from nlp4all import db
 
-from nlp4all.models import (
+from ..models import (
     BayesianAnalysisModel,
     OrganizationModel,
     DataTagCategoryModel,
@@ -14,10 +14,10 @@ from nlp4all.models import (
     BayesianRobotModel
 )
 
-from nlp4all.forms.admin import AddProjectForm
-from nlp4all.forms.analyses import AddBayesianAnalysisForm
+from ..forms.admin import AddProjectForm
+from ..forms.analyses import AddBayesianAnalysisForm
 
-from nlp4all.helpers.analyses import (
+from ..helpers.analyses import (
     add_project,
     get_user_projects,
 )  # @TODO: this add_project CLEARLY belongs on the model, not in helpers

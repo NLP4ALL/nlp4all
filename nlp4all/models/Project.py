@@ -11,7 +11,6 @@ from ..database import Base, project_data_source_table, project_categories_table
 from .data_source import DataSourceModel
 from .bayesian_analysis import BayesianAnalysisModel
 from .data_tag_category import DataTagCategoryModel
-# from .data import Data
 
 
 class ProjectModel(Base):

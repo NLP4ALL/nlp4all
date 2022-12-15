@@ -12,9 +12,9 @@ from flask_login import current_user
 
 from sqlalchemy.orm.attributes import flag_modified
 
-from nlp4all import db
+from .. import db
 
-from nlp4all.models import (
+from ..models import (
     BayesianAnalysisModel,
     BayesianRobotModel,
     ConfusionMatrixModel,
@@ -26,7 +26,7 @@ from nlp4all.models import (
     UserModel,
 )
 
-from nlp4all.helpers.analyses import (
+from ..helpers.analyses import (
     add_matrix,
     ann_create_css_info,
     create_ann_css_info,
@@ -38,7 +38,7 @@ from nlp4all.helpers.analyses import (
     matrix_metrics,
 )
 
-from nlp4all.forms.analyses import BayesianRobotForms, CreateMatrixForm, TaggingForm, ThresholdForm
+from ..forms.analyses import BayesianRobotForms, CreateMatrixForm, TaggingForm, ThresholdForm
 
 from .base import BaseController
 

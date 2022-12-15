@@ -6,7 +6,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
-from nlp4all.config import Config
+from ..config import Config
 
 
 def clean_word(aword):

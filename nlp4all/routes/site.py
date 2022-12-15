@@ -2,7 +2,7 @@
 
 from flask import Blueprint
 
-from nlp4all.controllers import SiteController
+from ..controllers import SiteController
 
 SiteRouter = Blueprint("site_controller", __name__, static_url_path="")
 

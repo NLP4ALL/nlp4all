@@ -10,7 +10,7 @@ from wtforms import (
 )
 
 from wtforms.validators import DataRequired, ValidationError
-from nlp4all.models import ProjectModel
+from ..models import ProjectModel
 
 
 class AddOrgForm(FlaskForm):

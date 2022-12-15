@@ -10,10 +10,10 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
-from .data_tag_category import DataTagCategoryModel
 
 if TYPE_CHECKING:
     from .data import DataModel
+    from .data_tag_category import DataTagCategoryModel
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
@@ -24,8 +24,8 @@ class ConfusionMatrixModel(Base):  # pylint: disable=too-many-instance-attribute
     __tablename__ = "confusion_matrix"
     id: Mapped[int] = mapped_column(primary_key=True)
     user: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    categories: Mapped[list[DataTagCategoryModel]] = relationship(secondary=matrix_categories_table)
-    source_data: Mapped[list[DataModel]] = relationship(secondary=data_matrices_table)
+    categories: Mapped[list['DataTagCategoryModel']] = relationship(secondary=matrix_categories_table)
+    source_data: Mapped[list['DataModel']] = relationship(secondary=data_matrices_table)
     matrix_data: Mapped[dict] = mapped_column(MutableJSONB)  # here to save the TP/TN/FP/FN
     train_data: Mapped[dict] = mapped_column(MutableJSONB)  # word counts from the training set
     tf_idf: Mapped[dict] = mapped_column(MutableJSONB)

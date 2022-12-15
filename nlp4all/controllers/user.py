@@ -11,12 +11,12 @@ from flask_login import current_user, login_user, logout_user
 from flask_mail import Message
 from flask_bcrypt import check_password_hash, generate_password_hash
 from nlp4all import db
-from nlp4all.helpers.site import is_safe_url
+from ..helpers.site import is_safe_url
 
 
-from nlp4all.models import BayesianAnalysisModel, OrganizationModel, UserModel
+from ..models import BayesianAnalysisModel, OrganizationModel, UserModel
 
-from nlp4all.forms.user import (
+from ..forms.user import (
     LoginForm,
     UpdateAccountForm,
     RegistrationForm,

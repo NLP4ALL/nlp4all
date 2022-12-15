@@ -3,7 +3,7 @@
 from flask import Blueprint
 from flask_login import login_required
 
-from nlp4all.controllers import ProjectController
+from ..controllers import ProjectController
 
 ProjectRouter = Blueprint("project_controller", __name__)
 

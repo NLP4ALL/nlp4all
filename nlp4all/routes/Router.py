@@ -11,27 +11,27 @@ class Router:  # pylint: disable=too-few-public-methods
         """Add routes to flask app."""
         # pylint: disable=import-outside-toplevel
 
-        from nlp4all.routes.site import SiteRouter
+        from .site import SiteRouter
 
         app.register_blueprint(SiteRouter, url_prefix="/")
 
-        from nlp4all.routes.admin import AdminRouter
+        from .admin import AdminRouter
 
         app.register_blueprint(AdminRouter, url_prefix="/admin")
 
-        from nlp4all.routes.user import UserRouter
+        from .user import UserRouter
 
         app.register_blueprint(UserRouter, url_prefix="/user")
 
-        from nlp4all.routes.analyses import AnalysesRouter
+        from .analyses import AnalysesRouter
 
         app.register_blueprint(AnalysesRouter, url_prefix="/analyses")
 
-        from nlp4all.routes.project import ProjectRouter
+        from .project import ProjectRouter
 
         app.register_blueprint(ProjectRouter, url_prefix="/project")
 
-        from nlp4all.routes.datasource import DataSourceRouter
+        from .datasource import DataSourceRouter
 
         app.register_blueprint(DataSourceRouter, url_prefix="/datasource")
 

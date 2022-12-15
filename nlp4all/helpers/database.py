@@ -9,7 +9,7 @@ from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
 from sqlalchemy.orm import DeclarativeBase
-from nlp4all.database import Base
+from ..database import Base
 
 
 class N4AObject(Object):
@@ -368,7 +368,7 @@ def model_cols_jsonb_to_json(app: Flask, cls: t.Type[DeclarativeBase]):  # pylin
     from sqlalchemy.dialects.sqlite import JSON
     from sqlalchemy_json import mutable_json_type, NestedMutable
     from sqlalchemy.ext.mutable import MutableDict
-    from nlp4all.database import N4AFlatJSON, N4ANestedJSON, N4AFlatJSONB, N4ANestedJSONB
+    from ..database import N4AFlatJSON, N4ANestedJSON, N4AFlatJSONB, N4ANestedJSONB
 
     SQLiteNestedMutableJSON = mutable_json_type(dbtype=JSON, nested=True)  # pylint: disable=invalid-name
     SQLiteMutableJSON = mutable_json_type(dbtype=JSON, nested=False)  # pylint: disable=invalid-name
