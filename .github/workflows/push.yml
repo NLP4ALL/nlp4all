@@ -14,30 +14,32 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+    - uses: actions/setup-python@v4
+      id: cpmat
       with:
         python-version: ${{ matrix.python-version }}
+        update-environment: false
         cache: 'pip'
     - name: Install dependencies
       run: |
         echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
-        python -m pip install --progress-bar off --upgrade pip
-        pip install --progress-bar off wheel
-        pip install --progress-bar off -r requirements-dev.txt
+        ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off --upgrade pip
+        ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off wheel
+        ${{ steps.cp310.outputs.python-path }} -m pip install --progress-bar off -r requirements-dev.txt
     - name: Print python os env for debugging, and pip freeze
       run: |
         printenv
-        pip freeze
+        ${{ steps.cp310.outputs.python-path }} -m pip freeze
     - name: Analysing the code with Flake8
       run: |
-        flake8
+        ${{ steps.cp310.outputs.python-path }} -m flake8
     # figure out why mypy doesn't work on github later
     - name: Type checking with mypy
       run: |
-        mypy
+        ${{ steps.cp310.outputs.python-path }} -m mypy
     - name: Run tests with pytest
       run: |
-        pytest
+        ${{ steps.cp310.outputs.python-path }} -m pytest
   failure_notification:
     needs: build
     runs-on: ubuntu-latest
