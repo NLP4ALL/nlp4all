@@ -2,6 +2,9 @@ name: Lint, test and notify
 
 on: [push]
 
+env:
+  PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/nlp4all:$PYTHONPATH
+
 jobs:
   build:
     runs-on: ubuntu-latest
