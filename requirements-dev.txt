@@ -13,6 +13,6 @@ python-dotenv==0.21.0
 yapf==0.32.0
 pydocstyle==6.1.1
 snowballstemmer==2.2.0
-flake8_docstrings==1.6.0
-types_Flask_Cors==3.0.10
-types_Pillow==9.3.0.4
+flake8-docstrings==1.6.0
+types-Flask_Cors==3.0.10
+types-Pillow==9.3.0.4

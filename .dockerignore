@@ -5,7 +5,6 @@ __pycache__
 .gitignore
 README.md
 .pre-commit-config.yaml
-pyproject.toml
 run_dev.py
 postgres-data
 .flaskenv

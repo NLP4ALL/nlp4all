@@ -80,6 +80,10 @@ COPY ./docker/python/run-nlp4all.sh $HOME
 RUN chmod +x $HOME/run-nlp4all.sh
 RUN chown app:app $HOME/run-nlp4all.sh
 
+COPY ./pyproject.toml $HOME
+RUN chmod +x $HOME/pyproject.toml
+RUN chown app:app $HOME/pyproject.toml
+
 # change to the app user
 USER app
 
