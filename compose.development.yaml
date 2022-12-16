@@ -14,14 +14,15 @@ services:
     restart: always
     build: 
       context: .
-      dockerfile: ./docker/python/Dockerfile.development
-    command: flask --debug --app nlp4all run --host=0.0.0.0
+      target: nlpapp-dev
+      dockerfile: ./docker/python/Dockerfile
+    command: ./run-nlp4all.sh
     volumes:
-      - static_volume_dev:/home/app/nlp4all/static
       - ./nlp4all:/home/app/nlp4all
     ports:
       - "5000:5000"
-    env_file:
+      - "5678:5678"
+    env_file: # variables defined here cannot be referenced in compose.yml
       - ./db.dev.env
       - ./app.dev.env
     networks:
@@ -34,4 +35,3 @@ networks:
   back-tier: {}
 volumes:
   postgres_data_dev:
-  static_volume_dev:
