@@ -1,32 +1,39 @@
-"""User Model""" # pylint: disable=invalid-name
+"""User Model"""  # pylint: disable=invalid-name
 
-from datetime import datetime, timezone, timedelta
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from typing import Union
+from datetime import datetime, timezone, timedelta
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, String, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 import jwt
 
-from .database import Base
+from ..database import Base, user_org_table, user_role_table
+
+if TYPE_CHECKING:
+    from .organization_model import OrganizationModel
+    from .role_model import RoleModel
+    from .bayesian_analysis import BayesianAnalysisModel
+    from .data_source import DataSourceModel
 
 
-class User(Base, UserMixin):
+class UserModel(Base, UserMixin):
     """User model."""
 
     __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
-    username = Column(String(20), unique=True, nullable=False)
-    email = Column(String(120), unique=True, nullable=False)
-    image_file = Column(String(20), nullable=False, default="default.jpg")
-    password = Column(String(60), nullable=False)
-    organizations = relationship(
-        "Organization",
-        secondary="user_orgs",
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
+    password: Mapped[str] = mapped_column(String(60), nullable=False)
+    organizations: Mapped[OrganizationModel] = relationship(
+        secondary=user_org_table,
         back_populates="users")
-    admin = Column(Boolean, default=False)
-    roles = relationship("Role", secondary="user_roles")
-    analyses = relationship("BayesianAnalysis")
-    data_sources = relationship("DataSource")
+    admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    roles: Mapped[RoleModel] = relationship("Role", secondary=user_role_table)
+    analyses: Mapped[BayesianAnalysisModel] = relationship()
+    data_sources: Mapped[DataSourceModel] = relationship()
 
     def get_reset_token(self, secret_key: str, expires_sec: int = 1800) -> str:
         """Get a reset token.
@@ -46,7 +53,7 @@ class User(Base, UserMixin):
         return reset_token
 
     @staticmethod
-    def verify_reset_token(token: str, secret_key: str) -> Union["User", None]:
+    def verify_reset_token(token: str, secret_key: str) -> Union["UserModel", None]:
         """decodes the token
         Parameters:
             token (str): The token needed to reset the password
@@ -65,7 +72,7 @@ class User(Base, UserMixin):
             return None
         except jwt.InvalidTokenError:
             return None
-        return User.query.get(user_id)
+        return UserModel.query.get(user_id)
 
     def __repr__(self):
         """represents the user object
@@ -82,4 +89,4 @@ def load_user(user_id):
     Returns:
     User: User object.
     """
-    return User.query.get(int(user_id))
+    return UserModel.query.get(int(user_id))

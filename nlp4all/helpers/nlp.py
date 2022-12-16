@@ -6,7 +6,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
-from nlp4all.config import Config
+from ..config import Config
 
 
 def clean_word(aword):
@@ -54,6 +54,7 @@ def clean_non_transparencynum(text):
     text = text.replace(")", " ")
     return text.strip()  # changed this, might not work!
 
+
 @click.command("spacy-download")
 @with_appcontext
 def get_spacy_models():
@@ -67,6 +68,7 @@ def get_spacy_models():
         if not importlib.util.find_spec(pkg):
             print(f"Installing required spacy model {pkg}...")
             subprocess.check_call(['python', '-m', 'spacy', 'download', pkg])
+
 
 def init_app(app):
     """Initialize the app with the spacy download command"""

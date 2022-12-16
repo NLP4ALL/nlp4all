@@ -1,15 +1,15 @@
-"""Bayesian Robot Model""" # pylint: disable=invalid-name
+"""Bayesian Robot Model"""  # pylint: disable=invalid-name
 
 import collections
 import functools
 import operator
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
+from sqlalchemy.orm import relationship
 
-from .database import Base
-from . import BayesianAnalysis, Project
+from ..database import Base, MutableJSON
 
 
-class BayesianRobot(Base):
+class BayesianRobotModel(Base):
     """BayesianRobot model."""
 
     __tablename__ = "bayesian_robot"
@@ -19,9 +19,10 @@ class BayesianRobot(Base):
     name = Column(String(25))
     parent = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
     child = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
-    analysis = Column(Integer, ForeignKey("bayesian_analysis.id"))
-    features = Column(JSON, default={})
-    accuracy = Column(JSON, default={})
+    analysis_id = Column(Integer, ForeignKey("bayesian_analysis.id"))
+    analysis = relationship("BayesianAnalysis")
+    features = Column(MutableJSON, default={})
+    accuracy = Column(MutableJSON, default={})
     retired = Column(Boolean, default=False)
     time_retired = Column(DateTime)
 
@@ -31,7 +32,7 @@ class BayesianRobot(Base):
         Returns:
             BayesianRobot: A new BayesianRobot object.
         """
-        new_robot = BayesianRobot()
+        new_robot = BayesianRobotModel()
         new_robot.name = self.name
         new_robot.analysis = self.analysis
         new_robot.features = self.features
@@ -45,7 +46,7 @@ class BayesianRobot(Base):
         Returns:
             BayesianAnalysis: The BayesianAnalysis object associated with the robot.
         """
-        return BayesianAnalysis.query.get(self.analysis)
+        return self.analysis
 
     def word_in_features(self, word):
         """Checks if a word is in the features of the robot.
@@ -81,13 +82,13 @@ class BayesianRobot(Base):
             dict: A dictionary containing the accuracy of the robot.
         """
         # @TODO: This function is too long and needs to be refactored.
-        analysis_obj = BayesianAnalysis.query.get(self.analysis)
-        proj_obj = Project.query.get(analysis_obj.project)
+        analysis_obj = self.analysis
+        proj_obj = analysis_obj.project
         tf_idf = proj_obj.tf_idf
         feature_words = {}
         for feature in self.features:
             feature_words[feature] = [
-                word for word in tf_idf.get("words") if BayesianRobot.matches(word, feature)
+                word for word in tf_idf.get("words") if BayesianRobotModel.matches(word, feature)
             ]
         # relevant_words = [w for words in feature_words.values() for w in words]
         # first calculate the predictions, based on the training sets.
@@ -99,7 +100,7 @@ class BayesianRobot(Base):
         # make one for individual words too so we can more easily access them
         # later, and make a  list of category names for viewing
         word_category_predictions = {}
-        cat_names = {cat.id: cat.name for cat in Project.query.get(analysis_obj.project).categories}
+        cat_names = {cat.id: cat.name for cat in analysis_obj.project.categories}
 
         for (
             feature

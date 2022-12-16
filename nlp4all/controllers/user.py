@@ -1,4 +1,4 @@
-"""User / Login related controller.""" # pylint: disable=invalid-name
+"""User / Login related controller."""  # pylint: disable=invalid-name
 
 import os
 from random import randint
@@ -11,12 +11,12 @@ from flask_login import current_user, login_user, logout_user
 from flask_mail import Message
 from flask_bcrypt import check_password_hash, generate_password_hash
 from nlp4all import db
-from nlp4all.helpers.site import is_safe_url
+from ..helpers.site import is_safe_url
 
 
-from nlp4all.models import BayesianAnalysis, Organization, User
+from ..models import BayesianAnalysisModel, OrganizationModel, UserModel
 
-from nlp4all.forms.user import (
+from ..forms.user import (
     LoginForm,
     UpdateAccountForm,
     RegistrationForm,
@@ -25,7 +25,8 @@ from nlp4all.forms.user import (
     IMCRegistrationForm,
 )
 
-from .BaseController import BaseController
+from .base import BaseController
+
 
 class UserController(BaseController):
     """User Controller"""
@@ -50,7 +51,7 @@ class UserController(BaseController):
             form.email.data = current_user.email
         image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
         return cls.render_template("account.html", title="Account",
-                                image_file=image_file, form=form)
+                                   image_file=image_file, form=form)
 
     @classmethod
     def save_picture(cls, form_picture):
@@ -74,7 +75,7 @@ class UserController(BaseController):
             return redirect(url_for("project_controller.home"))
         form = LoginForm()
         if form.validate_on_submit():
-            user = User.query.filter_by(email=form.email.data).first()
+            user = UserModel.query.filter_by(email=form.email.data).first()
             if user and check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
                 next_page = request.args.get("next")
@@ -99,11 +100,11 @@ class UserController(BaseController):
         if current_user.is_authenticated:
             return redirect(url_for("project_controller.home"))
         form = RegistrationForm()
-        form.organizations.choices = [(str(o.id), o.name) for o in Organization.query.all()]
+        form.organizations.choices = [(str(o.id), o.name) for o in OrganizationModel.query.all()]
         if form.validate_on_submit():
             hashed_password = generate_password_hash(form.password.data).decode("utf-8")
-            org = Organization.query.get(int(form.organizations.data))
-            user = User(
+            org = OrganizationModel.query.get(int(form.organizations.data))
+            user = UserModel(
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password,
@@ -122,7 +123,7 @@ class UserController(BaseController):
             return redirect(url_for("home"))
         form = RequestResetForm()
         if form.validate_on_submit():
-            user = User.query.filter_by(email=form.email.data).first()
+            user = UserModel.query.filter_by(email=form.email.data).first()
             cls.send_reset_email(user)
             flash("An email has been sent with instructions to reset your password.", "info")
             return redirect(url_for("login"))
@@ -133,7 +134,7 @@ class UserController(BaseController):
         """Reset password token page"""
         if current_user.is_authenticated:
             return redirect(url_for("home"))
-        user = User.verify_reset_token(token, cls.blueprint.secret_key)
+        user = UserModel.verify_reset_token(token, cls.blueprint.secret_key)
         if user in ("Expired", "Invalid"):
             flash(f"That is an {user} token", "warning")
             return redirect(url_for("reset_request"))
@@ -157,12 +158,12 @@ class UserController(BaseController):
             fake_email = str(fake_id) + "@arthurhjorth.com"
             fake_password = str(fake_id)
             hashed_password = generate_password_hash(fake_password).decode("utf-8")
-            imc_org = Organization.query.filter_by(name="ATU").all()
+            imc_org = OrganizationModel.query.filter_by(name="ATU").all()
             a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
             the_name = form.username.data
-            if any(User.query.filter_by(username=the_name)):
+            if any(UserModel.query.filter_by(username=the_name)):
                 the_name = the_name + str(fake_id)
-            user = User(
+            user = UserModel(
                 username=the_name, email=fake_email, password=hashed_password, organizations=imc_org
             )
             db.add(user)
@@ -170,7 +171,7 @@ class UserController(BaseController):
             login_user(user)
             userid = current_user.id
             name = current_user.username + "'s personal analysis"
-            bayes_analysis = BayesianAnalysis(
+            bayes_analysis = BayesianAnalysisModel(
                 user=userid,
                 name=name,
                 project=a_project.id,

@@ -3,15 +3,17 @@
 from flask import Blueprint
 from flask_login import login_required
 
-from nlp4all.controllers import AnalysesController
+from ..controllers import AnalysesController
 
 
 AnalysesRouter = Blueprint("analyses_controller", __name__)
+
 
 @AnalysesRouter.before_request
 @login_required
 def before_request():
     """ Protect all of the analyses endpoints."""
+
 
 AnalysesRouter.route("/robot_summary", methods=["GET", "POST"])(
     AnalysesController.robot_summary
@@ -57,7 +59,7 @@ AnalysesRouter.route("/compare_matrices", methods=["GET", "POST"])(
     AnalysesController.compare_matrices
 )
 AnalysesRouter.route("/tweet_annotation", methods=["GET", "POST"])(
-    AnalysesController.tweet_annotation
+    AnalysesController.data_annotation
 )
 AnalysesRouter.route("/annotation_summary/<analysis_id>", methods=["GET", "POST"])(
     AnalysesController.annotation_summary
@@ -66,7 +68,7 @@ AnalysesRouter.route("/annotations", methods=["GET", "POST"])(
     AnalysesController.annotations
 )
 AnalysesRouter.route("/tweet_annotations", methods=["GET", "POST"])(
-    AnalysesController.tweet_annotations
+    AnalysesController.data_annotations
 )
 AnalysesRouter.route("/save_annotation", methods=["GET", "POST"])(
     AnalysesController.save_annotation
