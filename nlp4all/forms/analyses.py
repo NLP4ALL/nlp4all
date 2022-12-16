@@ -115,7 +115,7 @@ class AddBayesianRobotFeatureForm(FlaskForm):
     """
 
     feature = StringField(
-        "Add a feature to your machine learning model here. You can use wildcard (*) to search for more words. You can add wildcard in the middle or at the beginning or end of your word. Only one wildcard per search term."  # pylint: disable=line-too-long
+        "Add a feature to your machine learning model here. You can use wildcard (*) to search for more words. You can add wildcard in the middle or at the beginning or end of your word. Only one wildcard per search term."  # noqa: E501
     )
     reasoning = StringField(
         "Explain here why you think this would be a good search term for classifying these texts."

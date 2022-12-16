@@ -1,14 +1,14 @@
-"""Admin controller.""" # pylint: disable=invalid-name
+"""Admin controller."""  # pylint: disable=invalid-name
 
 from flask import flash, redirect, url_for
 
 from nlp4all import db
-from nlp4all.models import Organization, TweetTagCategory
-from nlp4all.forms.admin import AddOrgForm
-from nlp4all.forms.analyses import AddTweetCategoryForm
-from nlp4all.helpers.tweets import add_tweets_from_account
+from ..models import OrganizationModel, DataTagCategoryModel
+from ..forms.admin import AddOrgForm
+from ..forms.analyses import AddTweetCategoryForm
+from ..helpers.tweets import add_tweets_from_account
 
-from .BaseController import BaseController
+from .base import BaseController
 
 
 class AdminController(BaseController):
@@ -20,7 +20,7 @@ class AdminController(BaseController):
     def manage_categories(cls):
         """Manage categories page"""
         form = AddTweetCategoryForm()
-        categories = [cat.name for cat in TweetTagCategory.query.all()]
+        categories = [cat.name for cat in DataTagCategoryModel.query.all()]
         if form.validate_on_submit():
             add_tweets_from_account(form.twitter_handle.data)
             flash("Added tweets from the twitter handle", "success")
@@ -31,9 +31,9 @@ class AdminController(BaseController):
     def add_org(cls):
         """Add organization page"""
         form = AddOrgForm()
-        orgs = Organization.query.all()
+        orgs = OrganizationModel.query.all()
         if form.validate_on_submit():
-            org = Organization(name=form.name.data)
+            org = OrganizationModel(name=form.name.data)
             db.add(org)
             db.session.commit()
             flash("Your organization has been created!", "success")

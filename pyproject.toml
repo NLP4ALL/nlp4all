@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
 pythonpath = [
-  "."
+  ".",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -9,23 +9,82 @@ markers = [
     "unit: marks tests as unit tests (deselect with '-m \"not unit\"')",
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
     "functional: marks tests as functional tests (deselect with '-m \"not functional\"')",
-    "data: marks tests as data-related tests (deselect with '-m \"not data\"')"
+    "data: marks tests as data-related tests (deselect with '-m \"not data\"')",
+    "model: marks tests as model-related tests (deselect with '-m \"not model\"')",
+    "helper: marks tests as helper-related tests (deselect with '-m \"not helper\"')",
 ]
 
 [tool.pylint.main]
 init-hook = "import sys; sys.path.insert(0, '.')"
 load-plugins = [
-  "pylint_flask"
+  "pylint_flask",
 ]
 jobs = 4
 ignore=[
-  "migrations"
+  "migrations",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
-  "no-member"
+  "no-member",
 ]
 
 [tool.mypy]
-plugins = "sqlmypy"
+exclude = [
+  '.git',
+  '__pycache__',
+  'migrations',
+]
+show_error_codes = true
+pretty = true
+files = [
+  ".",
+]
+#mypy_path = "."
+#namespace_packages = true
+#explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = [
+    "flask_wtf.*",
+    "wtforms.*",
+    # "wtforms",
+    "sqlalchemy_json.*",
+    "genson.*",
+    "flask_login.*",
+    "flask_mail.*",
+    "flask_bcrypt.*",
+    "flask_migrate.*",
+
+]
+ignore_missing_imports = true
+
+[tool.flake8]
+# ignore = ['E231', 'E241']
+per-file-ignores = [
+  '__init__.py:F401',
+  'tests/conftest.py:E501',
+  'nlp4all/controllers/analyses.py:W503',
+  'nlp4all/models/bayesian_analysis.py:W503',
+  'nlp4all/models/confusion_matrix.py:W503, W504',
+]
+exclude = [
+  '.git',
+  '__pycache__',
+  'migrations',
+]
+max-line-length = 120
+count = true
+ignore = "D"
+
+[tool.autoflake]
+check = true
+recursive = true
+
+[tool.yapfignore]
+ignore_patterns = [
+  "migrations/*",
+]
+
+[tool.yapf]
+based_on_style = 'pep8'

@@ -14,6 +14,7 @@ services:
     restart: always
     build: 
       context: .
+      target: nlpapp
       dockerfile: ./docker/python/Dockerfile
     command: gunicorn -w 4 --bind 0.0.0.0:5000 'nlp4all:create_app()'
     volumes:
