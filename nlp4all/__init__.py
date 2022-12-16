@@ -16,7 +16,7 @@ from .helpers import database as dbhelper
 from .helpers import nlp
 from .config import get_config, Config
 from .database import Base, nlp_sa_meta
-from .models.user import load_user
+from .models import load_user
 from .routes import Router
 
 db: SQLAlchemy = SQLAlchemy(query_class=Query, metadata=nlp_sa_meta, engine_options={"future": True})  # type: ignore

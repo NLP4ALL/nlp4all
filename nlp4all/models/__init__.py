@@ -11,4 +11,4 @@ from .role import RoleModel
 from .data_annotation import DataAnnotationModel
 from .data_tag import DataTagModel
 from .data_tag_category import DataTagCategoryModel
-from .user import UserModel
+from .user import UserModel, load_user

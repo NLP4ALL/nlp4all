@@ -41,6 +41,7 @@ def test_filterablestring():
     # we also want to ensure arbitrary options remain, besides required ones
     options = {
         'testopt': 'testval',
+        'another': 2,
     }
 
     filterable = FilterableString(name, path, options)
@@ -78,6 +79,13 @@ def test_filterablestring():
 
     assert filterable.validate("test")
     assert not filterable.validate(1)
+
+    # test with max_length option
+    options['max_length'] = 10
+
+    filterable = FilterableString(name, path, options)
+    assert filterable.validate("test")
+    assert not filterable.validate("testtesttesttest")
 
 
 def test_filterablenumber():

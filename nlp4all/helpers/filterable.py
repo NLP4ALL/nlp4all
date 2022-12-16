@@ -228,6 +228,7 @@ class FilterableString(Filterable):
     """A class to represent filterable strings"""
 
     _type = FilterableType.STRING
+    _max_length: int
 
     def __init__(self, name: str, path: t.Tuple[str, ...],
                  options: t.Optional[t.Union[None, t.Dict[str, t.Any]]] = None):
@@ -236,13 +237,18 @@ class FilterableString(Filterable):
         Args:
             name (str): The name of the filterable
             path (t.Tuple[str, ...]): The path to the filterable
-            options (t.Dict[str, t.Any]): The options for the filterable (unused)
+            options (t.Dict[str, t.Any]):
+            Keys:
+                max_length (int): The maximum length of the string
+                nullable (bool): Whether the filterable can be null or not
         """
 
         if options is None:
             options = {}
 
         super().__init__(name, path, options)
+
+        self._max_length = options.get('max_length', None)
 
     def validate(self, value: t.Any) -> bool:
         """Validates that a value is valid for the filterable string
@@ -257,7 +263,36 @@ class FilterableString(Filterable):
         if not isinstance(value, str):
             return False
 
+        if self._max_length is not None and len(value) > self._max_length:
+            return False
+
         return True
+
+    @classmethod
+    def _validate_options(cls, options: t.Dict[str, t.Any]) -> None:
+        """Validates the options for the filterable number
+
+        Args:
+            options (t.Dict[str, t.Any]): The options to validate
+
+        Raises:
+            KeyError: If a required option is missing
+            TypeError: If an option is the wrong type
+        """
+
+        super()._validate_options(options)
+
+        max_length = options.get('max_length', None)
+        if max_length is not None and not isinstance(max_length, int):
+            raise TypeError(f"Max length must be an integer, not {type(max_length)}")
+
+        if max_length is not None and max_length < 0:
+            raise ValueError("Max length must be greater than or equal to 0")
+
+    @property
+    def max_length(self) -> t.Union[int, None]:
+        """Returns the maximum length of the string"""
+        return self._max_length
 
 
 Filterable.register_type_handler(FilterableString)
@@ -268,8 +303,8 @@ class FilterableNumber(Filterable):
 
     _type = FilterableType.NUMBER
 
-    min_val: t.Union[int, float]
-    max_val: t.Union[int, float]
+    _min_val: t.Union[int, float]
+    _max_val: t.Union[int, float]
     is_float: bool = False
 
     def __init__(self, name: str, path: t.Tuple[str, ...], options: t.Dict[str, t.Any]):
@@ -288,17 +323,17 @@ class FilterableNumber(Filterable):
 
         super().__init__(name, path, options)
 
-        self.min_val = self.options['min']
-        self.max_val = self.options['max']
+        self._min_val = self.options['min']
+        self._max_val = self.options['max']
         self.is_float = self.options.get('is_float', False)
 
     def min(self) -> t.Union[float, int]:
         """Returns the minimum value"""
-        return self.min_val if self.is_float else int(self.min_val)
+        return self._min_val if self.is_float else int(self._min_val)
 
     def max(self) -> t.Union[float, int]:
         """Returns the maximum value"""
-        return self.max_val if self.is_float else int(self.max_val)
+        return self._max_val if self.is_float else int(self._max_val)
 
     def validate(self, value: t.Any) -> bool:
         """Validates a value against the minimum and maximum values
@@ -313,9 +348,9 @@ class FilterableNumber(Filterable):
             return False
 
         if self.is_float:
-            return self.min_val <= value <= self.max_val
+            return self._min_val <= value <= self._max_val
 
-        return self.min_val <= int(value) <= self.max_val
+        return self._min_val <= int(value) <= self._max_val
 
     @classmethod
     def _validate_options(cls, options: t.Dict[str, t.Any]) -> None:
@@ -384,8 +419,8 @@ class FilterableDate(Filterable):
 
     _type = FilterableType.DATE
 
-    min_val: datetime
-    max_val: datetime
+    _min_val: datetime
+    _max_val: datetime
 
     def __init__(self, name: str, path: t.Tuple[str, ...], options: t.Dict[str, t.Any]):
         """Initializes a new FilterableDate object
@@ -401,16 +436,16 @@ class FilterableDate(Filterable):
 
         super().__init__(name, path, options)
 
-        self.min_val = self.options['min']
-        self.max_val = self.options['max']
+        self._min_val = self.options['min']
+        self._max_val = self.options['max']
 
     def min(self) -> datetime:
         """Returns the minimum value"""
-        return self.min_val
+        return self._min_val
 
     def max(self) -> datetime:
         """Returns the maximum value"""
-        return self.max_val
+        return self._max_val
 
     def validate(self, value: t.Any) -> bool:
         """Validates a value against the minimum and maximum values
@@ -429,7 +464,7 @@ class FilterableDate(Filterable):
             except ValueError:
                 return False
 
-        return self.min_val <= value <= self.max_val
+        return self._min_val <= value <= self._max_val
 
     @classmethod
     def _validate_options(cls, options: t.Dict[str, t.Any]) -> None:

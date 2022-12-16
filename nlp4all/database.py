@@ -18,6 +18,10 @@ class Base(DeclarativeBase):  # pylint: disable=too-few-public-methods
     """Base model class"""
     __allow_unmapped__ = True
     metadata = nlp_sa_meta
+
+    # Model.query is a legacy interface, try to avoid using it
+    # it's only here for compatibility with the old code
+    # it should be replaced.
     query: Query
 
 

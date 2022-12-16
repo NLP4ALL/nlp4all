@@ -7,10 +7,11 @@ This will be use to interface with individual users' data sources
 from __future__ import annotations
 
 import typing as t
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
+from ..helpers.database import schema_aliased_path_dict
 
 if t.TYPE_CHECKING:
     from .data import DataModel
@@ -29,7 +30,6 @@ class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
     meta: Mapped[dict] = mapped_column(MutableJSONB, nullable=False)
     schema: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
     data_source_name: Mapped[str] = mapped_column(String(80), nullable=False)
-    data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id"))
     data: Mapped[list[DataModel]] = relationship(back_populates="data_source")
     # shared
     # groups / projects /etc need to be implemented
@@ -43,7 +43,7 @@ class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
             # this would be how to access the Data.document text property
             # e.g. ('text'), ('user', 'description'), this has to be valid within the schema
             'document_text_path': t.Tuple[str, ...],  # main text of the document used for NLP
-            'filterable': t.Dict[str, t.Dict[str, t.Any]],  # Name, Filterable
+            'filterables': t.Dict[str, t.Dict[str, t.Any]],  # Name, Filterable
             'aliased_paths': t.Dict[str, t.Tuple[str, ...]],  # Name, Path: all available data paths
         }
 
@@ -58,3 +58,30 @@ class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
             'path': t.Tuple[str, ...],  # Used for accessing the value from the document
             'options': t.Dict[str, t.Any]  # See: Filterable
         }
+
+    @property
+    def document_text_path(self) -> t.Tuple[str, ...]:
+        """Returns the path to the document text"""
+        return self.meta['document_text_path']
+
+    @property
+    def filterables(self) -> t.Dict[str, t.Dict[str, t.Any]]:
+        """Returns the filterables"""
+        return self.meta['filterables']
+
+    @property
+    def aliased_paths(self) -> t.Dict[str, t.Tuple[str, ...]]:
+        """Returns the aliased paths"""
+        return self.meta['aliased_paths']
+
+    def aliased_path(self, name: str) -> t.Tuple[str, ...]:
+        """Returns the aliased path"""
+        return self.meta['aliased_paths'][name]
+
+    def filterable(self, name: str) -> t.Dict[str, t.Any]:
+        """Returns the filterable"""
+        return self.meta['filterables'][name]
+
+    def path_aliases_from_schema(self) -> dict[str, t.Tuple[str, ...]]:
+        """Returns the path aliases from the schema"""
+        return schema_aliased_path_dict(self.schema)
