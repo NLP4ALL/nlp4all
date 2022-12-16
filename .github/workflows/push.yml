@@ -18,32 +18,32 @@ jobs:
       id: cpmat
       with:
         python-version: ${{ matrix.python-version }}
-        update-environment: false
-        cache: 'pip'
+        # update-environment: false
+        # cache: 'pip'
     - name: Install dependencies
       run: |
         echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
         echo ${{ steps.cpmat.outputs.python-path }}
-        ${{ steps.cpmat.outputs.python-path }} -m pip install --progress-bar off --upgrade pip
-        ${{ steps.cpmat.outputs.python-path }} -m pip install --progress-bar off wheel
-        ${{ steps.cpmat.outputs.python-path }} -m pip install --progress-bar off -r requirements-dev.txt
+        python -m pip install --progress-bar off --upgrade pip
+        pip install --progress-bar off wheel
+        pip install --progress-bar off -r requirements-dev.txt
     - name: Print python os env for debugging, and pip freeze
       run: |
         printenv
-        ${{ steps.cpmat.outputs.python-path }} -m pip freeze
+        pip freeze
     - name: Analysing the code with Flake8
       run: |
-        ${{ steps.cpmat.outputs.python-path }} -m flake8
+        flake8
     # figure out why mypy doesn't work on github later
     - name: Type checking with mypy
       run: |
-        ${{ steps.cpmat.outputs.python-path }} -m mypy
+        mypy
     - name: Run tests with pytest
       run: |
-        ${{ steps.cpmat.outputs.python-path }} -m pytest
+        pytest
   failure_notification:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: Sniddl/discord-commits@v1.5
         if: ${{ !env.ACT }}
@@ -54,7 +54,7 @@ jobs:
     if: failure()
   success_notification:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: Sniddl/discord-commits@v1.5
         if: ${{ !env.ACT }}
