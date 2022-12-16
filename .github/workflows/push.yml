@@ -7,7 +7,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11"]
@@ -18,8 +18,7 @@ jobs:
       id: cpmat
       with:
         python-version: ${{ matrix.python-version }}
-        # update-environment: false
-        # cache: 'pip'
+        cache: 'pip'
     - name: Install dependencies
       run: |
         echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
@@ -43,7 +42,7 @@ jobs:
         pytest
   failure_notification:
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: Sniddl/discord-commits@v1.5
         if: ${{ !env.ACT }}
@@ -54,7 +53,7 @@ jobs:
     if: failure()
   success_notification:
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: Sniddl/discord-commits@v1.5
         if: ${{ !env.ACT }}
