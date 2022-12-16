@@ -1,41 +1,49 @@
-"""Confusion Matrix model""" # pylint: disable=invalid-name
+"""Confusion Matrix model"""  # pylint: disable=invalid-name
+
+from __future__ import annotations
 
 import operator
-from sqlalchemy import Column, Integer, ForeignKey, Float, JSON
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING
+from typing import Optional
 
-from .database import Base
-from . import Tweet, TweetTagCategory
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+
+from ..database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
+
+if TYPE_CHECKING:
+    from .data_model import DataModel
+    from .data_tag_category import DataTagCategoryModel
 
 from ..helpers.datasets import create_n_split_tnt_sets
 
 
-class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
+class ConfusionMatrixModel(Base):  # pylint: disable=too-many-instance-attributes
     """Confusion matrix."""
 
     __tablename__ = "confusion_matrix"
-    id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey("user.id"))
-    categories = relationship("TweetTagCategory", secondary="confusionmatrix_categories")
-    tweets = relationship("Tweet", secondary="tweet_confusionmatrix")
-    matrix_data = Column(JSON)  # here to save the TP/TN/FP/FN
-    train_data = Column(JSON)  # word counts from the training set
-    tf_idf = Column(JSON)
-    training_and_test_sets = Column(JSON)
-    threshold = Column(Float())
-    ratio = Column(Float())
-    data = Column(JSON)  # accuracy etc resuts from the matrix
-    parent = Column(
-        Integer, ForeignKey("confusion_matrix.id"), default=None
-    )  # for cloning purposes
-    child = Column(Integer, ForeignKey("confusion_matrix.id"), default=None)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    categories: Mapped[list['DataTagCategoryModel']] = relationship(secondary=matrix_categories_table)
+    source_data: Mapped[list['DataModel']] = relationship(secondary=data_matrices_table)
+    matrix_data: Mapped[dict] = mapped_column(MutableJSONB)  # here to save the TP/TN/FP/FN
+    train_data: Mapped[dict] = mapped_column(MutableJSONB)  # word counts from the training set
+    tf_idf: Mapped[dict] = mapped_column(MutableJSONB)
+    training_and_test_sets: Mapped[dict] = mapped_column(MutableJSONB)
+    threshold: Mapped[float] = mapped_column()
+    ratio: Mapped[float] = mapped_column()
+    data: Mapped[dict] = mapped_column(MutableJSONB)  # accuracy etc resuts from the matrix
+    parent_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("confusion_matrix.id"),
+        default=None)  # for cloning purposes
+    child: Mapped[Optional[int]] = mapped_column(ForeignKey("confusion_matrix.id"), default=None)
 
     def clone(self):
         """Clone confusion matrix."""
-        new_matrix = ConfusionMatrix()
-        new_matrix.parent = self.id
+        new_matrix = ConfusionMatrixModel()
+        new_matrix.parent_id = self.id
         new_matrix.categories = self.categories
-        new_matrix.tweets = self.tweets
+        new_matrix.data = self.data
         new_matrix.tf_idf = self.tf_idf
         new_matrix.training_and_test_sets = self.training_and_test_sets
         new_matrix.ratio = self.ratio
@@ -59,8 +67,8 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
 
     def update_tnt_set(self):
         """Update the training and test sets."""
-        tweet_id_and_cat = {t.id: t.category for t in self.tweets}
-        self.training_and_test_sets = create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)
+        tweet_id_and_cat = {t.id: t.category for t in self.data}
+        self.training_and_test_sets = create_n_split_tnt_sets(30, self.ratio, tweet_id_and_cat)  # type: ignore
         return self.training_and_test_sets
 
     def get_predictions_and_words(self, words):
@@ -83,9 +91,9 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
                     )
                     prob_a = (
                         self.train_data[cat]["counts"] /
-                        self.train_data["counts"]) # type: ignore
+                        self.train_data["counts"])  # type: ignore
                     prob_b = (
-                        sum( # pylint: disable=consider-using-generator
+                        sum(  # pylint: disable=consider-using-generator
                             [self.train_data[c]["words"].get(word, 0) for c in category_names]
                         )
                         / self.train_data["counts"]  # type: ignore
@@ -109,9 +117,9 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
         train_data = self.train_data
         # trains the model with the training data tweets
         for tweet_id in train_tweet_ids:
-            tweet = Tweet.query.get(tweet_id)
+            tweet = DataModel.query.get(tweet_id)
             category_id = tweet.category
-            category = TweetTagCategory.query.get(category_id)
+            category = DataTagCategoryModel.query.get(category_id)
             train_data = self.updated_data(tweet, category)
         return train_data
 
@@ -181,8 +189,10 @@ class ConfusionMatrix(Base):  # pylint: disable=too-many-instance-attributes
     def make_table_data(self, cat_names):
         """Make table data."""
         # this function is a manual way to create confusion matrix data rows
-        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()]  # type: ignore # pylint: disable=unsubscriptable-object, no-member
-        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()]  # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        current_data_class = [self.matrix_data[i].get("real_cat") for i in self.matrix_data.keys()]
+        # type: ignore # pylint: disable=unsubscriptable-object, no-member
+        predicted_class = [self.matrix_data[i].get("pred_cat") for i in self.matrix_data.keys()]
         number_list = list(range(len(cat_names)))
         # change cat names to numbers 1,2,...
         for i in number_list:
