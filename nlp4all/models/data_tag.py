@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
 
 if TYPE_CHECKING:
-    from .data import DataModel
+    from .data_model import DataModel
 
 
 class DataTagModel(Base):  # pylint: disable=too-few-public-methods

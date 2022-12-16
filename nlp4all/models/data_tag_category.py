@@ -9,9 +9,9 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from ..database import Base, project_categories_table
 
 if TYPE_CHECKING:
-    from .data import DataModel
+    from .data_model import DataModel
     from .data_tag import DataTagModel
-    from .project import ProjectModel
+    from .project_model import ProjectModel
 
 
 class DataTagCategoryModel(Base):  # pylint: disable=too-few-public-methods

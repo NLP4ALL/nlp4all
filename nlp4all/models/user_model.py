@@ -12,8 +12,8 @@ import jwt
 from ..database import Base, user_org_table, user_role_table
 
 if TYPE_CHECKING:
-    from .organization import OrganizationModel
-    from .role import RoleModel
+    from .organization_model import OrganizationModel
+    from .role_model import RoleModel
     from .bayesian_analysis import BayesianAnalysisModel
     from .data_source import DataSourceModel
 

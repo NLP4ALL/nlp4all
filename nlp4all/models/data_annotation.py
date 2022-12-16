@@ -9,8 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base, MutableJSONB
 
 if TYPE_CHECKING:
-    from .user import UserModel
-    from .data import DataModel
+    from .user_model import UserModel
+    from .data_model import DataModel
 
 # isn't this just a duplicate of Data (formerly, Tweet)?
 

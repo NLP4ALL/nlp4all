@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from ..database import Base, data_matrices_table, matrix_categories_table, MutableJSONB
 
 if TYPE_CHECKING:
-    from .data import DataModel
+    from .data_model import DataModel
     from .data_tag_category import DataTagCategoryModel
 
 from ..helpers.datasets import create_n_split_tnt_sets

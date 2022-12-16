@@ -14,8 +14,8 @@ from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_sour
 from ..helpers.database import schema_aliased_path_dict
 
 if t.TYPE_CHECKING:
-    from .data import DataModel
-    from .project import ProjectModel
+    from .data_model import DataModel
+    from .project_model import ProjectModel
 
 
 class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
