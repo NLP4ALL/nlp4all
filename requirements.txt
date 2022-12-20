@@ -53,7 +53,7 @@ murmurhash==1.0.9
 nodeenv==1.7.0
 numpy==1.23.5
 oauthlib==3.2.1
-pathspec==0.10.2
+pathspec==0.10.3
 pathy==0.10.0
 pickleshare
 Pillow==9.3.0
