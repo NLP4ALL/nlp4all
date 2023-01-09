@@ -32,7 +32,7 @@ Flask==2.2.2
 genson==1.2.2
 greenlet==2.0.1
 gunicorn==20.1.0
-identify==2.5.9
+identify==2.5.12
 idna==3.4
 importlib-metadata==5.0.0
 inflection==0.5.1
