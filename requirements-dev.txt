@@ -15,4 +15,4 @@ pydocstyle==6.1.1
 snowballstemmer==2.2.0
 flake8-docstrings==1.6.0
 types-Flask_Cors==3.0.10
-types-Pillow==9.3.0.4
+types-Pillow==9.4.0.2
