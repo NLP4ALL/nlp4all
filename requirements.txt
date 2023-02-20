@@ -1,6 +1,6 @@
 alembic==1.9.1
 asgiref==3.5.2
-astroid==2.12.13
+astroid==2.14.2
 attrs==22.1.0
 bcrypt==4.0.1
 blinker==1.5
