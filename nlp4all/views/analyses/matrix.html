@@ -1,0 +1,58 @@
+
+{% extends "layout.html" %}
+
+{% block content %}
+
+    
+    <h1> Confusion Matrix </h1>
+    <br>
+    <p><a href="{{ url_for('analyses_controller.matrix_overview') }}">See overview over all matrices.</a></p>
+    
+    
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Matrix {{ matrix.id }}</a>
+        </li>
+        <li class="nav-item">
+        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Iterate matrix</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Compare</a>
+        </li>
+    </ul>
+   
+
+<div class="tab-content" id="myTabContent">
+
+    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+        
+        <br>
+        {% set matrix = matrix %}
+        {% set cat_names = cat_names %}
+        {% set counts = counts %}
+        {% include "analyses/matrix_template.html" %}
+
+    </div>
+    
+    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+       
+        {% set matrix = matrix %}
+        {% set cat_names = cat_names %}
+        {% include 'matrix_table.html' %}
+
+      
+        
+    </div>
+
+    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <h3>Compare matrices</h3>
+        {% set matrices = matrices %}
+        {% set all_cats= all_cats %}
+        {% include 'matrix_compare_.html' %}
+        
+        
+    </div>
+
+</div>
+
+{% endblock content %}  

@@ -2,25 +2,40 @@ name: Lint, test and notify
 
 on: [push]
 
+# env:
+#   PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/nlp4all:$PYTHONPATH
+
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10", "3.11"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
+      id: cpmat
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
-    - name: Analysing the code with pylint
+        echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
+        python -m pip install --progress-bar off --upgrade pip
+        pip install --progress-bar off wheel
+        pip install --progress-bar off -r requirements-dev.txt
+    - name: Print python os env for debugging, and pip freeze
       run: |
-        pylint $(git ls-files '*.py')
+        printenv
+        pip freeze
+    - name: Analysing the code with Flake8
+      run: |
+        flake8
+    # figure out why mypy doesn't work on github later
+    - name: Type checking with mypy
+      run: |
+        mypy
     - name: Run tests with pytest
       run: |
         pytest
@@ -28,7 +43,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: Sniddl/discord-commits@v1.5
+      - uses: Sniddl/discord-commits@v1.6
+        if: ${{ !env.ACT }}
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_STATUS }} # required
           message: ":x: Build failed for **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**. Run output:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDiff: {{ github.context.payload.compare }}"
@@ -38,7 +54,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: Sniddl/discord-commits@v1.5
+      - uses: Sniddl/discord-commits@v1.6
+        if: ${{ !env.ACT }}
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_STATUS }} # required
           message: ":white_check_mark: Build succeeded for **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**. Run output: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDiff: {{ github.context.payload.compare }}"

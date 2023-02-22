@@ -1,0 +1,37 @@
+services:
+  db-dev:
+    restart: always
+    image: postgres:15.1
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data/
+    expose:
+      - "5432"
+    networks:
+      - back-tier
+    env_file:
+      - ./db.env
+  app-dev:
+    restart: always
+    build: 
+      context: .
+      target: nlpapp-dev
+      dockerfile: ./docker/python/Dockerfile
+    command: ./run-nlp4all.sh
+    volumes:
+      - ./nlp4all:/home/app/nlp4all
+    ports:
+      - "5000:5000"
+      - "5678:5678"
+    env_file: # variables defined here cannot be referenced in compose.yml
+      - ./db.dev.env
+      - ./app.dev.env
+    networks:
+      - front-tier
+      - back-tier
+    depends_on:
+      - db-dev
+networks:
+  front-tier: {}
+  back-tier: {}
+volumes:
+  postgres_data_dev:

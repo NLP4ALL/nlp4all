@@ -1,0 +1,13 @@
+tests
+data
+.github
+__pycache__
+.gitignore
+README.md
+.pre-commit-config.yaml
+run_dev.py
+postgres-data
+.flaskenv
+.flask_secret
+.env
+*.env

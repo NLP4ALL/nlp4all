@@ -1,0 +1,104 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<table class="table"> 
+    <tr>
+{%if r.parent != None %}
+<td><a href="{{ url_for('analyses_controller.robot') }}?robot={{ r.parent}}">Last results</a></td>
+{% endif %}
+<td><a href="{{ url_for('analyses_controller.analysis') }}?analysis={{ r.analysis}}">Tweets</a></td>
+<td><a href="{{ url_for('ranalyses_controller.obot_summary') }}?analysis={{ r.analysis}}">Analyses Overview</a></td>
+{%if r.child != None %}
+<td><a href="{{ url_for('analyses_controller.robot') }}?robot={{ r.child}}">Improve your analysis >>>>> </a></td>
+{% endif %}
+</table>
+<!-- <h5>{{ r.name }} {% if r.retired %} (Old) {% endif %}</h5> -->
+{% if r.retired %}
+<div class="content-section col-md-8">
+<p>Tweets "hit" by your features: {{ acc_dict.tweets_targeted }}
+{% if r.parent != None %}
+Last time it was: {{ acc_dict.parent_tweets_targeted }}
+{% endif %}
+</p>
+<p>Tweets predicted accurately with your terms: {{ acc_dict.accuracy * 100 }}%
+{% if r.parent != None %}
+Last time it was: {{ acc_dict.parent_accuracy * 100 }}%
+{% endif %}
+</p>
+<p><b>Score: {{ acc_dict.accuracy * acc_dict.tweets_targeted }}
+{% if r.parent != None %}
+Last time it was: {{ acc_dict.parent_accuracy * acc_dict.parent_tweets_targeted }}
+{% endif %}
+</b></p>
+</div>
+{% endif %}
+{% if not r.retired %}
+<ul class="nav nav-tabs" id="searchTerms" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Learning Terms</a>
+    </li>
+{% endif %}
+</ul>
+{% if not r.retired %}
+<div class="tab-content" id="searchTerms">
+    <div class="content-section col-md-8">
+        <table class="table">
+            <tr><th>Term</th><th>Reasoning</th></tr>
+            {% for feature in r.features.items() %}
+                <tr><td>{{ feature[0] }}</td><td>{{ feature [1] }}</td><td><form action="" method="post"><button type="submit" value="{{feature[0]}}" name="delete">Delete</button></form></td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if r.retired %}
+<div class="tab-content col-md-8" id="searchResults">
+            {% set table_data = acc_dict.table_data %}
+            {% set table_name = "words" %}
+            {% include "analyses/data_table.html" %}
+</div>
+{% endif %}
+{% if not r.retired %}
+        <form method="POST" action="">
+            {{ form.add_feature_form.hidden_tag() }}
+            <fieldset class="mb-3 col-md-8">
+                <legend class="border-bottom mb-4">Add Terms to your Model</legend>
+                <div class="mb-3">
+                    {{ form.add_feature_form.feature.label(class="form-label") }}
+                    {% if form.add_feature_form.feature.errors %}
+                        {{ form.add_feature_form.feature(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.add_feature_form.feature.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.add_feature_form.feature(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.add_feature_form.reasoning.label(class="form-label") }}
+                    {% if form.add_feature_form.reasoning.errors %}
+                        {{ form.add_feature_form.reasoning(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.add_feature_form.reasoning.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.add_feature_form.reasoning(class="form-control ") }}
+                    {% endif %}
+                </div>
+
+            </fieldset>
+            <div class="mb-3">
+                {{ form.add_feature_form.submit(class="btn btn-outline-info") }}
+            </div>
+            <div class="mb-3">
+                {{ form.run_analysis_form.run_analysis(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{% endif %}
+{% endblock content %}

@@ -5,16 +5,24 @@ import time
 import operator
 from datetime import datetime
 
-from nlp4all.models.database import db_session
-from nlp4all.helpers.datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
-from nlp4all.helpers.colors import (
+from flask import g
+
+from .datasets import create_n_split_tnt_sets, create_n_train_and_test_sets
+from .colors import (
     assign_colors,
     generate_n_hsl_colors,
     hsl_color_to_string,
     ann_assign_colors,
 )
-from nlp4all.helpers.nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
-from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatrix, TweetAnnotation
+from .nlp import clean_non_transparencynum, clean_word, remove_hash_links_mentions
+from ..models import (
+    DataTagCategoryModel,
+    DataModel,
+    ProjectModel,
+    RoleModel,
+    ConfusionMatrixModel,
+    DataAnnotationModel
+)
 
 # @TODO: this file needs to be broken out
 # some of these functions belong on the **models** not the **helpers**
@@ -22,6 +30,8 @@ from nlp4all.models import TweetTagCategory, Tweet, Project, Role, ConfusionMatr
 # return a list of tuples with
 # (word, tag, number, color)
 # for the tag and number that is highest
+
+
 def create_css_info(classifications, text, list_of_categories):
     """create a list of tuples for the tag and number that is highest"""
     category_color_dict = assign_colors(list_of_categories)
@@ -81,7 +91,7 @@ def create_css_info(classifications, text, list_of_categories):
 #         # no need to write for each file. Just append each dict to a big list,
 #         # then save that.
 #         for status in tweepy.Cursor(
-#             api.user_timeline, screen_name=twitter_handle, tweet_mode="extended"
+#             api.user_timeline, screen_name=twitter_handle, data_mode="extended"
 #         ).items():
 #             # outf.write(json.dumps(status._json, ensure_ascii=False))
 #             # outf.write("\n")
@@ -97,14 +107,14 @@ def create_css_info(classifications, text, list_of_categories):
 #                 outdict["full_text"] = indict["full_text"]
 #             outf.write(json.dumps(outdict, ensure_ascii=False))
 #             outf.write("\n")
-#             add_tweet_from_dict(outdict)
+#             add_data_from_dict(outdict)
 
 
 def add_category(name, description):
     """add a category to the database"""
-    category = TweetTagCategory(name=name, description=description)
-    db_session.add(category)
-    db_session.commit()
+    category = DataTagCategoryModel(name=name, description=description)
+    g.db.add(category)
+    g.db.commit()
 
 
 def get_user_projects(a_user):
@@ -113,11 +123,11 @@ def get_user_projects(a_user):
     # projects, or  because the user is an admiin
     my_projects = []
     if a_user.admin:
-        my_projects = Project.query.all()
+        my_projects = ProjectModel.query.all()
     else:
         user_orgs = [org.id for org in a_user.organizations]
-        my_projects = Project.query.filter(
-            Project.organization.in_(user_orgs)
+        my_projects = ProjectModel.query.filter(
+            ProjectModel.organization.in_(user_orgs)
         ).all()  # pylint: disable=no-member
     return my_projects
 
@@ -125,41 +135,41 @@ def get_user_projects(a_user):
 def add_project(name, description, org, cat_ids):
     """add a project to the database"""
     print(description)
-    cats_objs = TweetTagCategory.query.filter(
-        TweetTagCategory.id.in_(cat_ids)
+    cats_objs = DataTagCategoryModel.query.filter(
+        DataTagCategoryModel.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
-    tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-    tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-    tweet_id_and_cat = {t.id: t.category for t in tweet_objs}
-    training_and_test_sets = create_n_train_and_test_sets(30, tweet_id_and_cat)
-    project = Project(
+    data_objs = [t for cat in cats_objs for t in cat.data]
+    tf_idf = tf_idf_from_tweets_and_cats_objs(data_objs, cats_objs)
+    data_id_and_cat = {t.id: t.category for t in data_objs}
+    training_and_test_sets = create_n_train_and_test_sets(30, data_id_and_cat)
+    project = ProjectModel(
         name=name,
         description=description,
         organization=org,
         categories=cats_objs,
-        tweets=tweet_objs,
+        tweets=data_objs,
         tf_idf=tf_idf,
         training_and_test_sets=training_and_test_sets,
     )
-    db_session.add(project)
-    db_session.commit()
+    g.db.add(project)
+    g.db.commit()
     return project
 
 
 def add_matrix(cat_ids, ratio, userid):
     """add a matrix to the database"""
     ratio = round(ratio, 3)
-    cats_objs = TweetTagCategory.query.filter(
-        TweetTagCategory.id.in_(cat_ids)
+    cats_objs = DataTagCategoryModel.query.filter(
+        DataTagCategoryModel.id.in_(cat_ids)
     ).all()  # pylint: disable=no-member
-    tweet_objs = [t for cat in cats_objs for t in cat.tweets]
-    tf_idf = tf_idf_from_tweets_and_cats_objs(tweet_objs, cats_objs)
-    tweet_id_and_cat = {t.id: t.category for t in tweet_objs}
-    training_and_test_sets = create_n_split_tnt_sets(30, ratio, tweet_id_and_cat)
+    data_objs = [t for cat in cats_objs for t in cat.data]
+    tf_idf = tf_idf_from_tweets_and_cats_objs(data_objs, cats_objs)
+    data_id_and_cat = {t.id: t.category for t in data_objs}
+    training_and_test_sets = create_n_split_tnt_sets(30, ratio, data_id_and_cat)
     matrix_data = {"matrix_classes": {}, "accuracy": 0}
-    matrix = ConfusionMatrix(
+    matrix = ConfusionMatrixModel(
         categories=cats_objs,
-        tweets=tweet_objs,
+        tweets=data_objs,
         tf_idf=tf_idf,
         training_and_test_sets=training_and_test_sets,
         train_data={"counts": 0, "words": {}},
@@ -168,8 +178,8 @@ def add_matrix(cat_ids, ratio, userid):
         ratio=ratio,
         user=userid,
     )
-    db_session.add(matrix)
-    db_session.commit()
+    g.db.add(matrix)
+    g.db.commit()
     return matrix
 
 
@@ -197,19 +207,19 @@ def twitter_date_to_unix(date_str):
     return datetime.fromtimestamp(unix_time)
 
 
-def add_tweet_from_dict(indict, category=None):
+def add_data_from_dict(indict, category=None):
     """add a tweet to the database from a dict"""
     timestamp = twitter_date_to_unix(indict["time"])
     full_text = indict["full_text"]
     links = ([w for w in full_text.split() if "http" in w],)
     hashtags = ([w for w in full_text.split() if "#" in w],)
     mentions = ([w for w in full_text.split() if "@" in w],)
-    tweet_parts = [clean_word(w) for w in full_text.split()]
-    full_text = " ".join(tweet_parts)
+    data_parts = [clean_word(w) for w in full_text.split()]
+    full_text = " ".join(data_parts)
     text = indict["full_text"]
     text = clean_non_transparencynum(remove_hash_links_mentions(text))
     words = text.split()
-    a_tweet = Tweet(
+    a_tweet = DataModel(
         time_posted=timestamp,
         category=category.id if category else None,
         handle=indict["twitter_handle"],
@@ -221,20 +231,20 @@ def add_tweet_from_dict(indict, category=None):
         url="https://twitter.com/" + indict["twitter_handle"] + "/" + str(indict["id"]),
         text=" ".join([clean_word(word) for word in text.split()]),
     )
-    db_session.add(a_tweet)
-    db_session.commit()
+    g.db.add(a_tweet)
+    g.db.commit()
 
 
 def add_role(role_name):
     """add a role to the database"""
-    role = Role(name=role_name)
-    db_session.add(role)
-    db_session.commit()
+    role = RoleModel(name=role_name)
+    g.db.add(role)
+    g.db.commit()
 
 
 def get_role(role_name):
     """get a role from the database"""
-    return Role.query.filter_by(name=role_name).first()
+    return RoleModel.query.filter_by(name=role_name).first()
 
 
 def create_bar_chart_data(predictions, title=""):
@@ -281,7 +291,7 @@ def ann_create_css_info(
     word_list = [(v, k) for k, v in ann[0].coordinates["word_locs"].items()]
     # print( category_color_dict)
     tups = [(word_list[w][0], w, "none", 0) for w in range(len(word_list))]
-    for i in range( # pylint: disable=consider-using-enumerate, too-many-nested-blocks
+    for i in range(  # pylint: disable=consider-using-enumerate, too-many-nested-blocks
         len(word_list)
     ):
         word = word_list[i]
@@ -325,13 +335,13 @@ def ann_create_css_info(
 def get_tags(analysis, words, a_tweet):  # set of tweet words
     """get tags for a tweet"""
     # take each word  and  calculate a proportion for each tag
-    ann_tags = [c.name for c in Project.query.get(analysis.project).categories]
+    ann_tags = [c.name for c in ProjectModel.query.get(analysis.project).categories]
     for tag in list(analysis.annotation_tags.keys()):
         if tag not in ann_tags:
             ann_tags.append(tag)
     mydict = {word.lower(): {a.lower(): 0 for a in ann_tags} for word in words}
-    annotations = TweetAnnotation.query.filter(
-        TweetAnnotation.tweet == a_tweet.id, TweetAnnotation.analysis == analysis.id
+    annotations = DataAnnotationModel.query.filter(
+        DataAnnotationModel.tweet == a_tweet.id, DataAnnotationModel.analysis == analysis.id
     ).all()
     for ann in annotations:
         if ann.text in a_tweet.full_text:
@@ -394,7 +404,7 @@ def matrix_metrics(cat_names, matrix_classes):
         selected_cat = i
         tp_key = str("Pred_" + selected_cat + "_Real_" + selected_cat)
         recall_keys = [str("Pred_" + selected_cat + "_Real_" + i) for i in cat_names]
-        if ( # pylint: disable=consider-using-generator
+        if (  # pylint: disable=consider-using-generator
             sum([matrix_classes[x] for x in recall_keys]) > 0
         ):
             metrics[i]["recall"] = round(
@@ -404,10 +414,11 @@ def matrix_metrics(cat_names, matrix_classes):
 
         precision_keys = [str("Pred_" + i + "_Real_" + selected_cat) for i in cat_names]
         if (
-            sum([matrix_classes[x] for x in precision_keys]) > 0 # pylint: disable=consider-using-generator
+            sum([matrix_classes[x] for x in precision_keys]) > 0  # pylint: disable=consider-using-generator
         ):
             metrics[i]["precision"] = round(
-                matrix_classes[tp_key] / sum([matrix_classes[x] for x in precision_keys]), # pylint: disable=consider-using-generator
+                matrix_classes[tp_key] / sum([matrix_classes[x] for x in precision_keys]
+                                             ),  # pylint: disable=consider-using-generator
                 2,
             )
     return metrics

@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h1>Project Title: {{ project.name }} </h1>
+<br>
+<div class="row">
+    
+    <div class="col-md-8"> 
+<div class="content-section">
+<h2>My analyses on project {{ project.name }} </h2>
+{% for a in analyses %}
+
+<div class="content-section">
+<a class="nav-item nav-link" href="{{ url_for('analyses_controller.analysis') }}?analysis={{a.id}}">{{a.name}}</a>
+</div>
+{% endfor %}
+</div>
+{% for p in projects %}
+<a class="nav-item nav-link" href="{{ url_for('project_controller.project') }}?project={{ p.id }}">p.name</a>
+{% endfor %}
+</div>
+
+<div class="col-md-4"> 
+{% if current_user.admin %}
+<div class="content-section addform">
+<h2>Create New Analysis</h1>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="mb-3">
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
+                {% if form.name.errors %}
+                    {{ form.name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.name(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+
+                <div class="form-check">
+                    {{ form.shared_model(class="form-check-input") }}
+                    {{ form.shared_model.label(class="form-check-label") }}
+                </div>
+                <div class="form-check">
+                    {{ form.shared(class="form-check-input") }}
+                    {{ form.shared.label(class="form-check-label") }}
+                </div>
+                <div class="mb-3">
+                    {{ form.annotate.label(class="form-label")}}<br>
+                    {{ form.annotate(class="form-control form-control-lg")}}
+                    {% for error in form.annotate.errors %}
+                        <span style="color :red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+            <div class="mb-3">
+                {{ form.number.label(class="form-label") }}
+                {% if form.number.errors %}
+                    {{ form.number(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.number.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.number(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+
+        </fieldset>
+        <div class="mb-3">
+            {{ form.submit(class="btn btn-outline-info") }}
+        </div>
+    </form>
+</div>
+{% endif %}
+</div>
+</div>
+
+{% endblock content %}

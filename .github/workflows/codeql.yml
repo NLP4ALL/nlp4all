@@ -22,6 +22,7 @@ on:
 
 jobs:
   analyze:
+    if: ${{ !github.event.act }}
     name: Analyze
     runs-on: ubuntu-latest
     permissions:
