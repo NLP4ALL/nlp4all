@@ -21,7 +21,7 @@ class DataTagCategoryModel(Base):  # pylint: disable=too-few-public-methods
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column(String(100))
-    data: Mapped[list['DataModel']] = relationship()
+    data: Mapped[list['DataModel']] = relationship(back_populates="category")
     tags: Mapped[list['DataTagModel']] = relationship()
     projects: Mapped[list['ProjectModel']] = relationship(
         secondary=project_categories_table,

@@ -33,7 +33,7 @@ class DataModel(Base):  # pylint: disable=too-few-public-methods
     annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="data")
     tags: Mapped[list['DataTagModel']] = relationship(back_populates="data")
     category_id: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
-    category: Mapped['DataTagCategoryModel'] = relationship()
+    category: Mapped['DataTagCategoryModel'] = relationship(back_populates="data")
 
     @property
     def text(self) -> str:

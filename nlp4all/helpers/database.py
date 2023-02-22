@@ -8,7 +8,6 @@ from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
-from sqlalchemy.orm import DeclarativeBase
 from ..database import Base
 
 
@@ -318,10 +317,25 @@ def schema_aliased_path_dict(schema: dict,
     return paths
 
 
+def create_default_org():
+    """Creates the default organization."""
+    from ..models import OrganizationModel
+    from .. import db
+
+    # if any orgs exist, don't create the default one
+    if db.session.query(OrganizationModel).count() > 0:
+        return
+
+    org = OrganizationModel(name="Default")
+    db.session.add(org)
+    db.session.commit()
+
+
 def init_db():  # pylint: disable=too-many-locals
     """Initializes the database."""
     engine = current_app.extensions["sqlalchemy"].engine
     Base.metadata.create_all(bind=engine)
+    create_default_org()
 
 
 @click.command("init-db")
@@ -356,7 +370,7 @@ def init_app(app: Flask):
     app.cli.add_command(drop_db_command)
 
 
-def model_cols_jsonb_to_json(app: Flask, cls: t.Type[DeclarativeBase]):  # pylint: disable=too-many-locals
+def model_cols_jsonb_to_json(app: Flask, cls: t.Type[Base]):  # pylint: disable=too-many-locals
     """Converts a Postgres JSONB column to a SQLite JSON column.
     Within the model itself, the column is defined as a JSONB column,
     we only need to change this to JSON when we are using SQLite.

@@ -21,7 +21,7 @@ class ProjectModel(Base):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column()
     organization: Mapped[int] = mapped_column(Integer, ForeignKey("organization.id"))
-    analyses: Mapped[list['BayesianAnalysisModel']] = relationship()
+    analyses: Mapped[list['BayesianAnalysisModel']] = relationship(back_populates="project")
     categories: Mapped[list['DataTagCategoryModel']] = relationship(
         secondary=project_categories_table,
         back_populates="projects")

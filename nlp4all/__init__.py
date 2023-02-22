@@ -4,7 +4,6 @@ nlp4all module
 
 from typing import Union
 
-from flask_sqlalchemy.query import Query
 from flask import Flask
 from flask_login import LoginManager
 from flask_cors import CORS
@@ -20,7 +19,6 @@ from .models import load_user
 from .routes import Router
 
 db: SQLAlchemy = SQLAlchemy(
-    query_class=Query,
     metadata=nlp_sa_meta,
     model_class=Base,
     engine_options={"future": True})

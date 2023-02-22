@@ -6,7 +6,6 @@ from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.ext.mutable import MutableDict
 from flask_sqlalchemy.query import Query
-from flask_sqlalchemy.model import _QueryProperty
 from sqlalchemy.orm import registry
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.dialects.postgresql import JSONB, JSON
@@ -27,11 +26,14 @@ class Base(metaclass=DeclarativeMeta):  # pylint: disable=too-few-public-methods
 
     __init__ = mapper_registry.constructor
 
+    __tablename__: str
+    __table__: Table
+
     # Model.query is a legacy interface, try to avoid using it
     # it's only here for compatibility with the old code
     # it should be replaced.
-    query_class: type[Query] = Query
-    query: _QueryProperty
+    query_class: t.ClassVar[type[Query]]
+    query: t.ClassVar[Query]
 
 
 # Base: t.Type[N4ABase] = declarative_base(cls=N4ABase)

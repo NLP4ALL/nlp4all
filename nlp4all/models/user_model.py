@@ -54,8 +54,8 @@ class UserModel(Base, UserMixin):
         )
         return reset_token
 
-    @staticmethod
-    def verify_reset_token(token: str, secret_key: str) -> Union["UserModel", None]:
+    @classmethod
+    def verify_reset_token(cls, token: str, secret_key: str) -> Union["UserModel", None]:
         """decodes the token
         Parameters:
             token (str): The token needed to reset the password
@@ -74,7 +74,7 @@ class UserModel(Base, UserMixin):
             return None
         except jwt.InvalidTokenError:
             return None
-        return UserModel.query.get(user_id)
+        return cls.query.get(user_id)
 
     def __repr__(self):
         """represents the user object
