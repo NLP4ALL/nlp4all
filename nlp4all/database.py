@@ -2,27 +2,36 @@
 
 import typing as t
 
-from sqlalchemy import Column, ForeignKey, Table, MetaData
+from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.types import TypeEngine
-from sqlalchemy.orm import DeclarativeBase, Query
 from sqlalchemy.ext.mutable import MutableDict
+from flask_sqlalchemy.query import Query
+from flask_sqlalchemy.model import _QueryProperty
+from sqlalchemy.orm import registry
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.dialects.postgresql import JSONB, JSON
 
 from sqlalchemy_json import NestedMutable
 
-nlp_sa_meta = MetaData()
+mapper_registry = registry()
+nlp_sa_meta = mapper_registry.metadata
 
 
 # base model class
-class Base(DeclarativeBase):  # pylint: disable=too-few-public-methods
+class Base(metaclass=DeclarativeMeta):  # pylint: disable=too-few-public-methods
     """Base model class"""
+    __abstract__ = True
+    registry = mapper_registry
+    metadata = mapper_registry.metadata
     __allow_unmapped__ = True
-    metadata = nlp_sa_meta
+
+    __init__ = mapper_registry.constructor
 
     # Model.query is a legacy interface, try to avoid using it
     # it's only here for compatibility with the old code
     # it should be replaced.
-    query: Query
+    query_class: type[Query] = Query
+    query: _QueryProperty
 
 
 # Base: t.Type[N4ABase] = declarative_base(cls=N4ABase)

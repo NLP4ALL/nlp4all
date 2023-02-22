@@ -21,11 +21,11 @@ class ProjectModel(Base):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column()
     organization: Mapped[int] = mapped_column(Integer, ForeignKey("organization.id"))
-    analyses: Mapped[list[BayesianAnalysisModel]] = relationship()
-    categories: Mapped[list[DataTagCategoryModel]] = relationship(
+    analyses: Mapped[list['BayesianAnalysisModel']] = relationship()
+    categories: Mapped[list['DataTagCategoryModel']] = relationship(
         secondary=project_categories_table,
         back_populates="projects")
-    data_sources: Mapped[list[DataSourceModel]] = relationship(
+    data_sources: Mapped[list['DataSourceModel']] = relationship(
         secondary=project_data_source_table,
         back_populates="projects")
     tf_idf: Mapped[dict] = mapped_column(MutableJSON)  # what is this?

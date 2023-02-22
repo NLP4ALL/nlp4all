@@ -12,7 +12,6 @@ UserRouter.route("/account", methods=["GET", "POST"])(login_required(UserControl
 UserRouter.route("/login", methods=["GET", "POST"])(UserController.login)
 UserRouter.route("/logout")(UserController.logout)
 UserRouter.route("/register", methods=["GET", "POST"])(UserController.register)
-UserRouter.route("/register_imc", methods=["GET", "POST"])(UserController.register_imc)
 UserRouter.route("/reset_password", methods=["GET", "POST"])(UserController.reset_request)
 UserRouter.route("/reset_password/<token>", methods=["GET", "POST"])(UserController.reset_token)
 

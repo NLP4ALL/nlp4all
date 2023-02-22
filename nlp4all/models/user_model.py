@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .organization_model import OrganizationModel
     from .role_model import RoleModel
     from .bayesian_analysis import BayesianAnalysisModel
-    from .data_source import DataSourceModel
+    from .data_annotation import DataAnnotationModel
 
 
 class UserModel(Base, UserMixin):
@@ -27,13 +27,15 @@ class UserModel(Base, UserMixin):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
     password: Mapped[str] = mapped_column(String(60), nullable=False)
-    organizations: Mapped[OrganizationModel] = relationship(
+    organizations: Mapped['OrganizationModel'] = relationship(
         secondary=user_org_table,
         back_populates="users")
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    roles: Mapped[RoleModel] = relationship("Role", secondary=user_role_table)
-    analyses: Mapped[BayesianAnalysisModel] = relationship()
-    data_sources: Mapped[DataSourceModel] = relationship()
+    roles: Mapped['RoleModel'] = relationship("RoleModel", secondary=user_role_table)
+    analyses: Mapped['BayesianAnalysisModel'] = relationship()
+    # data_sources: Mapped['DataSourceModel'] = relationship()
+    # data_sources should come via project
+    data_annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="user")
 
     def get_reset_token(self, secret_key: str, expires_sec: int = 1800) -> str:
         """Get a reset token.

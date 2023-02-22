@@ -86,15 +86,6 @@ class RegistrationForm(FlaskForm):
             raise ValidationError("That email is taken. Please choose a different one.")
 
 
-class IMCRegistrationForm(FlaskForm):
-    """
-    IMC Registration form.
-    """
-
-    username = StringField("Username", validators=[DataRequired(), Length(min=2, max=20)])
-    submit = SubmitField("Sign Up")
-
-
 class RequestResetForm(FlaskForm):
     """
     Request reset form.

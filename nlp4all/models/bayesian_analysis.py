@@ -13,16 +13,16 @@ class BayesianAnalysisModel(Base):
     id = Column(Integer, primary_key=True)
     user = Column(Integer, ForeignKey("user.id"))
     name = Column(String(50))
-    tags = relationship("DataTag")  # this also tells us which tweets
+    tags = relationship("DataTagModel")  # this also tells us which tweets
     data = Column(MutableJSON)
     project_id = Column(Integer, ForeignKey("project.id"))
-    project = relationship("Project")
-    robots = relationship("BayesianRobot")
+    project = relationship("ProjectModel")
+    robots = relationship("BayesianRobotModel")
     shared = Column(Boolean, default=False)
     shared_model = Column(Boolean, default=False)
     tweets = Column(MutableJSON, default=[])
     annotate = Column(Boolean, default=False)
-    annotations = relationship("TweetAnnotation")
+    annotations = relationship("DataAnnotationModel")
     annotation_tags = Column(MutableJSON)
     annotate = Column(Integer, default=1)  # type: ignore
 

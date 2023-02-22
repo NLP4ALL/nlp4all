@@ -30,7 +30,7 @@ class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
     meta: Mapped[dict] = mapped_column(MutableJSONB, nullable=False)
     schema: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
     data_source_name: Mapped[str] = mapped_column(String(80), nullable=False)
-    data: Mapped[list[DataModel]] = relationship(back_populates="data_source")
+    data: Mapped[list['DataModel']] = relationship(back_populates="data_source")
     # shared
     # groups / projects /etc need to be implemented
 

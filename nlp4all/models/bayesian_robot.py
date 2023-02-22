@@ -20,7 +20,7 @@ class BayesianRobotModel(Base):
     parent = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
     child = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
     analysis_id = Column(Integer, ForeignKey("bayesian_analysis.id"))
-    analysis = relationship("BayesianAnalysis")
+    analysis = relationship("BayesianAnalysisModel")
     features = Column(MutableJSON, default={})
     accuracy = Column(MutableJSON, default={})
     retired = Column(Boolean, default=False)

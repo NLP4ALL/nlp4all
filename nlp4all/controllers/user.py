@@ -1,7 +1,6 @@
 """User / Login related controller."""  # pylint: disable=invalid-name
 
 import os
-from random import randint
 import secrets
 from PIL import Image
 
@@ -14,7 +13,7 @@ from nlp4all import db
 from ..helpers.site import is_safe_url
 
 
-from ..models import BayesianAnalysisModel, OrganizationModel, UserModel
+from ..models import OrganizationModel, UserModel
 
 from ..forms.user import (
     LoginForm,
@@ -22,7 +21,6 @@ from ..forms.user import (
     RegistrationForm,
     RequestResetForm,
     ResetPasswordForm,
-    IMCRegistrationForm,
 )
 
 from .base import BaseController
@@ -146,44 +144,6 @@ class UserController(BaseController):
             flash("Your password has been updated! You are now able to log in", "success")
             return redirect(url_for("login"))
         return cls.render_template("reset_token.html", title="Reset Password", form=form)
-
-    @classmethod
-    def register_imc(cls):
-        """IMC registration page"""
-        if current_user.is_authenticated:
-            return redirect(url_for("project_controller.home"))
-        form = IMCRegistrationForm()
-        if form.validate_on_submit():
-            fake_id = randint(0, 99999999999)
-            fake_email = str(fake_id) + "@arthurhjorth.com"
-            fake_password = str(fake_id)
-            hashed_password = generate_password_hash(fake_password).decode("utf-8")
-            imc_org = OrganizationModel.query.filter_by(name="ATU").all()
-            a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
-            the_name = form.username.data
-            if any(UserModel.query.filter_by(username=the_name)):
-                the_name = the_name + str(fake_id)
-            user = UserModel(
-                username=the_name, email=fake_email, password=hashed_password, organizations=imc_org
-            )
-            db.add(user)
-            db.session.commit()
-            login_user(user)
-            userid = current_user.id
-            name = current_user.username + "'s personal analysis"
-            bayes_analysis = BayesianAnalysisModel(
-                user=userid,
-                name=name,
-                project=a_project.id,
-                data={"counts": 0, "words": {}},
-                tweets=[],
-                annotation_tags={},
-                annotate=1,
-            )
-            db.add(bayes_analysis)
-            db.session.commit()
-            return redirect(url_for("project_controller.home"))
-        return cls.render_template("register_imc.html", form=form)
 
     @classmethod
     def send_reset_email(cls, user):
