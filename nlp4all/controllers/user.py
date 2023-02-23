@@ -7,7 +7,7 @@ from PIL import Image
 
 from werkzeug.local import LocalProxy
 from flask import flash, redirect, request, url_for, abort
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user, confirm_login
 from flask_mail import Message
 from flask_bcrypt import check_password_hash, generate_password_hash
 from nlp4all import db
@@ -27,6 +27,7 @@ from ..forms.user import (
 from .base import BaseController
 
 if t.TYPE_CHECKING:
+    from werkzeug.wrappers import Response
     current_user: LocalProxy[UserModel] = current_user
 
 
@@ -71,6 +72,16 @@ class UserController(BaseController):
         return picture_fn
 
     @classmethod
+    def next_or_home(cls) -> 'Response':
+        """Redirect to next or home"""
+        next_page = request.args.get("next")
+        if next_page:
+            if not is_safe_url(next_page, request):
+                abort(400)
+            return redirect(next_page)
+        return redirect(url_for("project_controller.home"))
+
+    @classmethod
     def login(cls):
         """Login page"""
         if current_user.is_authenticated:
@@ -80,14 +91,20 @@ class UserController(BaseController):
             user = UserModel.query.filter_by(email=form.email.data).first()
             if user and check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
-                next_page = request.args.get("next")
-                if next_page:
-                    if not is_safe_url(next_page, request):
-                        return abort(400)
-                    return redirect(next_page)
-                return redirect(url_for("project_controller.home"))
+                return cls.next_or_home()
             flash("Login Unsuccessful. Please check email and password", "danger")
         return cls.render_template("login.html", title="Login", form=form)
+
+    @classmethod
+    def reauth(cls):
+        form = LoginForm()
+        if form.validate_on_submit():
+            if current_user and check_password_hash(current_user.password, form.password.data):
+                flash("Reauthenticated.", "info")
+                confirm_login()
+                return cls.next_or_home()
+            flash("Login Unsuccessful. Please check email and password", "danger")
+        return cls.render_template("reauth.html", title="Reauthenticate", form=form)
 
     @classmethod
     def logout(cls):

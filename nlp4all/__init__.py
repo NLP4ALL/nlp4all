@@ -43,6 +43,11 @@ def create_app(env: Union[None, str] = None) -> Flask:
     login_manager = LoginManager(app)
     login_manager.user_loader(load_user)
     login_manager.login_message_category = "info"
+    login_manager.refresh_view = "user_controller.reauth"
+    login_manager.needs_refresh_message = (
+        u"To protect your account, please reauthenticate to access this page."
+    )
+    login_manager.needs_refresh_message_category = "info"
 
     dbhelper.init_app(app)
     nlp.init_app(app)
