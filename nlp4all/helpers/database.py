@@ -9,6 +9,7 @@ from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
 from flask_bcrypt import generate_password_hash
+from sqlalchemy import select
 from ..database import Base
 from ..config import get_env_variable
 
@@ -329,13 +330,16 @@ def create_default_org() -> 'OrganizationModel':
 
     org_name = get_env_variable("NLP4ALL_ORG_NAME")
     # if the matching org already exists, don't create it
-    orgs = db.session.query(OrganizationModel).filter_by(name=org_name).first()
-    if orgs is not None:
-        return orgs
+    stmt = select(OrganizationModel).where(OrganizationModel.name == org_name)
+    org: OrganizationModel = db.session.execute(stmt).first()  # type: ignore
+    if org is not None:
+        current_app.logger.warning("Default org already exists, not creating it.")
+        return org
 
     org = OrganizationModel(name=org_name)
     db.session.add(org)
     db.session.commit()
+    current_app.logger.info("Created default org: %s", org_name)
     return org
 
 
@@ -346,11 +350,10 @@ def create_default_user(org: 'OrganizationModel') -> None:
 
     # First, we check if there are any admins for this org
     # if there are, we don't create a default user
-    admins = db.session.query(UserModel).filter(
-        UserModel.organizations.contains(org),
-        UserModel.admin is True).first()
-
-    if admins is not None:
+    stmt = select(UserModel).where(UserModel.admin).where(UserModel.organizations.contains(org))  # type: ignore
+    admin: UserModel = db.session.execute(stmt).first()  # type: ignore
+    if admin is not None:
+        current_app.logger.warning("Default admin user for org already exists, not creating it.")
         return
 
     user_name = get_env_variable("NLP4ALL_ADMIN_EMAIL")
@@ -365,6 +368,7 @@ def create_default_user(org: 'OrganizationModel') -> None:
     user.organizations.append(org)
     db.session.add(user)
     db.session.commit()
+    current_app.logger.info("Created default admin user: %s", user_name)
 
 
 def init_db() -> None:  # pylint: disable=too-many-locals

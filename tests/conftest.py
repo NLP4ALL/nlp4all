@@ -28,6 +28,10 @@ if os.getenv('_PYTEST_RAISE', "0") != "0":
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
+
+    os.environ["NLP4ALL_ADMIN_EMAIL"] = "example@example.org"
+    os.environ["NLP4ALL_ADMIN_PASSWORD"] = "example"
+    os.environ["NLP4ALL_ORG_NAME"] = "Example"
     nlp4all_app = create_app("testing")
     with nlp4all_app.app_context():
         database.init_db()
