@@ -331,29 +331,36 @@ def create_default_org() -> 'OrganizationModel':
     org_name = get_env_variable("NLP4ALL_ORG_NAME")
     # if the matching org already exists, don't create it
     stmt = select(OrganizationModel).where(OrganizationModel.name == org_name)
-    org: OrganizationModel = db.session.execute(stmt).first()  # type: ignore
+    org: OrganizationModel = db.session.scalars(stmt).first()  # type: ignore
+
     if org is not None:
-        current_app.logger.warning("Default org already exists, not creating it.")
+        current_app.logger.warning(f"Default org already exists (id: {org.id}, name: {org.name}), not creating it.")
         return org
 
     org = OrganizationModel(name=org_name)
     db.session.add(org)
     db.session.commit()
-    current_app.logger.info("Created default org: %s", org_name)
+    current_app.logger.info(f"Created default org: {org_name} (id: {org.id})", )
     return org
 
 
 def create_default_user(org: 'OrganizationModel') -> None:
     """Creates the default user."""
     from ..models import UserModel
+    from ..models import OrganizationModel
     from .. import db
 
     # First, we check if there are any admins for this org
     # if there are, we don't create a default user
-    stmt = select(UserModel).where(UserModel.admin).where(UserModel.organizations.contains(org))  # type: ignore
-    admin: UserModel = db.session.execute(stmt).first()  # type: ignore
+    stmt = select(UserModel).where(  # type: ignore
+        UserModel.admin
+    ).where(  # type: ignore
+        UserModel.organizations.any(OrganizationModel.id == org.id)
+    )
+    admin: UserModel = db.session.scalars(stmt).first()  # type: ignore
     if admin is not None:
-        current_app.logger.warning("Default admin user for org already exists, not creating it.")
+        current_app.logger.warning(
+            f"Default admin user (id: {admin.id}) for org {org.name} (id: {org.id}) already exists, not creating it.")
         return
 
     user_name = get_env_variable("NLP4ALL_ADMIN_EMAIL")
@@ -368,7 +375,7 @@ def create_default_user(org: 'OrganizationModel') -> None:
     user.organizations.append(org)
     db.session.add(user)
     db.session.commit()
-    current_app.logger.info("Created default admin user: %s", user_name)
+    current_app.logger.info(f"Created default admin user {user_name} (id: {user.id}) for org {org.name} (id: {org.id})")
 
 
 def init_db() -> None:  # pylint: disable=too-many-locals
@@ -384,7 +391,7 @@ def init_db() -> None:  # pylint: disable=too-many-locals
 def init_db_command() -> None:
     """Initializes the database."""
     init_db()
-    print("Initialized database.")
+    current_app.logger.info("Initialized database.")
 
 
 def drop_db() -> None:  # pylint: disable=too-many-locals
@@ -398,7 +405,7 @@ def drop_db() -> None:  # pylint: disable=too-many-locals
 def drop_db_command() -> None:
     """Drops the database."""
     drop_db()
-    print("Dropped database.")
+    current_app.logger.info("Dropped database.")
 
 
 def init_app(app: Flask) -> None:
