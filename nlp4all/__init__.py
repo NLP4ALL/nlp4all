@@ -10,6 +10,7 @@ from flask_cors import CORS
 # from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+# from flask_babel import Babel
 
 from .helpers import database as dbhelper
 from .helpers import nlp
@@ -34,6 +35,7 @@ def create_app(env: Union[None, str] = None) -> Flask:
 
     db.init_app(app)
     migrate.init_app(app, db)
+    # babel = Babel(app)
 
     Router.run(app)
 
