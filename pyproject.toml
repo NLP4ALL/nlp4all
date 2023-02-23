@@ -36,6 +36,8 @@ exclude = [
   'migrations',
 ]
 show_error_codes = true
+#once we've refactored the code, we can enable this
+#check_untyped_defs = true
 pretty = true
 files = [
   ".",

@@ -30,7 +30,7 @@ def test_filterable():
 
     # ensure filterable cannot be instantiated directly
     with pytest.raises(TypeError):
-        filterable = Filterable('test', ('invalid'), {})  # noqa: F841
+        Filterable('test', ('invalid', ), {})  # type: ignore
 
 
 def test_filterablestring():
