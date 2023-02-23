@@ -2,9 +2,10 @@
 
 import os
 import secrets
+import typing as t
 from PIL import Image
 
-
+from werkzeug.local import LocalProxy
 from flask import flash, redirect, request, url_for, abort
 from flask_login import current_user, login_user, logout_user
 from flask_mail import Message
@@ -24,6 +25,9 @@ from ..forms.user import (
 )
 
 from .base import BaseController
+
+if t.TYPE_CHECKING:
+    current_user: LocalProxy[UserModel] = current_user
 
 
 class UserController(BaseController):
@@ -47,7 +51,7 @@ class UserController(BaseController):
         if request.method == "GET":
             form.username.data = current_user.username
             form.email.data = current_user.email
-        image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
+        image_file = request.host_url + "static/profile_pics/" + current_user.image_file
         return cls.render_template("account.html", title="Account",
                                    image_file=image_file, form=form)
 
