@@ -1,8 +1,7 @@
 """User Model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from typing import Union
+import typing as t
 from datetime import datetime, timezone, timedelta
 from flask_login import UserMixin
 from sqlalchemy import Integer, String, Boolean
@@ -11,7 +10,7 @@ import jwt
 
 from ..database import Base, user_org_table, user_role_table
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from .organization_model import OrganizationModel
     from .role_model import RoleModel
     from .bayesian_analysis import BayesianAnalysisModel
@@ -27,7 +26,7 @@ class UserModel(Base, UserMixin):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
     password: Mapped[str] = mapped_column(String(60), nullable=False)
-    organizations: Mapped['OrganizationModel'] = relationship(
+    organizations: Mapped[t.List['OrganizationModel']] = relationship(
         secondary=user_org_table,
         back_populates="users")
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -55,7 +54,7 @@ class UserModel(Base, UserMixin):
         return reset_token
 
     @classmethod
-    def verify_reset_token(cls, token: str, secret_key: str) -> Union["UserModel", None]:
+    def verify_reset_token(cls, token: str, secret_key: str) -> t.Union["UserModel", None]:
         """decodes the token
         Parameters:
             token (str): The token needed to reset the password

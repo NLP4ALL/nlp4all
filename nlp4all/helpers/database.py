@@ -8,7 +8,12 @@ from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
+from flask_bcrypt import generate_password_hash
 from ..database import Base
+from ..config import get_env_variable
+
+if t.TYPE_CHECKING:
+    from ..models import OrganizationModel
 
 
 class N4AObject(Object):
@@ -317,36 +322,68 @@ def schema_aliased_path_dict(schema: dict,
     return paths
 
 
-def create_default_org():
+def create_default_org() -> 'OrganizationModel':
     """Creates the default organization."""
     from ..models import OrganizationModel
     from .. import db
 
-    # if any orgs exist, don't create the default one
-    if db.session.query(OrganizationModel).count() > 0:
+    org_name = get_env_variable("NLP4ALL_ORG_NAME")
+    # if the matching org already exists, don't create it
+    orgs = db.session.query(OrganizationModel).filter_by(name=org_name).first()
+    if orgs is not None:
+        return orgs
+
+    org = OrganizationModel(name=org_name)
+    db.session.add(org)
+    db.session.commit()
+    return org
+
+
+def create_default_user(org: 'OrganizationModel') -> None:
+    """Creates the default user."""
+    from ..models import UserModel
+    from .. import db
+
+    # First, we check if there are any admins for this org
+    # if there are, we don't create a default user
+    admins = db.session.query(UserModel).filter(
+        UserModel.organizations.contains(org),
+        UserModel.admin is True).first()
+
+    if admins is not None:
         return
 
-    org = OrganizationModel(name="Default")
-    db.session.add(org)
+    user_name = get_env_variable("NLP4ALL_ADMIN_EMAIL")
+    user_password = get_env_variable("NLP4ALL_ADMIN_PASSWORD")
+
+    user = UserModel(
+        username=user_name,
+        email=user_name,
+        password=generate_password_hash(user_password).decode("utf-8"),
+        admin=True
+    )
+    user.organizations.append(org)
+    db.session.add(user)
     db.session.commit()
 
 
-def init_db():  # pylint: disable=too-many-locals
+def init_db() -> None:  # pylint: disable=too-many-locals
     """Initializes the database."""
     engine = current_app.extensions["sqlalchemy"].engine
     Base.metadata.create_all(bind=engine)
-    create_default_org()
+    org = create_default_org()
+    create_default_user(org)
 
 
 @click.command("init-db")
 @with_appcontext
-def init_db_command():
+def init_db_command() -> None:
     """Initializes the database."""
     init_db()
     print("Initialized database.")
 
 
-def drop_db():  # pylint: disable=too-many-locals
+def drop_db() -> None:  # pylint: disable=too-many-locals
     """Drops all tables in the database."""
     engine = current_app.extensions["sqlalchemy"].get_engine()
     Base.metadata.drop_all(bind=engine)
@@ -354,13 +391,13 @@ def drop_db():  # pylint: disable=too-many-locals
 
 @click.command("drop-db")
 @with_appcontext
-def drop_db_command():
+def drop_db_command() -> None:
     """Drops the database."""
     drop_db()
     print("Dropped database.")
 
 
-def init_app(app: Flask):
+def init_app(app: Flask) -> None:
     """Initializes the database for the Flask app.
 
     Args:
@@ -370,7 +407,7 @@ def init_app(app: Flask):
     app.cli.add_command(drop_db_command)
 
 
-def model_cols_jsonb_to_json(app: Flask, cls: t.Type[Base]):  # pylint: disable=too-many-locals
+def model_cols_jsonb_to_json(app: Flask, cls: t.Type[Base]) -> None:  # pylint: disable=too-many-locals
     """Converts a Postgres JSONB column to a SQLite JSON column.
     Within the model itself, the column is defined as a JSONB column,
     we only need to change this to JSON when we are using SQLite.

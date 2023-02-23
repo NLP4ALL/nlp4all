@@ -16,6 +16,6 @@ class OrganizationModel(Base):  # pylint: disable=too-few-public-methods
 
     __tablename__ = "organization"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     users: Mapped[t.List['UserModel']] = relationship(secondary=user_org_table, back_populates="organizations")
     projects: Mapped[t.List['ProjectModel']] = relationship()
