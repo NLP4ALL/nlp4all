@@ -9,7 +9,7 @@ services:
     networks:
       - back-tier
     env_file:
-      - ./db.env
+      - ./db.dev.env
   app-dev:
     restart: always
     build: 
