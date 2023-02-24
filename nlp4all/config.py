@@ -50,6 +50,11 @@ class Config:  # pylint: disable=too-few-public-methods
     DB_BACKEND = DB_BACKEND
     LOG_LEVEL = logging.WARNING
 
+    # Security
+    BCRYPT_LOG_ROUNDS: int = 16
+    BCRYPT_HASH_PREFIX: str = "2b"
+    BCRYPT_HANDLE_LONG_PASSWORDS: bool = True
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = DB_URI
     STATIC_DIR = "static"

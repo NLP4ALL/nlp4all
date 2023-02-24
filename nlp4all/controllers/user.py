@@ -6,12 +6,12 @@ import typing as t
 from PIL import Image
 
 from werkzeug.local import LocalProxy
-from flask import flash, redirect, request, url_for, abort
+from flask import flash, redirect, request, url_for, abort, current_app
 from flask_login import current_user, login_user, logout_user, confirm_login
 from flask_mail import Message
-from flask_bcrypt import check_password_hash, generate_password_hash
 from nlp4all import db
 from ..helpers.site import is_safe_url
+from ..helpers.pyutil import classproperty
 
 
 from ..models import OrganizationModel, UserModel
@@ -28,6 +28,7 @@ from .base import BaseController
 
 if t.TYPE_CHECKING:
     from werkzeug.wrappers import Response
+    from flask_bcrypt import Bcrypt
     current_user: LocalProxy[UserModel] = current_user
 
 
@@ -35,6 +36,15 @@ class UserController(BaseController):
     """User Controller"""
 
     view_subdir = "user"
+
+    @classproperty[Bcrypt]
+    def bcrypt(cls) -> "Bcrypt":
+        """Bcrypt"""
+        if current_app is None:
+            raise RuntimeError("No application found")
+        if "bcrypt" not in current_app.extensions:
+            raise RuntimeError("Bcrypt not initialized")
+        return current_app.extensions["bcrypt"]
 
     @classmethod
     def account(cls):
@@ -89,7 +99,7 @@ class UserController(BaseController):
         form = LoginForm()
         if form.validate_on_submit():
             user = UserModel.query.filter_by(email=form.email.data).first()
-            if user and check_password_hash(user.password, form.password.data):
+            if user and cls.bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
                 return cls.next_or_home()
             flash("Login Unsuccessful. Please check email and password", "danger")
