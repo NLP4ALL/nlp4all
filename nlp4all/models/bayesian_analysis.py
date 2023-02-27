@@ -1,30 +1,37 @@
 """Bayesian Analysis Model"""  # pylint: disable=invalid-name
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+import typing as t
+
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, MutableJSON
+
+if t.TYPE_CHECKING:
+    from .bayesian_robot import BayesianRobotModel
+    from .data_annotation import DataAnnotationModel
+    from .data_tag import DataTagModel
+    from .project_model import ProjectModel
 
 
 class BayesianAnalysisModel(Base):
     """BayesianAnalysis model."""
 
     __tablename__ = "bayesian_analysis"
-    id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey("user.id"))
-    name = Column(String(50))
-    tags = relationship("DataTag")  # this also tells us which tweets
-    data = Column(MutableJSON)
-    project_id = Column(Integer, ForeignKey("project.id"))
-    project = relationship("Project")
-    robots = relationship("BayesianRobot")
-    shared = Column(Boolean, default=False)
-    shared_model = Column(Boolean, default=False)
-    tweets = Column(MutableJSON, default=[])
-    annotate = Column(Boolean, default=False)
-    annotations = relationship("TweetAnnotation")
-    annotation_tags = Column(MutableJSON)
-    annotate = Column(Integer, default=1)  # type: ignore
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(50))
+    tags: Mapped[t.List['DataTagModel']] = relationship()  # this also tells us which tweets
+    data: Mapped[dict] = mapped_column(MutableJSON)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"))
+    project: Mapped["ProjectModel"] = relationship(back_populates="analyses")
+    robots: Mapped[t.List["BayesianRobotModel"]] = relationship(back_populates="analysis")
+    shared: Mapped[bool] = mapped_column(default=False)
+    shared_model: Mapped[bool] = mapped_column(default=False)
+    tweets: Mapped[dict] = mapped_column(MutableJSON, default=[])
+    annotate: Mapped[bool] = mapped_column(default=False)
+    annotations: Mapped['DataAnnotationModel'] = relationship()
+    annotation_tags: Mapped[dict] = mapped_column(MutableJSON)
 
     def get_project(self):
         """Get project."""

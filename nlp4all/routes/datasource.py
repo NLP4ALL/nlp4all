@@ -19,7 +19,7 @@ DataSourceRouter.route("/", methods=["GET", "POST"])(
 )
 DataSourceRouter.route("/create",
                        methods=["GET", "POST"])(DataSourceController.create)
-DataSourceRouter.route("/configure",
+DataSourceRouter.route("/configure/<int:datasource_id>",
                        methods=["GET", "POST"])(DataSourceController.configure)
 DataSourceRouter.route("/save",
                        methods=["GET", "POST"])(DataSourceController.save)

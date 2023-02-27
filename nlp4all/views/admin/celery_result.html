@@ -1,0 +1,21 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <div class="content-section">
+        Celery result status:
+        {% if result.ready() %}
+            <p>Task is ready</p>
+            {% if result.successful() %}
+                <p>Task was successful</p>
+                <p>Result: {{ result.result }}</p>
+            {% else %}
+                <p>Task failed</p>
+                <p>Result: {{ result.result }}</p>
+            {% endif %}
+        {% else %}
+            <p>Task is not ready</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

@@ -1,12 +1,17 @@
 """Bayesian Robot Model"""  # pylint: disable=invalid-name
 
+import typing as t
+import datetime
 import collections
 import functools
 import operator
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, MutableJSON
+
+if t.TYPE_CHECKING:
+    from .bayesian_analysis import BayesianAnalysisModel
 
 
 class BayesianRobotModel(Base):
@@ -14,17 +19,21 @@ class BayesianRobotModel(Base):
 
     __tablename__ = "bayesian_robot"
 
-    id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey("user.id"))
-    name = Column(String(25))
-    parent = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
-    child = Column(Integer, ForeignKey("bayesian_robot.id"), default=None)
-    analysis_id = Column(Integer, ForeignKey("bayesian_analysis.id"))
-    analysis = relationship("BayesianAnalysis")
-    features = Column(MutableJSON, default={})
-    accuracy = Column(MutableJSON, default={})
-    retired = Column(Boolean, default=False)
-    time_retired = Column(DateTime)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    name: Mapped[str] = mapped_column(String(25))
+    parent: Mapped[int] = mapped_column(ForeignKey("bayesian_robot.id"),
+                                        default=None)
+    child: Mapped[int] = mapped_column(ForeignKey("bayesian_robot.id"),
+                                       default=None)
+    analysis_id: Mapped[int] = mapped_column(
+        ForeignKey("bayesian_analysis.id"))
+    analysis: Mapped['BayesianAnalysisModel'] = relationship(
+        back_populates="robots")
+    features: Mapped[dict] = mapped_column(MutableJSON, default={})
+    accuracy: Mapped[dict] = mapped_column(MutableJSON, default={})
+    retired: Mapped[bool] = mapped_column(default=False)
+    time_retired: Mapped['datetime.datetime'] = mapped_column()
 
     def clone(self):
         """Clones a BayesianRobot object.
@@ -73,9 +82,7 @@ class BayesianRobotModel(Base):
                     return True
         return False
 
-    def calculate_accuracy(
-        self,
-    ):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    def calculate_accuracy(self, ):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         """Calculates the accuracy of the robot.
 
         Returns:
@@ -86,9 +93,11 @@ class BayesianRobotModel(Base):
         proj_obj = analysis_obj.project
         tf_idf = proj_obj.tf_idf
         feature_words = {}
+        words = tf_idf.get("words", {})
         for feature in self.features:
             feature_words[feature] = [
-                word for word in tf_idf.get("words") if BayesianRobotModel.matches(word, feature)
+                word for word in words
+                if BayesianRobotModel.matches(word, feature)
             ]
         # relevant_words = [w for words in feature_words.values() for w in words]
         # first calculate the predictions, based on the training sets.
@@ -100,18 +109,17 @@ class BayesianRobotModel(Base):
         # make one for individual words too so we can more easily access them
         # later, and make a  list of category names for viewing
         word_category_predictions = {}
-        cat_names = {cat.id: cat.name for cat in analysis_obj.project.categories}
+        cat_names = {
+            cat.id: cat.name
+            for cat in analysis_obj.project.categories
+        }
 
-        for (
-            feature
-        ) in (
-            feature_words
-        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (feature) in (feature_words):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             predictions_by_feature[feature] = {}
             for word in feature_words[feature]:
                 for dataset in proj_obj.training_and_test_sets[:1]:
                     train_set = dataset[0]
-                    tweets = tf_idf.get("words").get(word)
+                    tweets = words.get(word, [])
                     train_set_tweets = []
                     for tweet in tweets:
                         if str(tweet[0]) in train_set.keys():
@@ -119,19 +127,26 @@ class BayesianRobotModel(Base):
                         else:
                             test_set_tweets.add(tweet[0])
                     categories_in_dataset = [
-                        dataset[0].get(str(tweet[0])) for tweet in train_set_tweets
+                        dataset[0].get(str(tweet[0]))
+                        for tweet in train_set_tweets
                     ]
-                    cat_counts = {c: categories_in_dataset.count(c) for c in cats}
+                    cat_counts = {
+                        c: categories_in_dataset.count(c)
+                        for c in cats
+                    }
                     total_cats = sum(cat_counts.values())
                     predictions = 0
                     # if there are no words in the training set to learn from,
                     # we simply ignore the word and do not append anything here
                     if total_cats > 0:
-                        predictions = {c: cat_counts[c] / sum(cat_counts.values()) for c in cats}
+                        predictions = {
+                            c: cat_counts[c] / sum(cat_counts.values())
+                            for c in cats
+                        }
                         category_dict = {
-                            "category_prediction": cat_names[
-                                max(predictions.items(), key=operator.itemgetter(1))[0]
-                            ]
+                            "category_prediction":
+                            cat_names[max(predictions.items(),
+                                          key=operator.itemgetter(1))[0]]
                         }
                         word_category_predictions[word] = category_dict
                         predictions_by_feature[feature][word] = predictions
@@ -144,38 +159,38 @@ class BayesianRobotModel(Base):
 
         for word_prediction in predictions_by_feature.values():
             for word, predictions in word_prediction.items():
-                word_tweets = tf_idf.get("words").get(word)
+                word_tweets = words.get(word, [])
                 test_set_tweets = [
-                    tweet for tweet in word_tweets if str(tweet[0]) in test_set.keys()
+                    tweet for tweet in word_tweets
+                    if str(tweet[0]) in test_set.keys()
                 ]
                 for tweet in test_set_tweets:
-                    preds = tweet_predictions.get(
-                        tweet[0], {"predictions": [], "words": [], "category": tweet[1]}
-                    )
+                    preds = tweet_predictions.get(tweet[0], {
+                        "predictions": [],
+                        "words": [],
+                        "category": tweet[1]
+                    })
                     preds["predictions"].append(predictions)
                     preds["words"].append(word)
                     tweet_predictions[tweet[0]] = preds
         # now finally evaluate how well we did, in general and by word
         word_accuracy = {}
-        for (
-            tweet_key
-        ) in (
-            tweet_predictions
-        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (tweet_key) in (tweet_predictions):
             prediction_dict = tweet_predictions[tweet_key].copy()
 
             summed_prediction = dict(
                 functools.reduce(
-                    operator.add, map(collections.Counter, prediction_dict["predictions"])
-                )
-            )
+                    operator.add,
+                    map(collections.Counter, prediction_dict["predictions"])))
             # the old code that makes summed_prediction also includes the newly
             # added "category_prediction". Since we don't want to
             # sum that, we remove it first
             # it can happen that we evaluate a word that we have no information
             # on. In that
-            cat_prediction = max(summed_prediction.items(), key=operator.itemgetter(1))[0]
-            tweet_predictions[tweet_key]["correct"] = test_set[str(tweet_key)] == cat_prediction
+            cat_prediction = max(summed_prediction.items(),
+                                 key=operator.itemgetter(1))[0]
+            tweet_predictions[tweet_key]["correct"] = test_set[str(
+                tweet_key)] == cat_prediction
             # save a per-word accuracy
             for word in prediction_dict["words"]:
                 acc = word_accuracy.get(word, [])
@@ -183,22 +198,17 @@ class BayesianRobotModel(Base):
                 word_accuracy[word] = acc
         # and then build a nice dict full of info
         feature_info = {}
-        for (
-            feature
-        ) in (
-            feature_words
-        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+        for (feature) in (feature_words):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
             feature_info[feature] = {}
             feature_info[feature]["words"] = {}
             for word in feature_words[feature]:
                 word_dict = feature_info[feature].get(word, {})
                 if (
-                    word in word_accuracy
+                        word in word_accuracy
                 ):  # the word is only in the word_accuracy dict if it was in the test set
                     word_dict["tweets_targeted"] = len(word_accuracy[word])
                     word_dict["accuracy"] = round(
-                        len([x for x in word_accuracy[word] if x]) / len(word_accuracy[word]), 2
-                    )
+                        len([x for x in word_accuracy[word] if x]) / len(word_accuracy[word]), 2)
                     feature_info[feature]["words"][word] = word_dict
                 # else:
                 #     # if it's not in the test set, we just take it out.
@@ -206,32 +216,33 @@ class BayesianRobotModel(Base):
                 #     word_dict['accuracy'] = 0
                 # feature_info[feature]['words'][word] = word_dict
 
-            accuracy_values = [d["accuracy"] for d in feature_info[feature]["words"].values()]
+            accuracy_values = [
+                d["accuracy"] for d in feature_info[feature]["words"].values()
+            ]
             targeted_values = [
-                d["tweets_targeted"] for d in feature_info[feature]["words"].values()
+                d["tweets_targeted"]
+                for d in feature_info[feature]["words"].values()
             ]
             if len(accuracy_values) > 0:
-                feature_info[feature]["accuracy"] = sum(accuracy_values) / len(accuracy_values)
+                feature_info[feature]["accuracy"] = sum(accuracy_values) / len(
+                    accuracy_values)
                 feature_info[feature]["tweets_targeted"] = sum(targeted_values)
             else:
                 feature_info[feature]["accuracy"] = 0
                 feature_info[feature]["tweets_targeted"] = 0
         tweets_targeted = 0
         table_data = []
-        for (
-            feature
-        ) in (
-            feature_info
-        ):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
-            tweets_targeted = tweets_targeted + feature_info[feature]["tweets_targeted"]
+        for (feature) in (feature_info):  # pylint: disable=consider-iterating-dictionary,consider-using-dict-items
+            tweets_targeted = tweets_targeted + feature_info[feature][
+                "tweets_targeted"]
             feat_dict = {}
             feat_dict["word"] = feature
             feat_dict["category_prediction"] = "N/A"
             feat_dict["accuracy"] = feature_info[feature]["accuracy"]
-            feat_dict["tweets_targeted"] = feature_info[feature]["tweets_targeted"]
+            feat_dict["tweets_targeted"] = feature_info[feature][
+                "tweets_targeted"]
             score = feat_dict["accuracy"] * feat_dict["tweets_targeted"] - (
-                (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"]
-            )
+                (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"])
             print(score)
             feat_dict["score"] = round(score, 2)
             # calculate the most often predicted category. This isn't trivial -
@@ -245,26 +256,28 @@ class BayesianRobotModel(Base):
             for word in feature_info[feature]["words"]:
                 feat_dict = {}
                 feat_dict["word"] = word
-                feat_dict["category_prediction"] = word_category_predictions[word][
-                    "category_prediction"
-                ]
-                feat_dict["accuracy"] = feature_info[feature]["words"][word]["accuracy"]
+                feat_dict["category_prediction"] = word_category_predictions[
+                    word]["category_prediction"]
+                feat_dict["accuracy"] = feature_info[feature]["words"][word][
+                    "accuracy"]
                 feat_dict["tweets_targeted"] = feature_info[feature]["words"][word][
                     "tweets_targeted"
                 ]  # pylint: disable=line-too-long
                 score = feat_dict["accuracy"] * feat_dict["tweets_targeted"] - (
-                    (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"]
-                )
+                    (1 - feat_dict["accuracy"]) * feat_dict["tweets_targeted"])
                 print(score)
                 feat_dict["score"] = round(score, 2)
                 table_data.append(feat_dict)
         if len(tweet_predictions) == 0:
             accuracy = 0
         else:
-            accuracy = len([d for d in tweet_predictions.values() if d["correct"]]) / len(
-                tweet_predictions
-            )
-        accuracy_info = {"accuracy": round(accuracy, 2), "tweets_targeted": tweets_targeted}
+            accuracy = len([
+                d for d in tweet_predictions.values() if d["correct"]
+            ]) / len(tweet_predictions)
+        accuracy_info = {
+            "accuracy": round(accuracy, 2),
+            "tweets_targeted": tweets_targeted
+        }
         accuracy_info["features"] = feature_info
         accuracy_info["table_data"] = table_data
         return accuracy_info

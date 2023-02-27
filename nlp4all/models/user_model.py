@@ -1,8 +1,7 @@
 """User Model"""  # pylint: disable=invalid-name
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from typing import Union
+import typing as t
 from datetime import datetime, timezone, timedelta
 from flask_login import UserMixin
 from sqlalchemy import Integer, String, Boolean
@@ -11,11 +10,11 @@ import jwt
 
 from ..database import Base, user_org_table, user_role_table
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from .organization_model import OrganizationModel
     from .role_model import RoleModel
     from .bayesian_analysis import BayesianAnalysisModel
-    from .data_source import DataSourceModel
+    from .data_annotation import DataAnnotationModel
 
 
 class UserModel(Base, UserMixin):
@@ -27,13 +26,15 @@ class UserModel(Base, UserMixin):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
     password: Mapped[str] = mapped_column(String(60), nullable=False)
-    organizations: Mapped[OrganizationModel] = relationship(
+    organizations: Mapped[t.List['OrganizationModel']] = relationship(
         secondary=user_org_table,
         back_populates="users")
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    roles: Mapped[RoleModel] = relationship("Role", secondary=user_role_table)
-    analyses: Mapped[BayesianAnalysisModel] = relationship()
-    data_sources: Mapped[DataSourceModel] = relationship()
+    roles: Mapped['RoleModel'] = relationship("RoleModel", secondary=user_role_table)
+    analyses: Mapped['BayesianAnalysisModel'] = relationship()
+    # data_sources: Mapped['DataSourceModel'] = relationship()
+    # data_sources should come via project
+    data_annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="user")
 
     def get_reset_token(self, secret_key: str, expires_sec: int = 1800) -> str:
         """Get a reset token.
@@ -52,8 +53,8 @@ class UserModel(Base, UserMixin):
         )
         return reset_token
 
-    @staticmethod
-    def verify_reset_token(token: str, secret_key: str) -> Union["UserModel", None]:
+    @classmethod
+    def verify_reset_token(cls, token: str, secret_key: str) -> t.Union["UserModel", None]:
         """decodes the token
         Parameters:
             token (str): The token needed to reset the password
@@ -72,7 +73,7 @@ class UserModel(Base, UserMixin):
             return None
         except jwt.InvalidTokenError:
             return None
-        return UserModel.query.get(user_id)
+        return cls.query.get(user_id)
 
     def __repr__(self):
         """represents the user object

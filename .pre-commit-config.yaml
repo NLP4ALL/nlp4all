@@ -8,6 +8,6 @@ repos:
         types: [python]
     -   id: mypy
         name: mypy
-        entry: mypy -v
+        entry: mypy
         language: python
         types: [python]

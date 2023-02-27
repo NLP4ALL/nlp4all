@@ -9,7 +9,7 @@ from io import StringIO
 
 import pytest
 
-from nlp4all.helpers.database import csv_to_json, generate_schema, csv_row_to_json
+from nlp4all.helpers.data_source import csv_to_json, generate_schema, csv_row_to_json
 
 
 @pytest.mark.data

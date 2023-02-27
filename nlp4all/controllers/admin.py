@@ -1,12 +1,13 @@
 """Admin controller."""  # pylint: disable=invalid-name
 
 from flask import flash, redirect, url_for
-
+from celery.result import AsyncResult
 from nlp4all import db
 from ..models import OrganizationModel, DataTagCategoryModel
 from ..forms.admin import AddOrgForm
 from ..forms.analyses import AddTweetCategoryForm
 from ..helpers.tweets import add_tweets_from_account
+from ..helpers.celery import add_test
 
 from .base import BaseController
 
@@ -39,3 +40,13 @@ class AdminController(BaseController):
             flash("Your organization has been created!", "success")
             return redirect(url_for("admin_controller.add_org"))
         return cls.render_template("add_org.html", form=form, orgs=orgs)
+
+    @classmethod
+    def celery_test(cls, x: int, y: int):
+        result = add_test.delay(x, y)
+        return redirect(url_for("admin_controller.celery_result", task_id=result.id))
+
+    @classmethod
+    def celery_result(cls, task_id: str):
+        result = AsyncResult(task_id)
+        return cls.render_template("celery_result.html", result=result)

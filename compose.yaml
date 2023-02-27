@@ -10,6 +10,15 @@ services:
       - back-tier
     env_file:
       - ./db.env
+  rabbitmq:
+    restart: always
+    image: rabbitmq:3.11
+    expose:
+      - "5672"
+    networks:
+      - back-tier
+    volumes:
+      - "rabbit:/var/lib/rabbitmq"
   app:
     restart: always
     build: 
@@ -29,6 +38,25 @@ services:
       - back-tier
     depends_on:
       - nlpdb
+      - rabbitmq
+      - worker
+  worker:
+    restart: always
+    build: 
+      context: .
+      target: nlpapp
+      dockerfile: ./docker/python/Dockerfile
+    command: celery -A make_celery worker -l info
+    volumes:
+      - ./nlp4all:/home/app/nlp4all
+    env_file:
+      - ./db.env
+      - ./app.env
+    networks:
+      - back-tier
+    depends_on:
+      - nlpdb
+      - rabbitmq
   web:
     restart: always
     build: 
@@ -47,3 +75,4 @@ networks:
 volumes:
   postgres_data_prod:
   static_volume:
+  rabbit:

@@ -23,5 +23,5 @@ class DataTagModel(Base):  # pylint: disable=too-few-public-methods
     category: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
     analysis: Mapped[int] = mapped_column(ForeignKey("bayesian_analysis.id", ondelete="CASCADE"))
     data_id: Mapped[int] = mapped_column(ForeignKey("nlp_data.id", ondelete="CASCADE"))
-    data: Mapped[DataModel] = relationship(back_populates="tags")
+    data: Mapped['DataModel'] = relationship(back_populates="tags")
     time_created: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)

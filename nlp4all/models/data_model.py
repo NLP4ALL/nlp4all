@@ -28,12 +28,12 @@ class DataModel(Base):  # pylint: disable=too-few-public-methods
 
     id: Mapped[int] = mapped_column(primary_key=True)
     data_source_id: Mapped[int] = mapped_column(ForeignKey("data_source.id"))
-    data_source: Mapped[DataSourceModel] = relationship(back_populates="data")
+    data_source: Mapped['DataSourceModel'] = relationship(back_populates="data")
     document: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
-    annotations: Mapped[list[DataAnnotationModel]] = relationship(back_populates="data")
-    tags: Mapped[list[DataTagModel]] = relationship(back_populates="data")
+    annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="data")
+    tags: Mapped[list['DataTagModel']] = relationship(back_populates="data")
     category_id: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
-    category: Mapped[DataTagCategoryModel] = relationship()
+    category: Mapped['DataTagCategoryModel'] = relationship(back_populates="data")
 
     @property
     def text(self) -> str:

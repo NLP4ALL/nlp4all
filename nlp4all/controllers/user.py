@@ -1,20 +1,20 @@
 """User / Login related controller."""  # pylint: disable=invalid-name
 
 import os
-from random import randint
 import secrets
+import typing as t
 from PIL import Image
 
-
-from flask import flash, redirect, request, url_for, abort
-from flask_login import current_user, login_user, logout_user
+from werkzeug.local import LocalProxy
+from flask import flash, redirect, request, url_for, abort, current_app
+from flask_login import current_user, login_user, logout_user, confirm_login
 from flask_mail import Message
-from flask_bcrypt import check_password_hash, generate_password_hash
 from nlp4all import db
 from ..helpers.site import is_safe_url
+from ..helpers.pyutil import classproperty
 
 
-from ..models import BayesianAnalysisModel, OrganizationModel, UserModel
+from ..models import OrganizationModel, UserModel
 
 from ..forms.user import (
     LoginForm,
@@ -22,16 +22,29 @@ from ..forms.user import (
     RegistrationForm,
     RequestResetForm,
     ResetPasswordForm,
-    IMCRegistrationForm,
 )
 
 from .base import BaseController
+
+if t.TYPE_CHECKING:
+    from werkzeug.wrappers import Response
+    from flask_bcrypt import Bcrypt
+    current_user: LocalProxy[UserModel] = current_user
 
 
 class UserController(BaseController):
     """User Controller"""
 
     view_subdir = "user"
+
+    @classproperty
+    def bcrypt(cls) -> "Bcrypt":
+        """Bcrypt"""
+        if current_app is None:
+            raise RuntimeError("No application found")
+        if "bcrypt" not in current_app.extensions:
+            raise RuntimeError("Bcrypt not initialized")
+        return current_app.extensions["bcrypt"]
 
     @classmethod
     def account(cls):
@@ -49,7 +62,7 @@ class UserController(BaseController):
         if request.method == "GET":
             form.username.data = current_user.username
             form.email.data = current_user.email
-        image_file = url_for("static", filename="profile_pics/" + current_user.image_file)
+        image_file = request.host_url + "static/profile_pics/" + current_user.image_file
         return cls.render_template("account.html", title="Account",
                                    image_file=image_file, form=form)
 
@@ -69,6 +82,16 @@ class UserController(BaseController):
         return picture_fn
 
     @classmethod
+    def next_or_home(cls) -> 'Response':
+        """Redirect to next or home"""
+        next_page = request.args.get("next")
+        if next_page:
+            if not is_safe_url(next_page, request):
+                abort(400)
+            return redirect(next_page)
+        return redirect(url_for("project_controller.home"))
+
+    @classmethod
     def login(cls):
         """Login page"""
         if current_user.is_authenticated:
@@ -76,16 +99,22 @@ class UserController(BaseController):
         form = LoginForm()
         if form.validate_on_submit():
             user = UserModel.query.filter_by(email=form.email.data).first()
-            if user and check_password_hash(user.password, form.password.data):
+            if user and cls.bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
-                next_page = request.args.get("next")
-                if next_page:
-                    if not is_safe_url(next_page, request):
-                        return abort(400)
-                    return redirect(next_page)
-                return redirect(url_for("project_controller.home"))
+                return cls.next_or_home()
             flash("Login Unsuccessful. Please check email and password", "danger")
         return cls.render_template("login.html", title="Login", form=form)
+
+    @classmethod
+    def reauth(cls):
+        form = LoginForm()
+        if form.validate_on_submit():
+            if current_user and cls.bcrypt.check_password_hash(current_user.password, form.password.data):
+                flash("Reauthenticated.", "info")
+                confirm_login()
+                return cls.next_or_home()
+            flash("Login Unsuccessful. Please check email and password", "danger")
+        return cls.render_template("reauth.html", title="Reauthenticate", form=form)
 
     @classmethod
     def logout(cls):
@@ -102,7 +131,7 @@ class UserController(BaseController):
         form = RegistrationForm()
         form.organizations.choices = [(str(o.id), o.name) for o in OrganizationModel.query.all()]
         if form.validate_on_submit():
-            hashed_password = generate_password_hash(form.password.data).decode("utf-8")
+            hashed_password = cls.bcrypt.generate_password_hash(form.password.data).decode("utf-8")
             org = OrganizationModel.query.get(int(form.organizations.data))
             user = UserModel(
                 username=form.username.data,
@@ -140,50 +169,12 @@ class UserController(BaseController):
             return redirect(url_for("reset_request"))
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            hashed_password = generate_password_hash(form.password.data).decode("utf-8")
+            hashed_password = cls.bcrypt.generate_password_hash(form.password.data).decode("utf-8")
             user.password = hashed_password
             db.session.commit()
             flash("Your password has been updated! You are now able to log in", "success")
             return redirect(url_for("login"))
         return cls.render_template("reset_token.html", title="Reset Password", form=form)
-
-    @classmethod
-    def register_imc(cls):
-        """IMC registration page"""
-        if current_user.is_authenticated:
-            return redirect(url_for("project_controller.home"))
-        form = IMCRegistrationForm()
-        if form.validate_on_submit():
-            fake_id = randint(0, 99999999999)
-            fake_email = str(fake_id) + "@arthurhjorth.com"
-            fake_password = str(fake_id)
-            hashed_password = generate_password_hash(fake_password).decode("utf-8")
-            imc_org = OrganizationModel.query.filter_by(name="ATU").all()
-            a_project = imc_org[0].projects[0]  # error when no project. out of range TODO
-            the_name = form.username.data
-            if any(UserModel.query.filter_by(username=the_name)):
-                the_name = the_name + str(fake_id)
-            user = UserModel(
-                username=the_name, email=fake_email, password=hashed_password, organizations=imc_org
-            )
-            db.add(user)
-            db.session.commit()
-            login_user(user)
-            userid = current_user.id
-            name = current_user.username + "'s personal analysis"
-            bayes_analysis = BayesianAnalysisModel(
-                user=userid,
-                name=name,
-                project=a_project.id,
-                data={"counts": 0, "words": {}},
-                tweets=[],
-                annotation_tags={},
-                annotate=1,
-            )
-            db.add(bayes_analysis)
-            db.session.commit()
-            return redirect(url_for("project_controller.home"))
-        return cls.render_template("register_imc.html", form=form)
 
     @classmethod
     def send_reset_email(cls, user):
