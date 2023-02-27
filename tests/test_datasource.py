@@ -3,7 +3,7 @@
 # import json
 # import pytest
 # import python_jsonschema_objects as pjs
-from nlp4all.helpers.database import schema_aliased_path_dict
+from nlp4all.helpers.data_source import schema_aliased_path_dict
 
 
 def test_schema_to_path_dict(jsonschema, schema_paths):
