@@ -8,7 +8,6 @@ from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from flask import Flask, current_app
 from flask.cli import with_appcontext
-from flask_bcrypt import generate_password_hash
 from sqlalchemy import select
 from ..database import Base
 from ..config import get_env_variable
@@ -348,6 +347,7 @@ def create_default_user(org: 'OrganizationModel') -> None:
     """Creates the default user."""
     from ..models import UserModel
     from ..models import OrganizationModel
+    from ..controllers import UserController
     from .. import db
 
     # First, we check if there are any admins for this org
@@ -369,7 +369,7 @@ def create_default_user(org: 'OrganizationModel') -> None:
     user = UserModel(
         username=user_name,
         email=user_name,
-        password=generate_password_hash(user_password).decode("utf-8"),
+        password=UserController.bcrypt.generate_password_hash(user_password).decode("utf-8"),
         admin=True
     )
     user.organizations.append(org)
