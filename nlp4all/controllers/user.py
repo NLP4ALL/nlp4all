@@ -37,7 +37,7 @@ class UserController(BaseController):
 
     view_subdir = "user"
 
-    @classproperty[Bcrypt]
+    @classproperty
     def bcrypt(cls) -> "Bcrypt":
         """Bcrypt"""
         if current_app is None:
@@ -109,7 +109,7 @@ class UserController(BaseController):
     def reauth(cls):
         form = LoginForm()
         if form.validate_on_submit():
-            if current_user and check_password_hash(current_user.password, form.password.data):
+            if current_user and cls.bcrypt.check_password_hash(current_user.password, form.password.data):
                 flash("Reauthenticated.", "info")
                 confirm_login()
                 return cls.next_or_home()
@@ -131,7 +131,7 @@ class UserController(BaseController):
         form = RegistrationForm()
         form.organizations.choices = [(str(o.id), o.name) for o in OrganizationModel.query.all()]
         if form.validate_on_submit():
-            hashed_password = generate_password_hash(form.password.data).decode("utf-8")
+            hashed_password = cls.bcrypt.generate_password_hash(form.password.data).decode("utf-8")
             org = OrganizationModel.query.get(int(form.organizations.data))
             user = UserModel(
                 username=form.username.data,
@@ -169,7 +169,7 @@ class UserController(BaseController):
             return redirect(url_for("reset_request"))
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            hashed_password = generate_password_hash(form.password.data).decode("utf-8")
+            hashed_password = cls.bcrypt.generate_password_hash(form.password.data).decode("utf-8")
             user.password = hashed_password
             db.session.commit()
             flash("Your password has been updated! You are now able to log in", "success")
