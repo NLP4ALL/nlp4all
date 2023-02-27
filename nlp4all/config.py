@@ -40,6 +40,10 @@ if DB_BACKEND == "postgres":
         url=pg_host,
         db=pg_db)
 
+MQ_HOST = os.getenv("MQ_HOST", "rabbitmq")
+CELERY_BROKER_URL = f"amqp://guest@{MQ_HOST}//"
+CELERY_RESULT_BACKEND = f"rpc://guest@{MQ_HOST}//"
+
 
 class Config:  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app."""
@@ -58,6 +62,13 @@ class Config:  # pylint: disable=too-few-public-methods
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = DB_URI
     STATIC_DIR = "static"
+
+    # Celery
+    CELERY: dict = dict(
+        broker_url=CELERY_BROKER_URL,
+        result_backend=CELERY_RESULT_BACKEND,
+        task_ignore_result=True,
+    )
 
     SPACY_MODEL_TYPES = {
         "small": "sm",

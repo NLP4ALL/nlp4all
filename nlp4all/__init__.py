@@ -3,10 +3,10 @@ nlp4all module
 """
 
 from typing import Union
-
 from flask import Flask
 from flask_login import LoginManager
 from flask_cors import CORS
+from flask_wtf.csrf import CSRFProtect
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -14,6 +14,7 @@ from flask_migrate import Migrate
 
 from .helpers import database as dbhelper
 from .helpers import nlp
+from .helpers.celery import celery_init_app
 from .config import get_config, Config
 from .database import Base, nlp_sa_meta
 from .models import load_user
@@ -24,6 +25,7 @@ db: SQLAlchemy = SQLAlchemy(
     model_class=Base,
     engine_options={"future": True})
 migrate = Migrate()
+csrf = CSRFProtect()
 
 
 def create_app(env: Union[None, str] = None) -> Flask:
@@ -40,6 +42,8 @@ def create_app(env: Union[None, str] = None) -> Flask:
     Router.run(app)
 
     CORS(app)
+
+    csrf.init_app(app)
 
     app.extensions['bcrypt'] = Bcrypt(app)
     login_manager = LoginManager(app)
@@ -66,5 +70,7 @@ def create_app(env: Union[None, str] = None) -> Flask:
             "This is ONLY for development purposes",
             "because SQLite does not support JSONB"))
         model_cols_jsonb_to_json(app, Base)
+
+    celery_init_app(app)
 
     return app

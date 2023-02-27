@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <fieldset class="mb-3">
+                <legend class="border-bottom mb-4">Create new data source</legend>
+                <div class="mb-3">
+                    {{ form.data_source_name.label(class="form-label") }}
+                    {% if form.data_source_name.errors %}
+                        {{ form.data_source_name(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.data_source_name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.data_source_name(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.data_source_description.label(class="form-label")}}<br>
+                    {{ form.data_source_description(class="form-control form-control-lg")}}
+                </div>
+                <div class="mb-3">
+                    {{ form.data_source.label(class="form-label")}}<br>
+                    {{ form.data_source(class="form-control form-control-lg")}}
+                    {% for error in form.data_source.errors %}
+                        <span style="color :red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            <div class="mb-3">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{% endblock content %}

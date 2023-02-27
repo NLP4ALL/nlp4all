@@ -57,7 +57,7 @@ module = [
     "flask_mail.*",
     "flask_bcrypt.*",
     "flask_migrate.*",
-
+    "celery.*",
 ]
 ignore_missing_imports = true
 

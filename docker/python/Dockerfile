@@ -45,6 +45,7 @@ COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --no-cache /wheels/*
 COPY ./docker/python/entrypoint.sh $HOME
+COPY ./make_celery.py $HOME
 RUN chmod +x $HOME/entrypoint.sh
 RUN chown -R app:app $HOME
 

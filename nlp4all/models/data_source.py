@@ -7,11 +7,11 @@ This will be use to interface with individual users' data sources
 from __future__ import annotations
 
 import typing as t
-from sqlalchemy import String
+from sqlalchemy import String, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
-from ..helpers.database import schema_aliased_path_dict
+from ..helpers.data_source import schema_aliased_path_dict
 
 if t.TYPE_CHECKING:
     from .data_model import DataModel
@@ -27,12 +27,19 @@ class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
     projects: Mapped[list['ProjectModel']] = relationship(
         secondary=project_data_source_table,
         back_populates="data_sources")
-    meta: Mapped[dict] = mapped_column(MutableJSONB, nullable=False)
-    schema: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
+    meta: Mapped[dict] = mapped_column(MutableJSONB, nullable=True)
+    schema: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=True)
+    filename: Mapped[str] = mapped_column(String(80), nullable=True)
     data_source_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    data_source_description: Mapped[str] = mapped_column(Text(), nullable=True)
     data: Mapped[list['DataModel']] = relationship(back_populates="data_source")
     # shared
     # groups / projects /etc need to be implemented
+
+    @property
+    def ready(self) -> bool:
+        """Returns True if the data source is ready to be used"""
+        return self.meta is not None and self.schema is not None
 
     def _meta_required_keys(self) -> dict[str, object]:
         """Returns a list of required keys for meta
