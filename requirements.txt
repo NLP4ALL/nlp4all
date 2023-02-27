@@ -44,7 +44,7 @@ langcodes==3.3.0
 lazy-object-proxy==1.9.0
 Mako==1.2.4
 Markdown==3.4.1
-MarkupSafe==2.1.1
+MarkupSafe==2.1.2
 matplotlib-inline
 mccabe==0.7.0
 murmurhash==1.0.9
