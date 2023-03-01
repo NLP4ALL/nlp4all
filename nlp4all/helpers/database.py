@@ -47,7 +47,7 @@ def create_default_user(org: 'UserGroupModel') -> None:
     stmt = select(UserModel).where(  # type: ignore
         UserModel.admin
     ).where(  # type: ignore
-        UserModel.organizations.any(UserGroupModel.id == org.id)
+        UserModel.user_groups.any(UserGroupModel.id == org.id)
     )
     admin: UserModel = db.session.scalars(stmt).first()  # type: ignore
     if admin is not None:

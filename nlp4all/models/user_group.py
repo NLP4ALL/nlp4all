@@ -1,4 +1,4 @@
-"""Organization model"""  # pylint: disable=invalid-name
+"""UserGroup model"""  # pylint: disable=invalid-name
 
 import typing as t
 from sqlalchemy import String
