@@ -11,11 +11,11 @@ if t.TYPE_CHECKING:
     from .project_model import ProjectModel
 
 
-class OrganizationModel(Base):  # pylint: disable=too-few-public-methods
-    """Organization model."""
+class UserGroupModel(Base):  # pylint: disable=too-few-public-methods
+    """UserGroup model."""
 
-    __tablename__ = "organization"
+    __tablename__ = "user_group"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    users: Mapped[t.List['UserModel']] = relationship(secondary=user_org_table, back_populates="organizations")
+    users: Mapped[t.List['UserModel']] = relationship(secondary=user_org_table, back_populates="user_groups")
     projects: Mapped[t.List['ProjectModel']] = relationship()

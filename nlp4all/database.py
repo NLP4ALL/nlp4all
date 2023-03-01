@@ -136,8 +136,8 @@ user_role_table = Table(
 )
 
 user_org_table = Table(
-    "user_orgs",
+    "user_groups",
     Base.metadata,
     Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
-    Column("org_id", ForeignKey("organization.id", ondelete="CASCADE"), primary_key=True),
+    Column("org_id", ForeignKey("user_group.id", ondelete="CASCADE"), primary_key=True),
 )

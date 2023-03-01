@@ -8,7 +8,7 @@ from nlp4all import db
 
 from ..models import (
     BayesianAnalysisModel,
-    OrganizationModel,
+    UserGroupModel,
     DataTagCategoryModel,
     ProjectModel,
     BayesianRobotModel
@@ -43,15 +43,15 @@ class ProjectController(BaseController):
         """Add project page"""
         form = AddProjectForm()
         # find forst alle mulige organizations
-        form.organization.choices = [(str(o.id), o.name) for o in OrganizationModel.query.all()]
+        form.group.choices = [(str(o.id), o.name) for o in UserGroupModel.query.all()]
         form.categories.choices = [(str(s.id), s.name) for s in DataTagCategoryModel.query.all()]
         if form.validate_on_submit():
             # orgs = [int(n) for n in form.organization.data]
             # orgs_objs = Organization.query.filter(Organization.id.in_(orgs)).all()
-            org = OrganizationModel.query.get(int(form.organization.data))
+            group = UserGroupModel.query.get(int(form.group.data))
             cats = [int(n) for n in form.categories.data]
             a_project = add_project(
-                name=form.title.data, description=form.description.data, org=org.id, cat_ids=cats
+                name=form.title.data, description=form.description.data, group=group.id, cat_ids=cats
             )
             project_id = a_project.id
             return redirect(url_for("project_controller.home", project=project_id))
@@ -113,7 +113,7 @@ class ProjectController(BaseController):
             # the org if it is a shared model, but not if it is a "shared",
             # meaning everyone tags the same tweets
             # @TODO: pretty sure this is broken
-            org = OrganizationModel.query.get(a_project.organization)
+            org = UserGroupModel.query.get(a_project.user_group)
             for _ in org.users:
                 bayes_robot = BayesianRobotModel(
                     name=current_user.username + "s robot", analysis=bayes_analysis.id

@@ -11,34 +11,34 @@ from ..database import Base
 from ..config import get_env_variable
 
 if t.TYPE_CHECKING:
-    from ..models import OrganizationModel
+    from ..models import UserGroupModel
 
 
-def create_default_org() -> 'OrganizationModel':
-    """Creates the default organization."""
-    from ..models import OrganizationModel
+def create_default_org() -> 'UserGroupModel':
+    """Creates the default group."""
+    from ..models import UserGroupModel
     from .. import db
 
     org_name = get_env_variable("NLP4ALL_ORG_NAME")
     # if the matching org already exists, don't create it
-    stmt = select(OrganizationModel).where(OrganizationModel.name == org_name)
-    org: OrganizationModel = db.session.scalars(stmt).first()  # type: ignore
+    stmt = select(UserGroupModel).where(UserGroupModel.name == org_name)
+    org: UserGroupModel = db.session.scalars(stmt).first()  # type: ignore
 
     if org is not None:
         current_app.logger.warning(f"Default org already exists (id: {org.id}, name: {org.name}), not creating it.")
         return org
 
-    org = OrganizationModel(name=org_name)
+    org = UserGroupModel(name=org_name)
     db.session.add(org)
     db.session.commit()
     current_app.logger.info(f"Created default org: {org_name} (id: {org.id})", )
     return org
 
 
-def create_default_user(org: 'OrganizationModel') -> None:
+def create_default_user(org: 'UserGroupModel') -> None:
     """Creates the default user."""
     from ..models import UserModel
-    from ..models import OrganizationModel
+    from ..models import UserGroupModel
     from ..controllers import UserController
     from .. import db
 
@@ -47,7 +47,7 @@ def create_default_user(org: 'OrganizationModel') -> None:
     stmt = select(UserModel).where(  # type: ignore
         UserModel.admin
     ).where(  # type: ignore
-        UserModel.organizations.any(OrganizationModel.id == org.id)
+        UserModel.organizations.any(UserGroupModel.id == org.id)
     )
     admin: UserModel = db.session.scalars(stmt).first()  # type: ignore
     if admin is not None:
@@ -64,7 +64,7 @@ def create_default_user(org: 'OrganizationModel') -> None:
         password=UserController.bcrypt.generate_password_hash(user_password).decode("utf-8"),
         admin=True
     )
-    user.organizations.append(org)
+    user.user_groups.append(org)
     db.session.add(user)
     db.session.commit()
     current_app.logger.info(f"Created default admin user {user_name} (id: {user.id}) for org {org.name} (id: {org.id})")

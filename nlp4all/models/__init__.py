@@ -9,7 +9,7 @@ from .bayesian_analysis import BayesianAnalysisModel as BayesianAnalysisModel
 from .confusion_matrix import ConfusionMatrixModel as ConfusionMatrixModel
 from .data_source import DataSourceModel as DataSourceModel
 from .data_model import DataModel as DataModel
-from .organization_model import OrganizationModel as OrganizationModel
+from .user_group import UserGroupModel as UserGroupModel
 from .project_model import ProjectModel as ProjectModel
 from .role_model import RoleModel as RoleModel
 from .data_annotation import DataAnnotationModel as DataAnnotationModel

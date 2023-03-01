@@ -32,9 +32,9 @@
                     {% endif %}
                 </div>
                 <div class="mb-3">
-                    {{ form.organization.label(class="form-label")}}<br>
-                    {{ form.organization(class="form-control form-control-lg")}}
-                    {% for error in form.organization.errors %}
+                    {{ form.groups.label(class="form-label")}}<br>
+                    {{ form.groups(class="form-control form-control-lg")}}
+                    {% for error in form.groups.errors %}
                         <span style="color :red;">[{{ error }}]</span>
                     {% endfor %}
                 </div>

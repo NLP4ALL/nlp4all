@@ -11,10 +11,12 @@ import jwt
 from ..database import Base, user_org_table, user_role_table
 
 if t.TYPE_CHECKING:
-    from .organization_model import OrganizationModel
+    from .user_group import UserGroupModel
     from .role_model import RoleModel
     from .bayesian_analysis import BayesianAnalysisModel
     from .data_annotation import DataAnnotationModel
+    from .data_source import DataSourceModel
+    from .project_model import ProjectModel
 
 
 class UserModel(Base, UserMixin):
@@ -26,7 +28,7 @@ class UserModel(Base, UserMixin):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     image_file: Mapped[str] = mapped_column(String(20), nullable=False, default="default.jpg")
     password: Mapped[str] = mapped_column(String(60), nullable=False)
-    organizations: Mapped[t.List['OrganizationModel']] = relationship(
+    user_groups: Mapped[t.List['UserGroupModel']] = relationship(
         secondary=user_org_table,
         back_populates="users")
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -35,6 +37,8 @@ class UserModel(Base, UserMixin):
     # data_sources: Mapped['DataSourceModel'] = relationship()
     # data_sources should come via project
     data_annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="user")
+    data_sources: Mapped[list['DataSourceModel']] = relationship(back_populates="user")
+    projects: Mapped[list['ProjectModel']] = relationship(back_populates="user")
 
     def get_reset_token(self, secret_key: str, expires_sec: int = 1800) -> str:
         """Get a reset token.

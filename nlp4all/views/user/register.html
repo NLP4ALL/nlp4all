@@ -61,9 +61,9 @@
                 </div>
 
                 <div class="mb-3">
-                    {{ form.organizations.label(class="form-label")}}<br>
-                    {{ form.organizations(class="form-control form-control-lg")}}
-                    {% for error in form.organizations.errors %}
+                    {{ form.groups.label(class="form-label")}}<br>
+                    {{ form.groups(class="form-control form-control-lg")}}
+                    {% for error in form.groups.errors %}
                         <span style="color :red;">[{{ error }}]</span>
                     {% endfor %}
                 </div>

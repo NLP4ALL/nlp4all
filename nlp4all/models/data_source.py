@@ -7,7 +7,8 @@ This will be use to interface with individual users' data sources
 from __future__ import annotations
 
 import typing as t
-from sqlalchemy import String, Text
+import enum
+from sqlalchemy import String, Text, ForeignKey, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
@@ -16,6 +17,15 @@ from ..helpers.data_source import schema_aliased_path_dict
 if t.TYPE_CHECKING:
     from .data_model import DataModel
     from .project_model import ProjectModel
+    from .user_model import UserModel
+
+
+class DataSourceStatus(enum.Enum):
+    """DataSource status."""
+
+    ACTIVE = "active"
+    DRAFT = "draft"
+    DELETED = "deleted"
 
 
 class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
@@ -33,6 +43,12 @@ class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
     data_source_name: Mapped[str] = mapped_column(String(80), nullable=False)
     data_source_description: Mapped[str] = mapped_column(Text(), nullable=True)
     data: Mapped[list['DataModel']] = relationship(back_populates="data_source")
+    user: Mapped['UserModel'] = relationship(back_populates="data_sources")
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    status: Mapped[DataSourceStatus] = mapped_column(
+        Enum(DataSourceStatus),
+        default=DataSourceStatus.DRAFT,
+        nullable=False)
     # shared
     # groups / projects /etc need to be implemented
 
