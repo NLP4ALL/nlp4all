@@ -8,7 +8,7 @@ import typing as t
 from sqlalchemy import Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from ..database import Base, project_data_source_table, project_categories_table, MutableJSON
+from ..database import Base, project_data_source_table, project_categories_table, MutableJSON, user_group_project_table
 
 if t.TYPE_CHECKING:
     from .data_source import DataSourceModel
@@ -35,7 +35,9 @@ class ProjectModel(Base):
     description: Mapped[str] = mapped_column()
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
     user: Mapped[UserModel] = relationship(back_populates="projects")
-    user_groups: Mapped[list[UserGroupModel]] = relationship(back_populates="projects")
+    user_groups: Mapped[list[UserGroupModel]] = relationship(
+        secondary=user_group_project_table,
+        back_populates="projects")
     analyses: Mapped[list['BayesianAnalysisModel']] = relationship(back_populates="project")
     categories: Mapped[list['DataTagCategoryModel']] = relationship(
         secondary=project_categories_table,

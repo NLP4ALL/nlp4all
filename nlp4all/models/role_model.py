@@ -1,9 +1,18 @@
 """Role model"""  # pylint: disable=invalid-name
 
-from sqlalchemy import String
+import enum
+from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..database import Base
+
+
+class Role(enum.Enum):
+    """Role."""
+
+    ADMIN = "admin"
+    STAFF = "staff"
+    STUDENT = "student"
 
 
 class RoleModel(Base):  # pylint: disable=too-few-public-methods
@@ -11,4 +20,4 @@ class RoleModel(Base):  # pylint: disable=too-few-public-methods
 
     __tablename__ = "role"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), unique=True)
+    name: Mapped[Role] = mapped_column(Enum(Role), nullable=False, default=Role.STUDENT)

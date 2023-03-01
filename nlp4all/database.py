@@ -141,3 +141,10 @@ user_org_table = Table(
     Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
     Column("org_id", ForeignKey("user_group.id", ondelete="CASCADE"), primary_key=True),
 )
+
+user_group_project_table = Table(
+    "user_group_projects",
+    Base.metadata,
+    Column("user_group_id", ForeignKey("user_group.id", ondelete="CASCADE"), primary_key=True),
+    Column("project_id", ForeignKey("project.id", ondelete="CASCADE"), primary_key=True),
+)
