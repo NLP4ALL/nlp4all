@@ -63,4 +63,3 @@ networks:
   back-tier: {}
 volumes:
   postgres_data_dev:
-  rabbit:
