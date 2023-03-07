@@ -75,4 +75,3 @@ networks:
 volumes:
   postgres_data_prod:
   static_volume:
-  rabbit:

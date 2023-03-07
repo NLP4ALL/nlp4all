@@ -55,7 +55,7 @@ class Config:  # pylint: disable=too-few-public-methods
     LOG_LEVEL = logging.WARNING
 
     # Security
-    BCRYPT_LOG_ROUNDS: int = 16
+    BCRYPT_LOG_ROUNDS: int = 12
     BCRYPT_HASH_PREFIX: str = "2b"
     BCRYPT_HANDLE_LONG_PASSWORDS: bool = True
 
