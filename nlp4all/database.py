@@ -2,13 +2,15 @@
 
 import typing as t
 
-from sqlalchemy import Column, ForeignKey, Table
+import enum
+from sqlalchemy import Column, ForeignKey, Table, Text, DateTime, String, Enum
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.ext.mutable import MutableDict
 from flask_sqlalchemy.query import Query
-from sqlalchemy.orm import registry
+from sqlalchemy.orm import registry, mapped_column, Mapped
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.dialects.postgresql import JSONB, JSON
+from datetime import datetime
 
 from sqlalchemy_json import NestedMutable
 
@@ -44,6 +46,27 @@ class Base(metaclass=DeclarativeMeta):  # pylint: disable=too-few-public-methods
 # and the main use of these custom
 # classes is to allow us to replace them
 # at runtime if we're using sqlite
+
+class BackgroundTaskStatus(enum.Enum):
+    """Background task status."""
+
+    PENDING = 0
+    STARTED = 1
+    SUCCESS = 2
+    FAILURE = 4
+
+
+class BackgroundTaskMixin:
+    """Background task mixin"""
+    task_status: Mapped[BackgroundTaskStatus] = mapped_column(
+        Enum(BackgroundTaskStatus),
+        default=BackgroundTaskStatus.PENDING,
+        nullable=False
+    )
+    task_id: Mapped[str] = mapped_column(String(64), nullable=True)
+    task_result: Mapped[str] = mapped_column(Text(), nullable=True)
+    task_started_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+    task_finished_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
 
 
 class N4ANestedJSONB(JSONB):  # pylint: disable=too-many-ancestors

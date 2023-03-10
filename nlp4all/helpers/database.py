@@ -9,9 +9,17 @@ from flask.cli import with_appcontext
 from sqlalchemy import select
 from ..database import Base
 from ..config import get_env_variable
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
+
 
 if t.TYPE_CHECKING:
     from ..models import UserGroupModel
+
+
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
 
 
 def create_default_org() -> 'UserGroupModel':

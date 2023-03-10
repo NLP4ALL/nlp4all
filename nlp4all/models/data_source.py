@@ -11,7 +11,7 @@ import enum
 from sqlalchemy import String, Text, ForeignKey, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table
+from ..database import Base, NestedMutableJSONB, MutableJSONB, project_data_source_table, BackgroundTaskMixin
 from ..helpers.data_source import schema_aliased_path_dict
 
 if t.TYPE_CHECKING:
@@ -28,7 +28,7 @@ class DataSourceStatus(enum.Enum):
     DELETED = "deleted"
 
 
-class DataSourceModel(Base):  # pylint: disable=too-few-public-methods
+class DataSourceModel(Base, BackgroundTaskMixin):  # pylint: disable=too-few-public-methods
     """DataSource class manages users' data sources"""
 
     __tablename__ = 'data_source'

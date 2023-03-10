@@ -3,6 +3,7 @@
 import os
 from datetime import datetime
 from flask import redirect, url_for, current_app
+from flask_login import current_user
 from werkzeug.utils import secure_filename
 from .base import BaseController
 from ..forms.data_source import AddDataSourceForm, ConfigureDataSourceForm
@@ -38,6 +39,8 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
             f.save(destination)
             ds = DataSourceModel(
                 data_source_name=form.data_source_name.data,
+                user=current_user,
+                user_id=current_user.id,  # type: ignore
                 filename=filename)
             db.session.add(ds)
             db.session.commit()
