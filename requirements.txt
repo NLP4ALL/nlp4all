@@ -36,7 +36,7 @@ Flask-Bcrypt==1.0.1
 Flask-Email==1.4.4
 Flask-Login==0.6.2
 Flask-Mail==0.9.1
-Flask-WTF==1.0.1
+Flask-WTF==1.1.1
 Flask==2.2.3
 genson==1.2.2
 greenlet==2.0.2
