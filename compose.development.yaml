@@ -45,7 +45,7 @@ services:
       context: .
       target: nlpapp-dev
       dockerfile: ./docker/python/Dockerfile
-    command: celery -A make_celery worker -l info
+    command: bash -c "watchmedo auto-restart --recursive --pattern='*.py' -- celery -A make_celery worker -l info"
     volumes:
       - ./nlp4all:/home/app/nlp4all
     env_file:

@@ -28,7 +28,7 @@ class DataSourceStatus(enum.Enum):
     DELETED = "deleted"
 
 
-class DataSourceModel(Base, BackgroundTaskMixin):  # pylint: disable=too-few-public-methods
+class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-public-methods
     """DataSource class manages users' data sources"""
 
     __tablename__ = 'data_source'

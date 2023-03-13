@@ -7,8 +7,9 @@ from wtforms import (
     FileField,
     TextAreaField,
     SelectMultipleField,
+    SelectField
 )
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, NoneOf
 from flask_wtf.file import FileRequired, FileAllowed
 
 
@@ -37,8 +38,14 @@ class ConfigureDataSourceForm(FlaskForm):
     Configure data source.
     """
 
+    data_source_main = SelectField(
+        "Which field contains the main document text?",
+        validators=[
+            DataRequired(),
+            NoneOf(["Pick a primary text field..."])
+        ])
     data_source_fields = SelectMultipleField(
-        "Which fields should be used?",
+        "Which additional fields should be used?",
         validators=[
             DataRequired()
         ])

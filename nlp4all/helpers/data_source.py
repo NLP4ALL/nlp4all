@@ -5,6 +5,8 @@ from __future__ import annotations
 import typing as t
 from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
+from pathlib import Path
+import csv
 
 
 class N4AObject(Object):
@@ -176,6 +178,23 @@ def csv_to_json(csv: t.List[t.List[str]], headers: t.Union[t.List[str], None]) -
         headers = csv[0]
         csv = csv[1:]
     return [csv_row_to_json(row, headers) for row in csv]
+
+
+def csv_file_to_json(file: Path) -> t.List[dict]:
+    """Converts a CSV file to a JSON array.
+
+    Args:
+        file: The CSV file to convert.
+
+    Returns:
+        The JSON array.
+
+    Raises:
+        ValueError: If the CSV is empty.
+    """
+    with file.open('r') as f:
+        csv_data = list(csv.reader(f))
+    return csv_to_json(csv_data, None)
 
 
 def generate_schema(

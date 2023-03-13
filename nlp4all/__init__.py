@@ -27,12 +27,14 @@ db: SQLAlchemy = SQLAlchemy(
 migrate = Migrate()
 csrf = CSRFProtect()
 
+conf: Config = Config()
+
 
 def create_app(env: Union[None, str] = None) -> Flask:
     """Create the Flask app."""
-
+    global conf  # pylint: disable=global-statement
     app = Flask(__name__, template_folder="views", static_folder=None)
-    conf: Config = get_config(env)
+    conf = get_config(env, app)
     app.config.from_object(conf)
 
     db.init_app(app)
@@ -49,7 +51,7 @@ def create_app(env: Union[None, str] = None) -> Flask:
     login_manager = LoginManager(app)
     login_manager.user_loader(load_user)
     login_manager.login_message_category = "info"
-    login_manager.refresh_view = "user_controller.reauth"
+    login_manager.refresh_view = "user_controller.reauth"  # type: ignore
     login_manager.needs_refresh_message = (
         u"To protect your account, please reauthenticate to access this page."
     )

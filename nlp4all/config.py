@@ -1,10 +1,14 @@
 """Flask configuration"""
 
+import typing as t
 import os
 import logging
 import secrets
 from pathlib import Path
 # from dotenv import load_dotenv
+
+if t.TYPE_CHECKING:
+    from flask import Flask
 
 
 def get_env_variable(name: str) -> str:
@@ -53,6 +57,7 @@ class Config:  # pylint: disable=too-few-public-methods
     SECRET_FILE_PATH = Path(".flask_secret")
     DB_BACKEND = DB_BACKEND
     LOG_LEVEL = logging.WARNING
+    DATA_UPLOAD_DIR: str = 'data'
 
     # Security
     BCRYPT_LOG_ROUNDS: int = 12
@@ -139,7 +144,7 @@ class ProductionConfig(Config):  # pylint: disable=too-few-public-methods
     """Configuration for the Flask app in production."""
 
 
-def get_config(env=None):
+def get_config(env=None, app: t.Optional['Flask'] = None):
     """Get the configuration for the Flask app."""
     if env is None:
         try:
@@ -147,21 +152,26 @@ def get_config(env=None):
         except EnvironmentError:
             env = 'production'
             print(f'env is not set, using: {env}')
-
+    conf: t.Union[Config, None] = None
     if env == 'production':
         if DB_URI == "":
             raise EnvironmentError('Cannot use SQLite in production')
-        return ProductionConfig(env)
+        conf = ProductionConfig(env)
 
     if env == 'testing':
-        return TestConfig(env)
+        conf = TestConfig(env)
 
     if env == 'development':
         if DB_URI == "":
             raise EnvironmentError('Cannot use SQLite in production')
-        return DevelopmentConfig(env)
+        conf = DevelopmentConfig(env)
 
     if env == 'localdev':
-        return LocalDevelopmentConfig(env)
+        conf = LocalDevelopmentConfig(env)
+
+    if conf is not None:
+        if app is not None:
+            conf.DATA_UPLOAD_DIR = os.path.join(app.root_path, conf.DATA_UPLOAD_DIR)
+        return conf
 
     raise EnvironmentError(f'Unknown environment: {env}')

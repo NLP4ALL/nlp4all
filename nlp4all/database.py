@@ -3,16 +3,20 @@
 import typing as t
 
 import enum
-from sqlalchemy import Column, ForeignKey, Table, Text, DateTime, String, Enum
+from datetime import datetime
+from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.ext.declarative import declared_attr
 from flask_sqlalchemy.query import Query
-from sqlalchemy.orm import registry, mapped_column, Mapped
+from sqlalchemy.orm import registry, mapped_column, Mapped, relationship
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.dialects.postgresql import JSONB, JSON
-from datetime import datetime
-
 from sqlalchemy_json import NestedMutable
+
+if t.TYPE_CHECKING:
+    from .models import BackgroundTaskModel
+
 
 mapper_registry = registry()
 nlp_sa_meta = mapper_registry.metadata
@@ -48,8 +52,13 @@ class Base(metaclass=DeclarativeMeta):  # pylint: disable=too-few-public-methods
 # at runtime if we're using sqlite
 
 class BackgroundTaskStatus(enum.Enum):
-    """Background task status."""
+    """Background task status.
 
+    PENDING: Task is pending
+    STARTED: Task has started
+    SUCCESS: Task has completed successfully
+    FAILURE: Task has failed
+    """
     PENDING = 0
     STARTED = 1
     SUCCESS = 2
@@ -58,15 +67,16 @@ class BackgroundTaskStatus(enum.Enum):
 
 class BackgroundTaskMixin:
     """Background task mixin"""
-    task_status: Mapped[BackgroundTaskStatus] = mapped_column(
-        Enum(BackgroundTaskStatus),
-        default=BackgroundTaskStatus.PENDING,
-        nullable=False
-    )
-    task_id: Mapped[str] = mapped_column(String(64), nullable=True)
-    task_result: Mapped[str] = mapped_column(Text(), nullable=True)
-    task_started_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
-    task_finished_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey('background_task.id'), nullable=True)
+
+    @declared_attr
+    def task(cls) -> Mapped['BackgroundTaskModel']:
+        return relationship('BackgroundTaskModel')
+
+
+class TimestampMixin:
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.now(), onupdate=datetime.now())
 
 
 class N4ANestedJSONB(JSONB):  # pylint: disable=too-many-ancestors

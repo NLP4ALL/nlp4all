@@ -32,7 +32,7 @@ class DataModel(Base):  # pylint: disable=too-few-public-methods
     document: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
     annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="data")
     tags: Mapped[list['DataTagModel']] = relationship(back_populates="data")
-    category_id: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
+    category_id: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"), nullable=True)
     category: Mapped['DataTagCategoryModel'] = relationship(back_populates="data")
 
     @property

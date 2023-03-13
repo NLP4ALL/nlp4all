@@ -43,7 +43,7 @@ class AdminController(BaseController):
 
     @classmethod
     def celery_test(cls, x: int, y: int):
-        result = add_test.delay(x, y)
+        result = add_test.delay(x, y)  # type: ignore
         return redirect(url_for("admin_controller.celery_result", task_id=result.id))
 
     @classmethod

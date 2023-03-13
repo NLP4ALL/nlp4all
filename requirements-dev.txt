@@ -16,3 +16,4 @@ snowballstemmer==2.2.0
 flake8-docstrings==1.6.0
 types-Flask_Cors==3.0.10
 types-Pillow==9.4.0.10
+watchdog[watchmedo]==2.3.1

@@ -73,6 +73,7 @@ FROM base as nlpapp-dev
 
 # add dev requirements
 COPY --from=builder /usr/src/app/requirements-dev.txt .
+RUN apt install -y libyaml-dev
 RUN pip install --progress-bar off --no-cache-dir -r requirements-dev.txt
 # install debugpy for remote debug listening
 RUN pip install debugpy

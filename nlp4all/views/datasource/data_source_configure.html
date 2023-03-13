@@ -6,6 +6,19 @@
             <fieldset class="mb-3">
                 <legend class="border-bottom mb-4">Configure data source {{ ds.name }}</legend>
                 <div class="mb-3">
+                    {{ form.data_source_main.label(class="form-label") }}
+                    {% if form.data_source_main.errors %}
+                        {{ form.data_source_main(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.data_source_main.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.data_source_main(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
                     {{ form.data_source_fields.label(class="form-label") }}
                     {% if form.data_source_fields.errors %}
                         {{ form.data_source_fields(class="form-control form-control-lg is-invalid") }}
