@@ -8,8 +8,15 @@ from celery import shared_task
 from .. import db, conf
 from ..models import DataSourceModel, DataModel, BackgroundTaskModel
 from ..database import BackgroundTaskStatus
-from sqlalchemy import select, func
-from .data_source import csv_file_to_json, generate_schema
+from sqlalchemy import select
+from sqlalchemy.orm import scoped_session
+# from sqlalchemy import func
+from .data_source import (
+    csv_file_to_json,
+    generate_schema,
+    minimum_paths_for_deletion,
+    schema_path_to_jsonb_path
+)
 
 
 def load_data_file(ds: DataSourceModel) -> None:
@@ -99,12 +106,48 @@ def prune_data_source(data_source_id: int, selected_fields: t.Collection[str]) -
     task.task_status = BackgroundTaskStatus.STARTED
     db.session.commit()
     paths = data_source.aliased_paths
-    all_paths = set(paths.values())
-    selected_paths = set([paths[field] for field in selected_fields])
-    paths_to_remove = all_paths - selected_paths
+    selected_paths = {field: paths[field] for field in selected_fields}
 
-    # try:
-    #     db.session.update(DataModel).filter(
-    #         DataModel.data_source_id == data_source_id).values(
-    #             document=DataModel.document.op("#-")(
-    #                 paths_to_remove)).execute()
+    paths_to_remove = minimum_paths_for_deletion(selected_paths, paths)
+
+    # reference query
+    # with paths(id,path_arr) as
+    #         (select id, path_arr from
+    #             (select id,document,jsonb_paths(document) path_arr from
+    #                 nlp_data where data_source_id={data_source_id}) c
+    #             where
+    # (path_arr[1]='path_part_obj' and path_arr[2]='path_part_sub_obj')
+    # or (path_arr[1]='path_part_obj' and path_arr[3]='path_part_obj_under_array')
+    #     update nlp_data a
+    #         set document = a.document #- b.path_arr
+    #         from paths as b where a.id=b.id;
+
+
+    try:
+        main_query: str = """
+WITH paths (id,path_arr) AS
+    (SELECT id, path_arr
+        FROM
+            (SELECT id,document,jsonb_paths(document) path_arr
+                FROM
+                    {:data_table} WHERE data_source_id={:data_source_id}) c
+        WHERE
+            (path_arr[1]='path_part_obj' AND path_arr[2]='path_part_sub_obj')
+        or (path_arr[1]='path_part_obj' AND path_arr[3]='path_part_obj_under_array')
+UPDATE {:data_table} a
+    SET document = a.document #- b.path_arr
+    FROM paths as b WHERE a.id=b.id;
+"""
+        for path_tuple in paths_to_remove.values():
+            sess: scoped_session = db.session
+            jsonb_path = schema_path_to_jsonb_path(path_tuple)
+            sess.execute(
+                f"update nlp_data set document=document #- '{jsonb_path}' where data_source_id={data_source_id}")
+            
+        db.session.commit()
+        task.task_status = BackgroundTaskStatus.SUCCESS
+        task.status_message = "Data source pruned successfully"
+    except Exception as e:
+        task.task_status = BackgroundTaskStatus.FAILURE
+        task.status_message = str(e)
+    db.session.commit()

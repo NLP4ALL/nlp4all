@@ -9,7 +9,14 @@ from io import StringIO
 
 import pytest
 
-from nlp4all.helpers.data_source import csv_to_json, generate_schema, csv_row_to_json, remove_sub_paths
+from nlp4all.helpers.data_source import (
+    csv_to_json,
+    generate_schema,
+    csv_row_to_json,
+    minimum_paths_for_deletion,
+    path_with_parents,
+    schema_path_to_jsonb_path
+)
 
 
 @pytest.mark.data
@@ -79,6 +86,23 @@ def test_json_schema(jsondata, jsonschema):
 
     assert schema == jsonschema
 
+
+@pytest.mark.data
+@pytest.mark.helper
+def test_path_with_parents():
+    """Test getting a path with its parents."""
+    keep = [
+        "a.b",
+        "b.a",
+    ]
+
+    assert path_with_parents(keep) == set([
+        "a",
+        "a.b",
+        "b",
+        "b.a"])
+
+
 @pytest.mark.data
 @pytest.mark.helper
 def test_remove_sub_paths():
@@ -103,7 +127,7 @@ def test_remove_sub_paths():
         "c.a.a": ("properties", "c", "properties", "a", "properties", "a"),
     }
 
-    paths_to_remove = remove_sub_paths(keep, paths)
+    paths_to_remove = minimum_paths_for_deletion(keep, paths)
     print(paths_to_remove)
     assert paths_to_remove == {
         "a.a": ("properties", "a", "properties", "a"),
@@ -112,3 +136,10 @@ def test_remove_sub_paths():
         "b.b": ("properties", "b", "properties", "b"),
         "c": ("properties", "c"),
     }
+
+
+@pytest.mark.data
+@pytest.mark.helper
+def test_schema_path_to_jsonb_path():
+    path_tuple = ("properties", "b", "properties", "a", "items", "a")
+    assert schema_path_to_jsonb_path(path_tuple) == '$."b"."a"[*]."a"'

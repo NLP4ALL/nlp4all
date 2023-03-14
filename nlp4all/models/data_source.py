@@ -76,7 +76,7 @@ class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-pub
         """Returns True if the meta has all the required keys"""
         return all(key in meta for key in self._meta_required_keys())
 
-    def _filterable_required_keys(self) -> dict[str, t.Type]:
+    def _filterable_required_keys(self) -> dict[str, t.Any]:
         """Returns a list of required keys for filterable
 
         This is mainly for documentation purposes, but can be used to validate.

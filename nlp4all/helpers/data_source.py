@@ -7,7 +7,6 @@ from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from pathlib import Path
 import csv
-import itertools
 
 
 class N4AObject(Object):
@@ -361,7 +360,7 @@ def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
                 "h"
             ))
     returns:
-        ".entities.media[*].sizes.small.h"
+        '."entities"."media[*]"."sizes"."small"."h"'
 
 
     Args:
@@ -371,41 +370,33 @@ def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
         The postgres path.
     """
     postgres_path = []
+    nitems = len(path)
     for i, part in enumerate(path):
         if part == "properties":
-            postgres_path.append('.' + path[i + 1])
+            postgres_path.append('."' + path[i + 1] + '"')
         elif part == "items":
-            postgres_path.append("[*]")
-    return "".join(postgres_path)
+            if i + 1 < nitems:
+                postgres_path.append('[*]."' + path[i + 1] + '"')
+            else:
+                postgres_path.append('[*]')
+    return '$' + "".join(postgres_path)
 
 
-# def get_parents(paths):
-#     parents = set()
-#     for path in paths:
-#         parent = path[:-1]
-#         while parent:
-#             parents.add(parent)
-#             parent = parent[:-1]
-#     return parents
-def get_parents(path):
-    """Get a set of all parent paths for a given path."""
-    parts = path.split(".")
-    return {frozenset(parts[:i]) for i in range(1, len(parts))}
+def path_with_parents(paths: t.Iterable[str]) -> t.Set[str]:
+    """Get a set of all parent paths for the given paths."""
+
+    all_paths: t.List = []
+    for path in paths:
+        for i in range(1, len(path.split(".")) + 1):
+            all_paths += [".".join(path.split(".")[:i])]
+    return set(all_paths)
 
 
-def remove_sub_paths(
+def minimum_paths_for_deletion(
         keep: t.Dict[str, t.Tuple[str, ...]],
         paths: t.Dict[str, t.Tuple[str, ...]]) -> t.Dict[str, t.Tuple[str, ...]]:
-    """Given a list of paths that the user wants to keep, we can exclude
-    any child paths IF and only if all of the child paths are in the list of
-    paths to remove.
-
-    However, if a child is not in the list of paths to remove, we should keep
-    the parent path(s). We can assume that "keep" is paths - remove.
-
-    This is to make the queries that remove properties from the jsonb more efficient.
-    It will be slow, let's make it as efficient as possible.
-
+    """
+    Keep only the bare minimum (highest level) items for deletion.
     e.g.
     keep = {
         "a.b.c.d": ("properties", "a", "properties", "b", "items", "properties", "c", "properties", "d"),
@@ -423,17 +414,26 @@ def remove_sub_paths(
     remove_sub_paths(selected, paths)
     returns:
     {
-        "a.b.c": ("properties", "a", "properties", "b"),
+        "x.y.z": ("properties", "x", "properties", "y", "properties", "z"),
     }
     """
 
-    keep_set = set(get_parents(path) for path in keep.keys())
+    keep_set = path_with_parents(keep.keys())
+
     paths_to_remove = {}
-    for path, _ in paths.items():
-        if get_parents(path) not in keep_set:
-            paths_to_remove[path] = paths[path]
-    # remove paths in keep from paths_to_remove
-    for k in keep:
-        paths_to_remove.pop(k, None)
-    
+    for path, path_tuple in paths.items():
+        if path not in keep_set:
+            # we only want to add the highest level item
+            # if we have a.b.c and a.b, we only want to add a.b
+            hierarchy = path.split(".")
+            if len(hierarchy) > 1:
+                for i in range(1, len(hierarchy) + 1):
+                    parent = ".".join(hierarchy[:i])
+                    if parent in keep_set:
+                        continue
+                    paths_to_remove[parent] = paths[parent]
+                    break
+            else:
+                paths_to_remove[path] = path_tuple
+
     return paths_to_remove
