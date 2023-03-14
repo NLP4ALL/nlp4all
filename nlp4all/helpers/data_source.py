@@ -197,6 +197,22 @@ def csv_file_to_json(file: Path) -> t.List[dict]:
     return csv_to_json(csv_data, None)
 
 
+def schema_builder() -> N4ASchemaBuilder:
+    """Create the schema builder for nlp4all.
+
+    This can be reused to add more data to an existing schema (e.g. on import, for each row).
+
+    Returns:
+        The schema builder.
+    """
+    # add our custom list and object strategies
+    N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [
+                                        Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
+    N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
+    N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
+    return N4ASchemaBuilder()
+
+
 def generate_schema(
         data: t.Union[dict, t.List[dict]],
         builder: t.Union[SchemaBuilder, None] = None) -> dict:
@@ -259,12 +275,7 @@ def generate_schema(
 
     """
     if builder is None:
-        # add our custom list and object strategies
-        N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [
-                                         Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
-        N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
-        N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
-        builder = N4ASchemaBuilder()
+        builder = schema_builder()
 
     if isinstance(data, list):
         for item in data:
