@@ -20,6 +20,8 @@ DataSourceRouter.route("/", methods=["GET", "POST"])(
 DataSourceRouter.route("/create",
                        methods=["GET", "POST"])(DataSourceController.create)
 DataSourceRouter.route("/configure/<int:datasource_id>",
-                       methods=["GET", "POST"])(DataSourceController.configure)
+                       methods=["GET", "POST"])(DataSourceController.configure)  # type: ignore
+DataSourceRouter.route("/configure/<int:datasource_id>/<string:step>",
+                       methods=["GET", "POST"])(DataSourceController.configure)  # type: ignore
 DataSourceRouter.route("/save",
                        methods=["GET", "POST"])(DataSourceController.save)

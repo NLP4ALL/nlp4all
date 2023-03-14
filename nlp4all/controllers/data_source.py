@@ -1,15 +1,16 @@
 """Data sources."""  # pylint: disable=invalid-name
 
+import typing as t
 import os
 from datetime import datetime
 from flask import redirect, url_for
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 from .base import BaseController
-from ..forms.data_source import AddDataSourceForm, ConfigureDataSourceForm
+from ..forms.data_source import AddDataSourceForm, DataSourceFieldSelectForm
 from ..models import DataSourceModel, BackgroundTaskModel
 from .. import db, conf
-from ..helpers.data_source_tasks import process_data_source
+from ..helpers import data_source_tasks as bg_tasks
 from ..database import BackgroundTaskStatus
 
 
@@ -51,7 +52,7 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
                 filename=filename)
             db.session.add(ds)
             db.session.commit()
-            task_result = process_data_source.delay(ds.id)  # type: ignore
+            task_result = bg_tasks.process_data_source.delay(ds.id)  # type: ignore
             bg = BackgroundTaskModel(
                 task_id=task_result.id,
             )
@@ -63,9 +64,11 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
         return cls.render_template("data_source_add.html", title="New Data Source", form=form)
 
     @classmethod
-    def configure(cls, datasource_id: int):
+    def configure(cls, datasource_id: int, step: str = "fields"):
         """Specify data fields"""
-        ds = db.session.query(DataSourceModel).filter_by(id=datasource_id).first()
+        ds: t.Union[DataSourceModel, None] = db.session.query(DataSourceModel).filter_by(id=datasource_id).first()
+        if ds is None:
+            return cls.render_template("404.html", title="Not found")
         task = ds.task
         if task.task_status in [BackgroundTaskStatus.PENDING, BackgroundTaskStatus.STARTED]:
             return cls.render_template(
@@ -74,18 +77,42 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
                 ds=ds,
                 task=task
             )
-        form = ConfigureDataSourceForm()
-        form.data_source_fields.choices = [f for f in ds.path_aliases_from_schema().keys()]
-        form.data_source_main.choices = ['Pick a primary text field...'] + form.data_source_fields.choices
-        if form.validate_on_submit():
-            return redirect(url_for("datasource_controller.configure", datasource_id=ds.id, step=""))
+        if task.task_status == BackgroundTaskStatus.FAILURE:
+            return cls.render_template(
+                "data_source_fail.html",
+                title="Data source processing failed",
+                ds=ds,
+                task=task
+            )
+        if step == "fields":
+            form = DataSourceFieldSelectForm()
+            form.data_source_fields.choices = [f for f in ds.aliased_paths.keys()]
+            form.data_source_main.choices = ['Pick a primary text field...'] + form.data_source_fields.choices
+            if form.validate_on_submit():
+                ds.document_text_path = ds.aliased_path(form.data_source_main.data)  # type: ignore
+                task = bg_tasks.prune_data_source.delay(ds.id, form.data_source_fields.data)  # type: ignore
+                bg = BackgroundTaskModel(
+                    task_id=task.id,
+                )
+                db.session.commit()
+                db.session.add(bg)
+                ds.task_id = bg.id
+                db.session.commit()
+                return redirect(url_for("datasource_controller.configure", datasource_id=ds.id, step="categories"))
 
-        return cls.render_template(
-            "data_source_configure.html",
-            title="Configure Data Source",
-            ds=ds,
-            form=form
-        )
+            return cls.render_template(
+                "data_source_select_fields.html",
+                title="Set up Data Source",
+                ds=ds,
+                form=form
+            )
+        # @TODO: Add categories step
+        if step == "categories":
+            return cls.render_template(
+                "data_source_select_list.html",
+                title="CHANGE ME",
+                ds=ds
+            )
 
     @classmethod
     def save(cls):

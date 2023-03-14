@@ -309,24 +309,123 @@ def schema_aliased_path_dict(schema: dict,
 
         new_path = path
         new_title_prefix = title_prefix
-
-        if "properties" in schema:
-            for key, value in schema["properties"].items():
-                new_path = path + [key]
-                new_title_prefix = title_prefix + [schema["properties"][key].get("title", key)]
+        stype = schema.get("type", [])
+        if not isinstance(stype, list):
+            stype = [stype]
+        if 'object' in stype:
+            if "properties" not in schema:
+                paths[".".join(new_title_prefix)] = tuple(new_path)
+            else:
+                for key, value in schema["properties"].items():
+                    new_path = path + ["properties", key]
+                    new_title_prefix = title_prefix + [schema["properties"][key].get("title", key)]
+                    _schema_aliased_path_dict(
+                        value,
+                        new_path,
+                        new_title_prefix,
+                        depth=depth - 1 if depth is not None else None)
+        elif 'array' in stype:
+            new_path = path + ["items"]
+            for item in schema["items"]:
                 _schema_aliased_path_dict(
-                    value,
+                    item,
                     new_path,
                     new_title_prefix,
                     depth=depth - 1 if depth is not None else None)
-        elif "items" in schema:
-            new_path = path + ["items"]
-            new_title_prefix = title_prefix + [schema.get("title", "items")]
-            _schema_aliased_path_dict(schema["items"], new_path, new_title_prefix,
-                                      depth=depth - 1 if depth is not None else None)
-
-        paths[".".join(new_title_prefix)] = tuple(new_path)
+        elif any(map(lambda v: v in stype, ["string", "number", "integer", "boolean", "null"])):
+            paths[".".join(new_title_prefix)] = tuple(new_path)
 
     _schema_aliased_path_dict(schema, [], title_prefix=[], depth=depth)
 
     return paths
+
+
+def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
+    """Converts a schema path to a postgres path.
+
+    This is needed because arrays use [] and objects use . notation.
+
+    example for aliased path "entities.media.sizes.small.h":
+        schema_path_to_postgres_path((
+                "properties",
+                "entities",
+                "properties",
+                "media",
+                "items",
+                "properties",
+                "sizes",
+                "properties",
+                "small",
+                "properties",
+                "h"
+            ))
+    returns:
+        ".entities.media[*].sizes.small.h"
+
+
+    Args:
+        path: The schema path to convert.
+
+    Returns:
+        The postgres path.
+    """
+    postgres_path = []
+    for i, part in enumerate(path):
+        if part == "properties":
+            postgres_path.append('.' + path[i + 1])
+        elif part == "items":
+            postgres_path.append("[*]")
+    return "".join(postgres_path)
+
+
+"""
+See: https://stackoverflow.com/a/75514179
+and
+https://dba.stackexchange.com/questions/303985/how-to-obtain-the-path-to-the-match-of-a-jsonpath-query-in-postgresql-14
+
+
+CREATE OR REPLACE FUNCTION jsonb_paths (data jsonb, prefix text[] default '{}')
+  RETURNS SETOF text[] STABLE PARALLEL SAFE LANGUAGE plpgsql AS $function$
+DECLARE
+    key     text;
+    value   jsonb;
+    path    text[];
+    counter integer := 0;
+BEGIN
+    IF jsonb_typeof(data) = 'object' THEN
+        FOR key, value IN SELECT * FROM jsonb_each(data)
+        LOOP
+            RETURN NEXT array_append(prefix, key);
+            IF jsonb_typeof(value) IN ('array', 'object') THEN
+                RETURN QUERY SELECT * FROM jsonb_paths (value, array_append(prefix, key));
+            END IF;
+        END LOOP;
+    ELSIF jsonb_typeof(data) = 'array' THEN
+        FOR value IN SELECT * FROM jsonb_array_elements(data)
+        LOOP
+            RETURN NEXT array_append(prefix, counter::text);
+            IF jsonb_typeof(value) IN ('array', 'object') THEN
+                RETURN QUERY SELECT * FROM jsonb_paths (value, array_append(prefix, counter::text));
+            END IF;
+            counter := counter + 1;
+        END LOOP;
+    END IF;
+END $function$;
+
+select jsonb_paths(document) from nlp_data where id=861;
+
+
+example usage:
+
+(select id, path_arr from (select id,document,jsonb_paths(document) path_arr from nlp_data) c where path_arr[1]='entities' and path_arr[2]='user_mentions');
+
+to delete:
+with paths(id,path_arr) as
+    (select id, path_arr from
+        (select id,document,jsonb_paths(document) path_arr from
+            nlp_data where id=861) c
+        where path_arr[1]='entities' and path_arr[2]='user_mentions')
+update nlp_data a
+    set document = a.document #- b.path_arr
+    from paths as b where a.id=b.id;
+"""

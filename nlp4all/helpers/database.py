@@ -9,9 +9,10 @@ from flask.cli import with_appcontext
 from sqlalchemy import select
 from ..database import Base
 from ..config import get_env_variable
+from sqlalchemy.schema import DDL
 from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.compiler import compiles
-
+from sqlalchemy.engine import Engine
 
 if t.TYPE_CHECKING:
     from ..models import UserGroupModel
@@ -20,6 +21,41 @@ if t.TYPE_CHECKING:
 @compiles(DropTable, "postgresql")
 def _compile_drop_table(element, compiler, **kwargs):
     return compiler.visit_drop_table(element) + " CASCADE"
+
+
+def create_postgres_jsonb_paths_function(engine: Engine) -> None:
+    stmt = """
+CREATE OR REPLACE FUNCTION jsonb_paths (data jsonb, prefix text[] default '{}')
+  RETURNS SETOF text[] STABLE PARALLEL SAFE LANGUAGE plpgsql AS $function$
+DECLARE
+    key     text;
+    value   jsonb;
+    path    text[];
+    counter integer := 0;
+BEGIN
+    IF jsonb_typeof(data) = 'object' THEN
+        FOR key, value IN SELECT * FROM jsonb_each(data)
+        LOOP
+            RETURN NEXT array_append(prefix, key);
+            IF jsonb_typeof(value) IN ('array', 'object') THEN
+                RETURN QUERY SELECT * FROM jsonb_paths (value, array_append(prefix, key));
+            END IF;
+        END LOOP;
+    ELSIF jsonb_typeof(data) = 'array' THEN
+        FOR value IN SELECT * FROM jsonb_array_elements(data)
+        LOOP
+            RETURN NEXT array_append(prefix, counter::text);
+            IF jsonb_typeof(value) IN ('array', 'object') THEN
+                RETURN QUERY SELECT * FROM jsonb_paths (value, array_append(prefix, counter::text));
+            END IF;
+            counter := counter + 1;
+        END LOOP;
+    END IF;
+END $function$;
+"""
+    ddl_stmt = DDL(stmt)
+    with engine.connect() as conn:
+        conn.execute(ddl_stmt)
 
 
 def create_default_org() -> 'UserGroupModel':
@@ -82,6 +118,7 @@ def init_db() -> None:  # pylint: disable=too-many-locals
     """Initializes the database."""
     engine = current_app.extensions["sqlalchemy"].engine
     Base.metadata.create_all(bind=engine)
+    create_postgres_jsonb_paths_function(engine)
     org = create_default_org()
     create_default_user(org)
 

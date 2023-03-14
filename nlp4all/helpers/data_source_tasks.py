@@ -8,7 +8,7 @@ from celery import shared_task
 from .. import db, conf
 from ..models import DataSourceModel, DataModel, BackgroundTaskModel
 from ..database import BackgroundTaskStatus
-from sqlalchemy import select
+from sqlalchemy import select, func
 from .data_source import csv_file_to_json, generate_schema
 
 
@@ -40,11 +40,11 @@ def load_data_file(ds: DataSourceModel) -> None:
         data_processed += 1
         ds.task.current_step = data_processed
         db.session.commit()
+    ds.aliased_paths = ds.path_aliases_from_schema()
 
 
-@shared_task(ignore_result=False)
-def process_data_source(data_source_id: int) -> None:
-    """Process a data source."""
+def wait_for_data_source(data_source_id: int) -> t.Tuple[DataSourceModel, BackgroundTaskModel]:
+    """Wait for a data source/task to be available."""
     # we should allow for a little delay with updating the DB
     attempts: int = 0
     data_source: t.Union[DataSourceModel, None] = None
@@ -60,11 +60,17 @@ def process_data_source(data_source_id: int) -> None:
             attempts += 1
             if attempts > 5:
                 raise RuntimeError("Unable to update data source task status")
-
-        if data_source.task.task_status != BackgroundTaskStatus.PENDING:
-            return
+            continue
         break
-    task = data_source.task
+    return data_source, task
+
+
+@shared_task(ignore_result=False)
+def process_data_source(data_source_id: int) -> None:
+    """Process a data source."""
+    data_source, task = wait_for_data_source(data_source_id)
+    if task.task_status != BackgroundTaskStatus.PENDING:
+        return
     task.task_status = BackgroundTaskStatus.STARTED
     db.session.commit()
     try:
@@ -78,3 +84,26 @@ def process_data_source(data_source_id: int) -> None:
         db.session.query(DataModel).filter(
             DataModel.data_source_id == data_source_id).delete()
     db.session.commit()
+
+
+@shared_task(ignore_result=False)
+def prune_data_source(data_source_id: int, selected_fields: t.Collection[str]) -> None:
+    """Prune data source.
+
+    This removes fields that were not selected by the user.
+    """
+    data_source, task = wait_for_data_source(data_source_id)
+    if task.task_status != BackgroundTaskStatus.PENDING:
+        return
+    task.task_status = BackgroundTaskStatus.STARTED
+    db.session.commit()
+    paths = data_source.aliased_paths
+    all_paths = set(paths.values())
+    selected_paths = set([paths[field] for field in selected_fields])
+    paths_to_remove = all_paths - selected_paths
+
+    # try:
+    #     db.session.update(DataModel).filter(
+    #         DataModel.data_source_id == data_source_id).values(
+    #             document=DataModel.document.op("#-")(
+    #                 paths_to_remove)).execute()

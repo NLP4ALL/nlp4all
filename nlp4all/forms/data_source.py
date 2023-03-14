@@ -33,7 +33,7 @@ class AddDataSourceForm(FlaskForm):
     submit = SubmitField("Create")
 
 
-class ConfigureDataSourceForm(FlaskForm):
+class DataSourceFieldSelectForm(FlaskForm):
     """
     Configure data source.
     """
