@@ -24,6 +24,40 @@ def _compile_drop_table(element, compiler, **kwargs):
 
 
 def create_postgres_jsonb_paths_function(engine: Engine) -> None:
+    """
+    This creates a function that is a recursive generator for all paths in a jsonb object.
+    It's extremely inefficient, but we can restrict the usage only for deleting data
+    from documents when users select the fields they want to keep.
+    e.g. they don't want to keep a bunch of geo info from a tweet, but they do want text and handle.
+
+        See: https://stackoverflow.com/a/75514179
+        and
+        https://dba.stackexchange.com/questions/303985/how-to-obtain-the-path-to-the-match-of-a-jsonpath-query-in-postgresql-14
+
+
+
+        select jsonb_paths(document) from nlp_data where id=xxx;
+
+
+        example usage:
+
+        (select id, path_arr
+            from (select id,document,jsonb_paths(document) path_arr
+                from nlp_data) c
+            where path_arr[1]='entities' and path_arr[2]='user_mentions');
+
+        to delete:
+        with paths(id,path_arr) as
+            (select id, path_arr from
+                (select id,document,jsonb_paths(document) path_arr from
+                    nlp_data where id=xxx) c
+                where path_arr[1]='entities' and path_arr[2]='user_mentions')
+        update nlp_data a
+            set document = a.document #- b.path_arr
+            from paths as b where a.id=b.id;
+    """
+    if engine.dialect.name != "postgresql":
+        return
     stmt = """
 CREATE OR REPLACE FUNCTION jsonb_paths (data jsonb, prefix text[] default '{}')
   RETURNS SETOF text[] STABLE PARALLEL SAFE LANGUAGE plpgsql AS $function$

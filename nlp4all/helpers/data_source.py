@@ -7,6 +7,7 @@ from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from pathlib import Path
 import csv
+import itertools
 
 
 class N4AObject(Object):
@@ -378,54 +379,61 @@ def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
     return "".join(postgres_path)
 
 
-"""
-See: https://stackoverflow.com/a/75514179
-and
-https://dba.stackexchange.com/questions/303985/how-to-obtain-the-path-to-the-match-of-a-jsonpath-query-in-postgresql-14
+# def get_parents(paths):
+#     parents = set()
+#     for path in paths:
+#         parent = path[:-1]
+#         while parent:
+#             parents.add(parent)
+#             parent = parent[:-1]
+#     return parents
+def get_parents(path):
+    """Get a set of all parent paths for a given path."""
+    parts = path.split(".")
+    return {frozenset(parts[:i]) for i in range(1, len(parts))}
 
 
-CREATE OR REPLACE FUNCTION jsonb_paths (data jsonb, prefix text[] default '{}')
-  RETURNS SETOF text[] STABLE PARALLEL SAFE LANGUAGE plpgsql AS $function$
-DECLARE
-    key     text;
-    value   jsonb;
-    path    text[];
-    counter integer := 0;
-BEGIN
-    IF jsonb_typeof(data) = 'object' THEN
-        FOR key, value IN SELECT * FROM jsonb_each(data)
-        LOOP
-            RETURN NEXT array_append(prefix, key);
-            IF jsonb_typeof(value) IN ('array', 'object') THEN
-                RETURN QUERY SELECT * FROM jsonb_paths (value, array_append(prefix, key));
-            END IF;
-        END LOOP;
-    ELSIF jsonb_typeof(data) = 'array' THEN
-        FOR value IN SELECT * FROM jsonb_array_elements(data)
-        LOOP
-            RETURN NEXT array_append(prefix, counter::text);
-            IF jsonb_typeof(value) IN ('array', 'object') THEN
-                RETURN QUERY SELECT * FROM jsonb_paths (value, array_append(prefix, counter::text));
-            END IF;
-            counter := counter + 1;
-        END LOOP;
-    END IF;
-END $function$;
+def remove_sub_paths(
+        keep: t.Dict[str, t.Tuple[str, ...]],
+        paths: t.Dict[str, t.Tuple[str, ...]]) -> t.Dict[str, t.Tuple[str, ...]]:
+    """Given a list of paths that the user wants to keep, we can exclude
+    any child paths IF and only if all of the child paths are in the list of
+    paths to remove.
 
-select jsonb_paths(document) from nlp_data where id=861;
+    However, if a child is not in the list of paths to remove, we should keep
+    the parent path(s). We can assume that "keep" is paths - remove.
 
+    This is to make the queries that remove properties from the jsonb more efficient.
+    It will be slow, let's make it as efficient as possible.
 
-example usage:
+    e.g.
+    keep = {
+        "a.b.c.d": ("properties", "a", "properties", "b", "items", "properties", "c", "properties", "d"),
+        "a.b.c": ("properties", "a", "properties", "b"),
+        "x.y": ("properties", "x", "properties", "y")
+    }
+    paths = {
+        "a.b.c.d": ("properties", "a", "properties", "b", "items", "properties", "c", "properties", "d"),
+        "a.b.c": ("properties", "a", "properties", "b", "items", "properties", "c"),
+        "a.b": ("properties", "a", "properties", "b"),
+        "x": ("properties", "x"),
+        "x.y": ("properties", "x", "properties", "y"),
+        "x.y.z": ("properties", "x", "properties", "y", "properties", "z")
+    }
+    remove_sub_paths(selected, paths)
+    returns:
+    {
+        "a.b.c": ("properties", "a", "properties", "b"),
+    }
+    """
 
-(select id, path_arr from (select id,document,jsonb_paths(document) path_arr from nlp_data) c where path_arr[1]='entities' and path_arr[2]='user_mentions');
-
-to delete:
-with paths(id,path_arr) as
-    (select id, path_arr from
-        (select id,document,jsonb_paths(document) path_arr from
-            nlp_data where id=861) c
-        where path_arr[1]='entities' and path_arr[2]='user_mentions')
-update nlp_data a
-    set document = a.document #- b.path_arr
-    from paths as b where a.id=b.id;
-"""
+    keep_set = set(get_parents(path) for path in keep.keys())
+    paths_to_remove = {}
+    for path, _ in paths.items():
+        if get_parents(path) not in keep_set:
+            paths_to_remove[path] = paths[path]
+    # remove paths in keep from paths_to_remove
+    for k in keep:
+        paths_to_remove.pop(k, None)
+    
+    return paths_to_remove

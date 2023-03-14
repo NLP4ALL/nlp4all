@@ -41,6 +41,7 @@ def load_data_file(ds: DataSourceModel) -> None:
         ds.task.current_step = data_processed
         db.session.commit()
     ds.aliased_paths = ds.path_aliases_from_schema()
+    db.session.commit()
 
 
 def wait_for_data_source(data_source_id: int) -> t.Tuple[DataSourceModel, BackgroundTaskModel]:

@@ -9,7 +9,7 @@ from io import StringIO
 
 import pytest
 
-from nlp4all.helpers.data_source import csv_to_json, generate_schema, csv_row_to_json
+from nlp4all.helpers.data_source import csv_to_json, generate_schema, csv_row_to_json, remove_sub_paths
 
 
 @pytest.mark.data
@@ -78,3 +78,37 @@ def test_json_schema(jsondata, jsonschema):
     schema = generate_schema(parsed_json)
 
     assert schema == jsonschema
+
+@pytest.mark.data
+@pytest.mark.helper
+def test_remove_sub_paths():
+    """Test removing sub paths from a path dict."""
+
+    keep = {
+        "a.b": ("properties", "a", "properties", "a"),
+        "b.a": ("properties", "b"),
+    }
+    paths = {
+        "a": ("properties", "a"),
+        "a.a": ("properties", "a", "properties", "a"),
+        "a.b": ("properties", "a", "properties", "b"),
+        "b": ("properties", "b"),
+        "b.a": ("properties", "b", "properties", "a"),
+        "b.a.a": ("properties", "b", "properties", "a", "properties", "a"),
+        "b.a.b": ("properties", "b", "properties", "a", "properties", "b"),
+        "b.b": ("properties", "b", "properties", "b"),
+        "b.b.a": ("properties", "b", "properties", "b", "properties", "a"),
+        "c": ("properties", "c"),
+        "c.a": ("properties", "c", "properties", "a"),
+        "c.a.a": ("properties", "c", "properties", "a", "properties", "a"),
+    }
+
+    paths_to_remove = remove_sub_paths(keep, paths)
+    print(paths_to_remove)
+    assert paths_to_remove == {
+        "a.a": ("properties", "a", "properties", "a"),
+        "b.a.a": ("properties", "b", "properties", "a", "properties", "a"),
+        "b.a.b": ("properties", "b", "properties", "a", "properties", "b"),
+        "b.b": ("properties", "b", "properties", "b"),
+        "c": ("properties", "c"),
+    }
