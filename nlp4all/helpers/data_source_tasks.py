@@ -209,6 +209,14 @@ UPDATE {data_table} a
 """
         data_table = DataModel.__tablename__
         sess: scoped_session = db.session
+        # TODO: combine into one single massive where clause
+        # currently it's extremely slow, and it could be for many reasons
+        # also TODO: look up indexing for jsonb
+        # https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING
+        # currently it's running about 1 query / 5 minutes (at least the first few,
+        # after which it gets a bit quicker), but intuitively,
+        # it's probably almost exactly the same amount of time as doing all
+        # the queries in one go
         for path_tuple in paths_to_remove.values():
             # jsonb_path = schema_path_to_jsonb_path(path_tuple)
             path_indices = schema_path_index_and_keys_for_pgsql(path_tuple)
@@ -228,10 +236,11 @@ UPDATE {data_table} a
             result: CursorResult = sess.execute(query)  # type: ignore
             if result.rowcount > 0:
                 updated_rows += result.rowcount
-            task.task_status = BackgroundTaskStatus.SUCCESS
             task.current_step = updated_rows
             task.status_message = "Data source pruned successfully"
             sess.commit()
+        task.task_status = BackgroundTaskStatus.SUCCESS
+        sess.commit()
 
     except Exception as e:
         logging.info("Error pruning data source: " + str(e))
