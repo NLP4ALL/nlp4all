@@ -64,6 +64,7 @@ def create_app(env: Union[None, str] = None) -> Flask:
     if conf.env != "production":
         from .helpers import development  # pylint: disable=import-outside-toplevel
         app.add_url_rule('/api/help', methods=['GET'], view_func=development.help_route)
+        app.add_url_rule('/api/get_ds/<int:dsid>', methods=['GET'], view_func=development.load_data_source)
 
     if conf.DB_BACKEND == "sqlite":
         from .helpers.database import model_cols_jsonb_to_json  # pylint: disable=import-outside-toplevel

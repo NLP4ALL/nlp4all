@@ -2,7 +2,7 @@
 {% block content %}
     <div class="content-section">
         <h1>Processing data failed...</h1>
-        <p>Unfortunately, something went wrong with importing the data. Please contact a system administrator.</p>
+        <p>Unfortunately, something went wrong with importing the data. Please contact a system administrator. Error: {{ task.status_message }}</p>
         <p>Progress: {{ task.current_step }} / {{ task.total_steps }}</p>
     </div>
 {% endblock content %}

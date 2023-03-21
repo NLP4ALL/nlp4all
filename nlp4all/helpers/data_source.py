@@ -207,7 +207,7 @@ def schema_builder() -> N4ASchemaBuilder:
     """
     # add our custom list and object strategies
     N4ASchemaNode.STRATEGIES = tuple([s for s in SchemaBuilder.STRATEGIES if s not in [
-                                        Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
+        Object, List, Tuple]] + [N4ATuple, N4AList, N4AObject])
     N4ASchemaBuilder.NODE_CLASS = N4ASchemaNode
     N4ASchemaBuilder.STRATEGIES = N4ASchemaNode.STRATEGIES
     return N4ASchemaBuilder()
@@ -381,16 +381,34 @@ def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
         The postgres path.
     """
     postgres_path = []
-    nitems = len(path)
-    for i, part in enumerate(path):
-        if part == "properties":
-            postgres_path.append('."' + path[i + 1] + '"')
-        elif part == "items":
-            if i + 1 < nitems:
-                postgres_path.append('[*]."' + path[i + 1] + '"')
-            else:
-                postgres_path.append('[*]')
+    for part in path:
+        if part == "items":
+            postgres_path.append('[*]')
+        elif part != "properties":
+            postgres_path.append('."' + part + '"')
     return '$' + "".join(postgres_path)
+
+
+def schema_path_index_and_keys_for_pgsql(path: t.Tuple[str, ...]) -> t.List[t.Tuple[int, str]]:
+    """Gets the index and key for each part in a schema path.
+    This is used in the query because we can't use arrays in the query
+
+    Args:
+        path: The schema path to get the index and keys for.
+
+    Returns:
+        A list of tuples of the index and key for each part.
+    """
+
+    index_and_keys = []
+    current_index = 0  # pg is 1 indexed, but the first item is "properties" / root
+    for part in path:
+        if part == "items":
+            current_index += 1
+        elif part != "properties":
+            current_index += 1
+            index_and_keys.append((current_index, part))
+    return index_and_keys
 
 
 def path_with_parents(paths: t.Iterable[str]) -> t.Set[str]:
@@ -401,6 +419,12 @@ def path_with_parents(paths: t.Iterable[str]) -> t.Set[str]:
         for i in range(1, len(path.split(".")) + 1):
             all_paths += [".".join(path.split(".")[:i])]
     return set(all_paths)
+
+
+def find_last(lst, sought_elt):
+    for r_idx, elt in enumerate(reversed(lst)):
+        if elt == sought_elt:
+            return len(lst) - 1 - r_idx
 
 
 def minimum_paths_for_deletion(
@@ -428,23 +452,164 @@ def minimum_paths_for_deletion(
         "x.y.z": ("properties", "x", "properties", "y", "properties", "z"),
     }
     """
-
+    keep['$schema'] = ('$schema', )
     keep_set = path_with_parents(keep.keys())
-
     paths_to_remove = {}
     for path, path_tuple in paths.items():
         if path not in keep_set:
             # we only want to add the highest level item
             # if we have a.b.c and a.b, we only want to add a.b
             hierarchy = path.split(".")
-            if len(hierarchy) > 1:
-                for i in range(1, len(hierarchy) + 1):
+            h_len = len(hierarchy)
+            if h_len > 1:
+                for i in range(1, h_len + 1):
                     parent = ".".join(hierarchy[:i])
+
+                    if parent in paths_to_remove:
+                        break
                     if parent in keep_set:
                         continue
-                    paths_to_remove[parent] = paths[parent]
+                    # the key might not exist if it's an object
+                    # because we can't use objects for filtering
+                    # but we can use their usable properties
+                    if parent in paths:
+                        paths_to_remove[parent] = paths[parent]
+                    else:
+                        # we can use a "pseudo" path, this will be the path_tuple
+                        # up to the parent
+                        parent_tuple = None
+                        for j in range(i, h_len):
+                            tmp_path = ".".join(hierarchy[:j])
+                            if tmp_path in paths:
+                                parent_tuple = paths[tmp_path]
+                                break
+                        if parent_tuple is None:
+                            parent_tuple = path_tuple
+                        idx = find_last(parent_tuple, hierarchy[i - 1])
+                        if idx is not None:
+                            idx += 1
+                            paths_to_remove[parent] = parent_tuple[:idx]
+                        else:
+                            # last resort, just use the whole path
+                            paths_to_remove[parent] = parent_tuple
                     break
             else:
-                paths_to_remove[path] = path_tuple
+                if path_tuple[-1] == "items":
+                    paths_to_remove[path] = path_tuple[:-1]
+                else:
+                    paths_to_remove[path] = path_tuple
 
     return paths_to_remove
+
+# def build_delete_where_clause()
+
+
+def nested_get_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...]) -> t.List[t.Any]:
+    out = []
+    if not isinstance(dic, list):
+        dic = [dic]
+    n_keys = len(keys)
+    for di in dic:
+        for i, key in enumerate(keys):
+            if isinstance(di, list):
+                for d in di:
+                    res = nested_get_all(d, keys[i:])
+                    if res and not res == []:
+                        out += res
+            else:
+                if key in di:
+                    di = di[key]
+                    if i == n_keys - 1:
+                        out.append(di)
+                elif i == n_keys - 1 and "title" in di and di["title"] == key:
+                    out.append(di)
+    return out
+
+
+def nested_set(dic: t.Dict, keys: t.Tuple[str, ...], value: t.Any):
+    for key in keys[:-1]:
+        dic = dic.setdefault(key, {})
+    dic[keys[-1]] = value
+
+
+def nested_set_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...], value: t.Any) -> t.Union[t.Dict, t.List[t.Dict]]:
+    is_list = isinstance(dic, list)
+    if not is_list:
+        dic = [dic]
+    n_keys = len(keys)
+    for i, di in enumerate(dic):
+        if isinstance(di, list):
+            for k, d in enumerate(di):
+                res = nested_set_all(d, keys, value)
+                di[k] = res
+            dic[i] = di
+        else:
+            if keys[0] in di:
+                if n_keys == 1:
+                    di[keys[0]] = value
+                    dic[i] = di
+                else:
+                    dic[i] = nested_set_all(di[keys[0]], keys[1:], value)
+            elif n_keys == 1 and "title" in di and di["title"] == keys[0]:
+                di[keys[0]] = value
+                dic[i] = di
+    if not is_list:
+        return dic[0]
+    return dic
+
+
+def nested_del_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...]) -> t.Union[t.Dict, t.List[t.Dict]]:
+    is_list = isinstance(dic, list)
+    if not is_list:
+        dic = [dic]
+    n_keys = len(keys)
+    for i, di in enumerate(dic):
+        if isinstance(di, list):
+            new_list = []
+            for k, d in enumerate(di):
+                res = nested_del_all(d, keys)
+                new_list.append(res)
+            dic[i] = new_list
+        else:
+            if keys[0] in di:
+                if n_keys == 1:
+                    del di[keys[0]]
+                    dic[i] = di
+                else:
+                    if n_keys in (2, 3) and "required" in di and keys[-1] in di["required"]:
+                        di["required"].remove(keys[-1])
+                    new_dict = nested_del_all(di[keys[0]], keys[1:])
+                    dic[i] = {**di, keys[0]: new_dict}
+            # elif n_keys == 1 and "title" in di and di["title"] == keys[0]:
+            #     if "required" in di and keys[-1] in di["required"]:
+            #         di["required"].remove(keys[-1])
+            #     del dic[i]
+            elif n_keys in (2, 3) and "required" in di and keys[-1] in di["required"]:
+                di["required"].remove(keys[-1])
+                dic[i] = di
+    return dic if is_list else dic[0]
+
+
+def remove_paths_from_schema(schema: t.Dict, paths: t.Dict[str, t.Tuple[str, ...]]) -> dict:
+    """Removes the given paths from the schema.
+
+    Args:
+        schema: The schema to remove the paths from.
+        paths: The paths to remove.
+
+    Returns:
+        The schema with the paths removed.
+    """
+
+    for path in paths.values():
+        try:
+            val = []
+            val = nested_get_all(schema, path)
+            if len(val) == 0:
+                continue
+            schema = nested_del_all(schema, path)  # type: ignore
+        except KeyError:
+            continue
+        except TypeError:
+            pass
+    return schema

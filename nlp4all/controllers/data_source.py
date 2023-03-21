@@ -6,6 +6,7 @@ from datetime import datetime
 from flask import redirect, url_for
 from flask_login import current_user
 from werkzeug.utils import secure_filename
+from sqlalchemy.orm import joinedload
 from .base import BaseController
 from ..forms.data_source import AddDataSourceForm, DataSourceFieldSelectForm
 from ..models import DataSourceModel, BackgroundTaskModel
@@ -52,24 +53,33 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
                 filename=filename)
             db.session.add(ds)
             db.session.commit()
-            task_result = bg_tasks.process_data_source.delay(ds.id)  # type: ignore
-            bg = BackgroundTaskModel(
-                task_id=task_result.id,
-            )
-            db.session.add(bg)
-            db.session.commit()
-            ds.task_id = bg.id
-            db.session.commit()
+            bg_tasks.process_data_source.delay(ds.id)  # type: ignore
+            # bg = BackgroundTaskModel(
+            #     task_id=task_result.id,
+            # )
+            # db.session.add(bg)
+            # db.session.commit()
+            # ds.task_id = bg.id
+            # db.session.commit()
             return redirect(url_for("datasource_controller.configure", datasource_id=ds.id))
         return cls.render_template("data_source_add.html", title="New Data Source", form=form)
 
     @classmethod
     def configure(cls, datasource_id: int, step: str = "fields"):
         """Specify data fields"""
-        ds: t.Union[DataSourceModel, None] = db.session.query(DataSourceModel).filter_by(id=datasource_id).first()
+        ds: t.Union[DataSourceModel, None] = db.session.query(DataSourceModel).filter_by(
+            id=datasource_id).options(
+                joinedload(DataSourceModel.task)).first()
         if ds is None:
             return cls.render_template("404.html", title="Not found")
         task = ds.task
+        if task is None:
+            task = BackgroundTaskModel(
+                task_status=BackgroundTaskStatus.PENDING,
+                task_id="TEMP",
+                current_step=0,
+                total_steps=0,
+            )
         if task.task_status in [BackgroundTaskStatus.PENDING, BackgroundTaskStatus.STARTED]:
             return cls.render_template(
                 "data_source_processing.html",
@@ -90,14 +100,17 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
             form.data_source_main.choices = ['Pick a primary text field...'] + form.data_source_fields.choices
             if form.validate_on_submit():
                 ds.document_text_path = ds.aliased_path(form.data_source_main.data)  # type: ignore
-                task = bg_tasks.prune_data_source.delay(ds.id, form.data_source_fields.data)  # type: ignore
-                bg = BackgroundTaskModel(
-                    task_id=task.id,
-                )
+                fields_to_keep = form.data_source_fields.data + [form.data_source_main.data]  # type: ignore
+                ds.task_id = None
                 db.session.commit()
-                db.session.add(bg)
-                ds.task_id = bg.id
-                db.session.commit()
+                bg_tasks.prune_data_source.delay(ds.id, fields_to_keep)  # type: ignore
+                # bg = BackgroundTaskModel(
+                #     task_id=bg_task.id,
+                # )
+                # db.session.add(bg)
+                # db.session.commit()
+                # ds.task_id = bg.id
+                # db.session.commit()
                 return redirect(url_for("datasource_controller.configure", datasource_id=ds.id, step="categories"))
 
             return cls.render_template(

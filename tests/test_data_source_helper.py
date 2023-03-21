@@ -6,6 +6,7 @@ Database helper related tests.
 import csv
 import json
 from io import StringIO
+import pickle
 
 import pytest
 
@@ -15,7 +16,13 @@ from nlp4all.helpers.data_source import (
     csv_row_to_json,
     minimum_paths_for_deletion,
     path_with_parents,
-    schema_path_to_jsonb_path
+    schema_path_to_jsonb_path,
+    schema_path_index_and_keys_for_pgsql,
+    remove_paths_from_schema,
+    nested_del_all,
+    nested_get_all,
+    nested_set_all,
+    schema_aliased_path_dict
 )
 
 
@@ -143,3 +150,63 @@ def test_remove_sub_paths():
 def test_schema_path_to_jsonb_path():
     path_tuple = ("properties", "b", "properties", "a", "items", "a")
     assert schema_path_to_jsonb_path(path_tuple) == '$."b"."a"[*]."a"'
+    path_tuple = ("properties", "b", "properties", "a", "items", "properties", "a")
+    assert schema_path_to_jsonb_path(path_tuple) == '$."b"."a"[*]."a"'
+
+
+@pytest.mark.data
+@pytest.mark.helper
+def test_schema_path_index_and_keys_for_pgsql():
+    path_tuple = ("properties", "b", "properties", "a", "items", "a")
+    assert schema_path_index_and_keys_for_pgsql(path_tuple) == [
+        (1, "b"), (2, "a"), (4, "a")]
+    path_tuple = ("properties", "b", "properties", "a", "items", "properties", "a")
+    assert schema_path_index_and_keys_for_pgsql(path_tuple) == [
+        (1, "b"), (2, "a"), (4, "a")]
+    path_tuple = ("properties", "b", "properties", "a", "items", "properties", "a", "items", "a")
+    assert schema_path_index_and_keys_for_pgsql(path_tuple) == [
+        (1, "b"), (2, "a"), (4, "a"), (6, "a")]
+
+
+@pytest.mark.data
+@pytest.mark.helper
+def test_remove_paths_from_schema():
+    schema = {
+        "$schema": "http://json-schema.org/schema#",
+        "title": "nlp4all",
+        "type": "object",
+        "properties": {
+            "a": {"type": "integer"},
+            "b": {"type": "integer"},
+            "c": {"type": "integer"},
+            "d": {"type": "integer"},
+        },
+        "required": ["a", "b", "c"],
+    }
+    remove = {
+        "a": ("properties", "a"),
+    }
+
+    # assert remove_paths_from_schema(schema, remove) == {
+    #     "$schema": "http://json-schema.org/schema#",
+    #     "title": "nlp4all",
+    #     "type": "object",
+    #     "properties": {
+    #         "b": {"type": "integer"},
+    #         "c": {"type": "integer"},
+    #         "d": {"type": "integer"},
+    #     },
+    #     "required": ["b", "c"],
+    # }
+
+
+@pytest.mark.data
+@pytest.mark.helper
+def test_dic_crap():
+    schema = json.load(open("tests/data/schema.json"))
+    aliased = schema_aliased_path_dict(schema)
+    paths_to_keep = {'id': ('properties', 'id'), 'url': ('properties', 'url'), 'date': ('properties', 'date'), 'quotedTweet.user.descriptionUrls.url': ('properties', 'quotedTweet', 'properties', 'user', 'properties', 'descriptionUrls', 'items', 'properties', 'url'), 'quotedTweet.user.descriptionUrls.indices': ('properties', 'quotedTweet', 'properties', 'user', 'properties', 'descriptionUrls', 'items', 'properties', 'indices', 'items'), 'content': ('properties', 'content')}
+    paths_to_remove = minimum_paths_for_deletion(paths_to_keep, aliased)
+
+    print("removing paths")
+    updated_schema = remove_paths_from_schema(schema, paths_to_remove)

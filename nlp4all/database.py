@@ -67,11 +67,11 @@ class BackgroundTaskStatus(enum.Enum):
 
 class BackgroundTaskMixin:
     """Background task mixin"""
-    task_id: Mapped[int] = mapped_column(ForeignKey('background_task.id'), nullable=True)
+    task_id: Mapped[t.Optional[int]] = mapped_column(ForeignKey('background_task.id'), nullable=True)
 
     @declared_attr
     def task(cls) -> Mapped['BackgroundTaskModel']:
-        return relationship('BackgroundTaskModel')
+        return relationship('BackgroundTaskModel', foreign_keys=[cls.task_id])  # type: ignore
 
 
 class TimestampMixin:
