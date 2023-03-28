@@ -1,7 +1,7 @@
 alembic==1.9.1
 amqp==5.1.1
 asgiref==3.6.0
-astroid==2.14.2
+astroid==2.15.1
 async-timeout==4.0.2
 attrs==22.1.0
 Babel==2.11.0
