@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload, Session
 from .base import BaseController
 from ..forms.data_source import AddDataSourceForm, DataSourceFieldSelectForm
 from ..models import DataSourceModel, BackgroundTaskModel, DataModel
-from .. import db, conf
+from .. import db, conf, docdb
 from ..helpers import data_source_tasks as bg_tasks
 from ..database import BackgroundTaskStatus
 
@@ -99,7 +99,7 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
             form.data_source_fields.choices = [f for f in ds.aliased_paths.keys()]
             form.data_source_main.choices = ['Pick a primary text field...'] + form.data_source_fields.choices
             if form.validate_on_submit():
-                ds.document_text_path = ds.aliased_path(form.data_source_main.data)  # type: ignore
+                ds.set_document_text(form.data_source_main.data, ds.aliased_path(form.data_source_main.data))  # type: ignore
                 fields_to_keep = form.data_source_fields.data + [form.data_source_main.data]  # type: ignore
                 ds.task_id = None
                 db.session.commit()
@@ -135,7 +135,7 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
     @classmethod
     def inspect(cls, datasource_id: int):
         """Inspect data source"""
-        from ..helpers.data_source import remove_paths_from_schema, minimum_paths_for_deletion
+        from ..helpers.data_source import schema_aliased_path_dict
         sess: Session = db.session
         ds: t.Union[DataSourceModel, None] = sess.query(DataSourceModel).filter_by(
             id=datasource_id).first()
@@ -143,17 +143,19 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
             return cls.render_template("404.html", title="Not found")
         paths = ds.path_aliases_from_schema()
 
-        selected_paths = {field: paths[field] for field in ('content', 'id', 'user.username')}
+        # selected_paths = {field: paths[field] for field in ('content', 'id')}
 
-        paths_to_remove = minimum_paths_for_deletion(selected_paths, paths)
-        new_schema = remove_paths_from_schema(ds.schema, paths_to_remove)
+        # paths_to_remove = minimum_paths_for_deletion(selected_paths, paths)
+        new_schema = schema_aliased_path_dict(ds.schema, types_only=True)
         # get the first 10 rows from the data
-        data = sess.query(DataModel).filter_by(data_source_id=ds.id).limit(10)
+        data_collection = docdb.get_collection(ds.collection_name)
+        data = [d for d in data_collection.find().limit(10)]
 
         return cls.render_template(
             "data_source_inspect.html",
             title="Set up Data Source",
             ds=ds,
             data=data,
-            paths=new_schema
+            paths=paths,
+            anything=new_schema
         )

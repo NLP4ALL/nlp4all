@@ -1,7 +1,7 @@
 """Mongo Flask Plugin"""
 
 import typing as t
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING, TEXT
 from pymongo.collection import Collection
 from pymongo.database import Database
 from flask import Flask
@@ -37,3 +37,24 @@ class Mongo:
         if self._db is None:
             raise RuntimeError("Database not initialized")
         return self._db.get_collection(collection_name)
+
+    def add_indices_to_collection(
+            self,
+            collection: t.Union[str, Collection],
+            index_paths: t.Dict[str, t.Tuple[str, ...]],
+            primary_text_field: str) -> None:
+        """Add index to collection."""
+        if self._db is None:
+            raise RuntimeError("Database not initialized")
+        if isinstance(collection, str):
+            collection = self._db.get_collection(collection)
+        for index_path, tipe in index_paths.items():
+            if tipe[0] in ("number", "integer", "boolean"):
+                if self.app:
+                    self.app.logger.info("Creating index %s", index_path)
+                collection.create_index([(index_path, ASCENDING)], background=True)
+            elif index_path == primary_text_field and tipe[0] == "string":
+                if self.app:
+                    self.app.logger.info("Creating MAIN TEXT index %s", index_path)
+                collection.create_index([(index_path, TEXT)], background=True)
+            collection.create_index(index_path)

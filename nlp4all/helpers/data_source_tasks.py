@@ -10,8 +10,7 @@ from celery import shared_task, Task
 from .. import db, conf, docdb
 from ..models import DataSourceModel, DataModel, BackgroundTaskModel
 from ..database import BackgroundTaskStatus
-from sqlalchemy import select, text
-from sqlalchemy.engine import CursorResult
+from sqlalchemy import select
 from sqlalchemy.orm import scoped_session
 from .data_source import (
     csv_row_to_json,
@@ -19,7 +18,8 @@ from .data_source import (
     schema_builder,
     remove_paths_from_schema,
     minimum_paths_for_deletion,
-    schema_path_index_and_keys_for_pgsql
+    schema_path_to_jsonb_path,
+    schema_aliased_path_dict
 )
 
 
@@ -185,8 +185,9 @@ def prune_data_source(self: Task, data_source_id: int, selected_fields: t.Collec
     data_source, task = wait_for_data_source(data_source_id, self.request.id)
     if task.task_status != BackgroundTaskStatus.PENDING:
         return
+    sess: scoped_session = db.session
     task.task_status = BackgroundTaskStatus.STARTED
-    db.session.commit()
+    sess.commit()
     paths = data_source.path_aliases_from_schema()
 
     selected_paths = {field: paths[field] for field in selected_fields}
@@ -196,71 +197,40 @@ def prune_data_source(self: Task, data_source_id: int, selected_fields: t.Collec
     logging.info("Selected paths: " + str(selected_paths))
     logging.info("Paths to remove: " + str(paths_to_remove))
 
-    num_data_items = db.session.query(DataModel).filter(
-        DataModel.data_source_id == data_source_id).count()
-    task.total_steps = num_data_items * len(paths_to_remove)
-    db.session.commit()
-
-    updated_rows: int = 0
+    ds_collection = docdb.get_collection(data_source.collection_name)
+    update_count = 0
+    update_every = 1
     try:
-        main_query: str = """
-WITH paths (id,path_arr) AS
-    (SELECT id, path_arr
-        FROM
-            (SELECT id,document,jsonb_paths(document) path_arr
-                FROM
-                    {data_table} WHERE data_source_id=:data_source_id) c
-        WHERE
-            {where_clause})
-UPDATE {data_table} a
-    SET document = a.document #- b.path_arr
-    FROM paths as b WHERE a.id=b.id;
-"""
-        data_table = DataModel.__tablename__
-        sess: scoped_session = db.session
-        # TODO: combine into one single massive where clause
-        # currently it's extremely slow, and it could be for many reasons
-        # also TODO: look up indexing for jsonb
-        # https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING
-        # currently it's running about 1 query / 5 minutes (at least the first few,
-        # after which it gets a bit quicker), but intuitively,
-        # it's probably almost exactly the same amount of time as doing all
-        # the queries in one go
-        where_clauses = []
-        path_key_dict = {}
-        path_ind_offset = 0
-        for path_tuple in paths_to_remove.values():
-            # jsonb_path = schema_path_to_jsonb_path(path_tuple)
-            path_indices = schema_path_index_and_keys_for_pgsql(path_tuple)
-            where_clauses.append("(" + " AND ".join(
-                f"path_arr[{i}]=:path_key_{i + path_ind_offset}" for i, _ in path_indices) + ")")
-            path_keys = {"path_key_" + str(i + path_ind_offset): key for i, key in path_indices}
-            path_key_dict.update(path_keys)
-            path_ind_offset += len(path_indices)
-        query = text(main_query.format(
-            data_table=data_table,
-            where_clause=" OR ".join(where_clauses),
-        ))
-
-        query = query.bindparams(
-            data_source_id=data_source_id,
-            **path_key_dict,
-        )
-        logging.info(query)
-        result: CursorResult = sess.execute(query)  # type: ignore
-        if result.rowcount > 0:
-            updated_rows += result.rowcount
-        task.current_step = updated_rows
+        for path, path_tuple in paths_to_remove.items():
+            logging.info("Removing path: " + path)
+            jsonb_path = schema_path_to_jsonb_path(path_tuple)
+            result = ds_collection.update_many(
+                {path: {"$exists": True}},
+                {"$unset": {jsonb_path: ""}}
+            )
+            update_count += result.modified_count
+            if update_count % update_every == 0:
+                task.current_step = update_count
+                sess.commit()
+            logging.info("Removed path: " + path)
         task.status_message = "Data source pruned successfully"
-        sess.commit()
         task.task_status = BackgroundTaskStatus.SUCCESS
-        sess.commit()
         data_source.schema = remove_paths_from_schema(data_source.schema, paths_to_remove)
+        sess.commit()
     except Exception as e:
         logging.info("Error pruning data source: " + str(e))
         logging.info(traceback.format_exc())
-        task.current_step = updated_rows
         task.task_status = BackgroundTaskStatus.FAILURE
         task.status_message = str(e)
-    logging.info("Updated rows: " + str(updated_rows))
+    # now we can add indices for the remaining paths
+    try:
+        docdb.add_indices_to_collection(
+            ds_collection,
+            schema_aliased_path_dict(data_source.schema, types_only=True),
+            data_source.document_text_field)
+    except Exception as e:
+        logging.info("Error adding indices to collection: " + str(e))
+        logging.info(traceback.format_exc())
+        task.task_status = BackgroundTaskStatus.FAILURE
+        task.status_message = str(e)
     db.session.commit()

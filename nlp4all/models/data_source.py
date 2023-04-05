@@ -74,6 +74,7 @@ class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-pub
             # this would be how to access the Data.document text property
             # e.g. ('text'), ('user', 'description'), this has to be valid within the schema
             'document_text_path': t.Tuple[str, ...],  # main text of the document used for NLP
+            'document_text_field': str,  # main text of the document used for NLP
             'filterables': t.Dict[str, t.Dict[str, t.Any]],  # Name, Filterable
             'aliased_paths': t.Dict[str, t.Tuple[str, ...]],  # Name, Path: all available data paths
         }
@@ -107,6 +108,21 @@ class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-pub
     def document_text_path(self, path: t.Tuple[str, ...]):
         """Sets the path to the document text"""
         self.meta['document_text_path'] = path
+    
+    @property
+    def document_text_field(self) -> str:
+        """Returns the path to the document text"""
+        return self.meta['document_text_field']
+
+    @document_text_field.setter
+    def document_text_field(self, field: str):
+        """Sets the path to the document text"""
+        self.meta['document_text_field'] = field
+
+    def set_document_text(self, field: str, path: t.Tuple[str, ...]):
+        """Sets the document text field and path"""
+        self.document_text_field = field
+        self.document_text_path = path
 
     @property
     def filterables(self) -> t.Dict[str, t.Dict[str, t.Any]]:

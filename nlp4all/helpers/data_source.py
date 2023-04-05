@@ -7,6 +7,7 @@ from genson import SchemaBuilder, SchemaNode, SchemaStrategy
 from genson.schema.strategies import Object, List, Tuple
 from pathlib import Path
 import csv
+import re
 
 
 class N4AObject(Object):
@@ -289,7 +290,8 @@ def generate_schema(
 
 
 def schema_aliased_path_dict(schema: dict,
-                             depth: t.Union[None, int] = None) -> t.Dict[str, t.Tuple[str, ...]]:
+                             depth: t.Union[None, int] = None,
+                             types_only: bool = False) -> t.Dict[str, t.Tuple[str, ...]]:
     """Gets a dictionary of all paths in a schema, with their aliases.
     This recursively goes through a json schema and returns a list of paths to
     all properties that can contain data (i.e. not objects or arrays).
@@ -325,7 +327,7 @@ def schema_aliased_path_dict(schema: dict,
             stype = [stype]
         if 'object' in stype:
             if "properties" not in schema:
-                paths[".".join(new_title_prefix)] = tuple(new_path)
+                paths[".".join(new_title_prefix)] = tuple(new_path) if not types_only else tuple(stype)
             else:
                 for key, value in schema["properties"].items():
                     new_path = path + ["properties", key]
@@ -336,15 +338,16 @@ def schema_aliased_path_dict(schema: dict,
                         new_title_prefix,
                         depth=depth - 1 if depth is not None else None)
         elif 'array' in stype:
-            new_path = path + ["items"]
-            for item in schema["items"]:
-                _schema_aliased_path_dict(
-                    item,
-                    new_path,
-                    new_title_prefix,
-                    depth=depth - 1 if depth is not None else None)
+            if "items" in schema:
+                new_path = path + ["items"]
+                for item in schema["items"]:
+                    _schema_aliased_path_dict(
+                        item,
+                        new_path,
+                        new_title_prefix,
+                        depth=depth - 1 if depth is not None else None)
         elif any(map(lambda v: v in stype, ["string", "number", "integer", "boolean", "null"])):
-            paths[".".join(new_title_prefix)] = tuple(new_path)
+            paths[".".join(new_title_prefix)] = tuple(new_path) if not types_only else tuple(stype)
 
     _schema_aliased_path_dict(schema, [], title_prefix=[], depth=depth)
 
@@ -352,7 +355,7 @@ def schema_aliased_path_dict(schema: dict,
 
 
 def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
-    """Converts a schema path to a postgres path.
+    """Converts a schema path to a mongodb path.
 
     This is needed because arrays use [] and objects use . notation.
 
@@ -383,10 +386,10 @@ def schema_path_to_jsonb_path(path: t.Tuple[str, ...]) -> str:
     postgres_path = []
     for part in path:
         if part == "items":
-            postgres_path.append('[*]')
+            postgres_path.append('$[]')
         elif part != "properties":
-            postgres_path.append('."' + part + '"')
-    return '$' + "".join(postgres_path)
+            postgres_path.append(re.escape(part))
+    return ".".join(postgres_path)
 
 
 def schema_path_index_and_keys_for_pgsql(path: t.Tuple[str, ...]) -> t.List[t.Tuple[int, str]]:
