@@ -6,10 +6,10 @@ from datetime import datetime
 from flask import redirect, url_for
 from flask_login import current_user
 from werkzeug.utils import secure_filename
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, Session
 from .base import BaseController
 from ..forms.data_source import AddDataSourceForm, DataSourceFieldSelectForm
-from ..models import DataSourceModel, BackgroundTaskModel
+from ..models import DataSourceModel, BackgroundTaskModel, DataModel
 from .. import db, conf
 from ..helpers import data_source_tasks as bg_tasks
 from ..database import BackgroundTaskStatus
@@ -131,3 +131,29 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
     def save(cls):
         """Save data source"""
         return redirect(url_for("data_source_controller.home"))
+
+    @classmethod
+    def inspect(cls, datasource_id: int):
+        """Inspect data source"""
+        from ..helpers.data_source import remove_paths_from_schema, minimum_paths_for_deletion
+        sess: Session = db.session
+        ds: t.Union[DataSourceModel, None] = sess.query(DataSourceModel).filter_by(
+            id=datasource_id).first()
+        if ds is None:
+            return cls.render_template("404.html", title="Not found")
+        paths = ds.path_aliases_from_schema()
+
+        selected_paths = {field: paths[field] for field in ('content', 'id', 'user.username')}
+
+        paths_to_remove = minimum_paths_for_deletion(selected_paths, paths)
+        new_schema = remove_paths_from_schema(ds.schema, paths_to_remove)
+        # get the first 10 rows from the data
+        data = sess.query(DataModel).filter_by(data_source_id=ds.id).limit(10)
+
+        return cls.render_template(
+            "data_source_inspect.html",
+            title="Set up Data Source",
+            ds=ds,
+            data=data,
+            paths=new_schema
+        )

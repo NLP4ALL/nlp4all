@@ -53,11 +53,17 @@ class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-pub
         nullable=False)
     # shared
     # groups / projects /etc need to be implemented
+    document_collection_prefix: str = "user_data_"
 
     @property
     def ready(self) -> bool:
         """Returns True if the data source is ready to be used"""
         return self.meta is not None and self.schema is not None
+    
+    @property
+    def collection_name(self) -> str:
+        """Returns the collection name for the data source"""
+        return f"{self.document_collection_prefix}{self.id}"
 
     def _meta_required_keys(self) -> dict[str, object]:
         """Returns a list of required keys for meta

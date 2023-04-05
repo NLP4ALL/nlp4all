@@ -6,18 +6,18 @@ import typing as t
 import json
 import csv
 from pathlib import Path
-from time import sleep
 from celery import shared_task, Task
-from .. import db, conf
+from .. import db, conf, docdb
 from ..models import DataSourceModel, DataModel, BackgroundTaskModel
 from ..database import BackgroundTaskStatus
-from sqlalchemy import select, text, bindparam, String
+from sqlalchemy import select, text
 from sqlalchemy.engine import CursorResult
-from sqlalchemy.orm import scoped_session, joinedload
+from sqlalchemy.orm import scoped_session
 from .data_source import (
     csv_row_to_json,
     generate_schema,
     schema_builder,
+    remove_paths_from_schema,
     minimum_paths_for_deletion,
     schema_path_index_and_keys_for_pgsql
 )
@@ -74,27 +74,36 @@ def load_data_file(ds: DataSourceModel) -> None:
     af = session.autoflush
     session.autoflush = False
     task = ds.task
+    ds_collection = docdb.get_collection(ds.collection_name)
     # session.expire(task)
+    process_every = 100
+    update_every = 1000
+    data_items = []
     for data_item in reader:
         if is_csv:
-            data_item = csv_row_to_json(data_item, header)
+            data_item = csv_row_to_json(data_item, header)  # type: ignore
         else:
-            data_item = json.loads(data_item)
-        schema = generate_schema(data_item, builder)
-        data_model = DataModel(
-            data_source=ds,
-            document=data_item
-        )
+            data_item = json.loads(data_item)  # type: ignore
+        # data_model = DataModel(
+        #     data_source=ds,
+        #     document=data_item
+        # )
 
-        session.add(data_model)
+        # session.add(data_model)
         data_processed += 1
-        if data_processed % 1000 == 0:
-            session.commit()
-        elif data_processed % 50 == 0:
-            nested = session.begin_nested()
+        data_items.append(data_item)
+        if data_processed % process_every == 0:
+            schema = generate_schema(data_items, builder)
+            ds_collection.insert_many(data_items)
+            data_items = []
+        if data_processed % update_every == 0:
             task.current_step = data_processed
-            nested.commit()
-            nested.close()
+            session.commit()
+    if len(data_items) > 0:
+        schema = generate_schema(data_items, builder)
+        ds_collection.insert_many(data_items)
+        task.current_step = data_processed
+        session.commit()
 
     if schema is not None:
         ds.schema = schema
@@ -217,31 +226,36 @@ UPDATE {data_table} a
         # after which it gets a bit quicker), but intuitively,
         # it's probably almost exactly the same amount of time as doing all
         # the queries in one go
+        where_clauses = []
+        path_key_dict = {}
+        path_ind_offset = 0
         for path_tuple in paths_to_remove.values():
             # jsonb_path = schema_path_to_jsonb_path(path_tuple)
             path_indices = schema_path_index_and_keys_for_pgsql(path_tuple)
-            where_clause = " AND ".join(
-                f"path_arr[{i}]=:path_key_{i}" for i, _ in path_indices)
-            path_keys = {"path_key_" + str(i): key for i, key in path_indices}
-            query = text(main_query.format(
-                data_table=data_table,
-                where_clause=where_clause
-            ))
+            where_clauses.append("(" + " AND ".join(
+                f"path_arr[{i}]=:path_key_{i + path_ind_offset}" for i, _ in path_indices) + ")")
+            path_keys = {"path_key_" + str(i + path_ind_offset): key for i, key in path_indices}
+            path_key_dict.update(path_keys)
+            path_ind_offset += len(path_indices)
+        query = text(main_query.format(
+            data_table=data_table,
+            where_clause=" OR ".join(where_clauses),
+        ))
 
-            query = query.bindparams(
-                data_source_id=data_source_id,
-                **path_keys
-            )
-            logging.info(query)
-            result: CursorResult = sess.execute(query)  # type: ignore
-            if result.rowcount > 0:
-                updated_rows += result.rowcount
-            task.current_step = updated_rows
-            task.status_message = "Data source pruned successfully"
-            sess.commit()
+        query = query.bindparams(
+            data_source_id=data_source_id,
+            **path_key_dict,
+        )
+        logging.info(query)
+        result: CursorResult = sess.execute(query)  # type: ignore
+        if result.rowcount > 0:
+            updated_rows += result.rowcount
+        task.current_step = updated_rows
+        task.status_message = "Data source pruned successfully"
+        sess.commit()
         task.task_status = BackgroundTaskStatus.SUCCESS
         sess.commit()
-
+        data_source.schema = remove_paths_from_schema(data_source.schema, paths_to_remove)
     except Exception as e:
         logging.info("Error pruning data source: " + str(e))
         logging.info(traceback.format_exc())

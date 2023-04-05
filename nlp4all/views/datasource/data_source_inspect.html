@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section col-md-8"> {{ ds.schema }}</div>
+<div class="content-section col-md-8"> {{ paths }}</div>
+<div class="content-section col-md-8">
+{% for d in data %}
+<a class="nav-item nav-link" href="#">{{ d.id }}</a>
+<p>{{ d.document }}</p>
+{% endfor %}
+</div>
+{% endblock content %}

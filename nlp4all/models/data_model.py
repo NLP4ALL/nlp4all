@@ -7,7 +7,7 @@ Data imported into nlp4all, used in analyses
 from __future__ import annotations
 
 import typing as t
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base, NestedMutableJSONB
@@ -41,3 +41,8 @@ class DataModel(Base):  # pylint: disable=too-few-public-methods
         if self._text_path is None:
             self._text_path = self.data_source.document_text_path
         return self.document[self._text_path]
+
+
+# DataModel.__table__.append_constraint(
+#     Index('idx_nlp_data_document_gin', DataModel.document, postgresql_using='gin')
+# )

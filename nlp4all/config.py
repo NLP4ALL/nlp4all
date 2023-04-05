@@ -32,6 +32,15 @@ try:
 except EnvironmentError:
     DB_BACKEND = "sqlite"
 
+try:
+    MONGODB_HOST = get_env_variable("MONGODB_HOST")
+    MONGO_INITDB_ROOT_USERNAME = get_env_variable("MONGO_INITDB_ROOT_USERNAME")
+    MONGO_INITDB_ROOT_PASSWORD = get_env_variable("MONGO_INITDB_ROOT_PASSWORD")
+except EnvironmentError:
+    MONGODB_HOST = "document-store"
+    MONGO_INITDB_ROOT_USERNAME = "nlp4all"
+    MONGO_INITDB_ROOT_PASSWORD = "nlp4all"
+
 if DB_BACKEND == "postgres":
     pg_host = get_env_variable('POSTGRES_HOST')
     pg_user = get_env_variable('POSTGRES_USER')

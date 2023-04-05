@@ -73,10 +73,13 @@ FROM base as nlpapp-dev
 
 # add dev requirements
 COPY --from=builder /usr/src/app/requirements-dev.txt .
-RUN apt install -y libyaml-dev
+RUN apt-get install -y libyaml-dev inotify-tools
 RUN pip install --progress-bar off --no-cache-dir -r requirements-dev.txt
 # install debugpy for remote debug listening
 RUN pip install debugpy
+
+# temporary fix until werkzeug > 2.2.3 is released
+RUN pip install https://github.com/pallets/werkzeug/archive/refs/heads/main.zip
 
 COPY ./docker/python/run-nlp4all.sh $HOME
 RUN chmod +x $HOME/run-nlp4all.sh

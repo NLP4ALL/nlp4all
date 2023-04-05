@@ -14,6 +14,7 @@ from flask_migrate import Migrate
 
 from .helpers import database as dbhelper
 from .helpers import nlp
+from .helpers.mongo import Mongo
 from .helpers.celery import celery_init_app
 from .config import get_config, Config
 from .database import Base, nlp_sa_meta
@@ -24,6 +25,7 @@ db: SQLAlchemy = SQLAlchemy(
     metadata=nlp_sa_meta,
     model_class=Base,
     engine_options={"future": True})
+docdb: Mongo = Mongo()
 migrate = Migrate()
 csrf = CSRFProtect()
 
@@ -58,6 +60,8 @@ def create_app(env: Union[None, str] = None) -> Flask:
     login_manager.needs_refresh_message_category = "info"
 
     dbhelper.init_app(app)
+    # TODO: the connection probably doesn't need to exist for each request
+    docdb.init_app(app)
     nlp.init_app(app)
 
     # in non-production environments, we want to be able to get a list of routes
