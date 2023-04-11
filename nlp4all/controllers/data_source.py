@@ -6,10 +6,10 @@ from datetime import datetime
 from flask import redirect, url_for
 from flask_login import current_user
 from werkzeug.utils import secure_filename
-from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.orm import joinedload, scoped_session
 from .base import BaseController
 from ..forms.data_source import AddDataSourceForm, DataSourceFieldSelectForm
-from ..models import DataSourceModel, BackgroundTaskModel, DataModel
+from ..models import DataSourceModel, BackgroundTaskModel
 from .. import db, conf, docdb
 from ..helpers import data_source_tasks as bg_tasks
 from ..database import BackgroundTaskStatus
@@ -99,7 +99,9 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
             form.data_source_fields.choices = [f for f in ds.aliased_paths.keys()]
             form.data_source_main.choices = ['Pick a primary text field...'] + form.data_source_fields.choices
             if form.validate_on_submit():
-                ds.set_document_text(form.data_source_main.data, ds.aliased_path(form.data_source_main.data))  # type: ignore
+                ds.set_document_text(
+                    form.data_source_main.data,  # type: ignore
+                    ds.aliased_path(form.data_source_main.data))  # type: ignore
                 fields_to_keep = form.data_source_fields.data + [form.data_source_main.data]  # type: ignore
                 ds.task_id = None
                 db.session.commit()
@@ -136,7 +138,7 @@ class DataSourceController(BaseController):  # pylint: disable=too-few-public-me
     def inspect(cls, datasource_id: int):
         """Inspect data source"""
         from ..helpers.data_source import schema_aliased_path_dict
-        sess: Session = db.session
+        sess: scoped_session = db.session
         ds: t.Union[DataSourceModel, None] = sess.query(DataSourceModel).filter_by(
             id=datasource_id).first()
         if ds is None:

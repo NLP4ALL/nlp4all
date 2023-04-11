@@ -59,7 +59,7 @@ class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-pub
     def ready(self) -> bool:
         """Returns True if the data source is ready to be used"""
         return self.meta is not None and self.schema is not None
-    
+
     @property
     def collection_name(self) -> str:
         """Returns the collection name for the data source"""
@@ -108,7 +108,7 @@ class DataSourceModel(BackgroundTaskMixin, Base):  # pylint: disable=too-few-pub
     def document_text_path(self, path: t.Tuple[str, ...]):
         """Sets the path to the document text"""
         self.meta['document_text_path'] = path
-    
+
     @property
     def document_text_field(self) -> str:
         """Returns the path to the document text"""

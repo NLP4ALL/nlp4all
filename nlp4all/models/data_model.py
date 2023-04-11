@@ -7,7 +7,7 @@ Data imported into nlp4all, used in analyses
 from __future__ import annotations
 
 import typing as t
-from sqlalchemy import ForeignKey, Index
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base, NestedMutableJSONB

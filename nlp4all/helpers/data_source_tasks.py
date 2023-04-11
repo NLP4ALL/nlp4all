@@ -69,7 +69,7 @@ def load_data_file(ds: DataSourceModel) -> None:
         header = next(reader)
         data_processed += 1
     else:
-        reader = f
+        reader = f  # type: ignore
     session: scoped_session = db.session
     af = session.autoflush
     session.autoflush = False
@@ -93,14 +93,14 @@ def load_data_file(ds: DataSourceModel) -> None:
         data_processed += 1
         data_items.append(data_item)
         if data_processed % process_every == 0:
-            schema = generate_schema(data_items, builder)
+            schema = generate_schema(data_items, builder)  # type: ignore
             ds_collection.insert_many(data_items)
             data_items = []
         if data_processed % update_every == 0:
             task.current_step = data_processed
             session.commit()
     if len(data_items) > 0:
-        schema = generate_schema(data_items, builder)
+        schema = generate_schema(data_items, builder)  # type: ignore
         ds_collection.insert_many(data_items)
         task.current_step = data_processed
         session.commit()

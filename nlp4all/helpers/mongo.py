@@ -22,7 +22,8 @@ class Mongo:
     def init_app(self, app: Flask) -> None:
         """Initialize the app."""
         self.app = app
-        CONNECTION_STRING = f"mongodb://{MONGO_INITDB_ROOT_USERNAME}:{MONGO_INITDB_ROOT_PASSWORD}@{MONGODB_HOST}:27017/nlp4all?authSource=admin"
+        CONNECTION_STRING = f"mongodb://{MONGO_INITDB_ROOT_USERNAME}:{MONGO_INITDB_ROOT_PASSWORD}@{MONGODB_HOST}"
+        CONNECTION_STRING = CONNECTION_STRING + ":27017/nlp4all?authSource=admin"
         app.logger.info("Connecting to MongoDB: %s", CONNECTION_STRING)
         self._conn = MongoClient(CONNECTION_STRING)
         self._db = self._conn.get_database()

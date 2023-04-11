@@ -535,24 +535,27 @@ def nested_set(dic: t.Dict, keys: t.Tuple[str, ...], value: t.Any):
     dic[keys[-1]] = value
 
 
-def nested_set_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...], value: t.Any) -> t.Union[t.Dict, t.List[t.Dict]]:
+def nested_set_all(
+        dic: t.Union[t.Dict, t.List[t.Dict]],
+        keys: t.Tuple[str, ...],
+        value: t.Any) -> t.Union[t.Dict, t.List[t.Dict]]:
     is_list = isinstance(dic, list)
     if not is_list:
-        dic = [dic]
+        dic = [dic]  # type: ignore
     n_keys = len(keys)
     for i, di in enumerate(dic):
         if isinstance(di, list):
             for k, d in enumerate(di):
                 res = nested_set_all(d, keys, value)
                 di[k] = res
-            dic[i] = di
+            dic[i] = di  # type: ignore
         else:
             if keys[0] in di:
                 if n_keys == 1:
                     di[keys[0]] = value
                     dic[i] = di
                 else:
-                    dic[i] = nested_set_all(di[keys[0]], keys[1:], value)
+                    dic[i] = nested_set_all(di[keys[0]], keys[1:], value)  # type: ignore
             elif n_keys == 1 and "title" in di and di["title"] == keys[0]:
                 di[keys[0]] = value
                 dic[i] = di
@@ -564,7 +567,7 @@ def nested_set_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...]
 def nested_del_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...]) -> t.Union[t.Dict, t.List[t.Dict]]:
     is_list = isinstance(dic, list)
     if not is_list:
-        dic = [dic]
+        dic = [dic]  # type: ignore
     n_keys = len(keys)
     for i, di in enumerate(dic):
         if isinstance(di, list):
@@ -572,7 +575,7 @@ def nested_del_all(dic: t.Union[t.Dict, t.List[t.Dict]], keys: t.Tuple[str, ...]
             for k, d in enumerate(di):
                 res = nested_del_all(d, keys)
                 new_list.append(res)
-            dic[i] = new_list
+            dic[i] = new_list  # type: ignore
         else:
             if keys[0] in di:
                 if n_keys == 1:
