@@ -1,24 +1,33 @@
 services:
   db-dev:
     restart: always
-    image: postgres:15.1
+    image: postgres:15.2
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data/
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
     networks:
       - back-tier
     env_file:
       - ./db.dev.env
-  rabbitmq:
+  document-store-dev:
+    restart: always
+    image: mongo:5.0.15
+    ports:
+      - "27017:27017"
+    networks:
+      - back-tier
+    volumes:
+      - mongo_data_dev:/data/db
+    env_file:
+      - ./db.dev.env
+  rabbitmq-dev:
     restart: always
     image: rabbitmq:3.11
     expose:
       - "5672"
     networks:
       - back-tier
-    volumes:
-      - "rabbit:/var/lib/rabbitmq"
   app-dev:
     restart: always
     build: 
@@ -39,15 +48,15 @@ services:
       - back-tier
     depends_on:
       - db-dev
-      - rabbitmq
       - worker-dev
+      - document-store-dev
   worker-dev:
     restart: always
     build: 
       context: .
       target: nlpapp-dev
       dockerfile: ./docker/python/Dockerfile
-    command: celery -A make_celery worker -l info
+    command: bash -c "watchmedo auto-restart --recursive --pattern='*.py' -- celery -A make_celery worker -l info"
     volumes:
       - ./nlp4all:/home/app/nlp4all
     env_file:
@@ -57,9 +66,11 @@ services:
       - back-tier
     depends_on:
       - db-dev
-      - rabbitmq
+      - rabbitmq-dev
+      - document-store-dev
 networks:
   front-tier: {}
   back-tier: {}
 volumes:
   postgres_data_dev:
+  mongo_data_dev:

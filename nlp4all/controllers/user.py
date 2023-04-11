@@ -14,7 +14,7 @@ from ..helpers.site import is_safe_url
 from ..helpers.pyutil import classproperty
 
 
-from ..models import OrganizationModel, UserModel
+from ..models import UserGroupModel, UserModel
 
 from ..forms.user import (
     LoginForm,
@@ -129,15 +129,15 @@ class UserController(BaseController):
         if current_user.is_authenticated:
             return redirect(url_for("project_controller.home"))
         form = RegistrationForm()
-        form.organizations.choices = [(str(o.id), o.name) for o in OrganizationModel.query.all()]
+        form.groups.choices = [(str(g.id), g.name) for g in UserGroupModel.query.all()]
         if form.validate_on_submit():
             hashed_password = cls.bcrypt.generate_password_hash(form.password.data).decode("utf-8")
-            org = OrganizationModel.query.get(int(form.organizations.data))
+            group = UserGroupModel.query.get(int(form.groups.data))
             user = UserModel(
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password,
-                organizations=[org],
+                groups=[group],
             )
             db.add(user)
             db.session.commit()

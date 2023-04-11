@@ -32,7 +32,7 @@ class DataModel(Base):  # pylint: disable=too-few-public-methods
     document: Mapped[dict] = mapped_column(NestedMutableJSONB, nullable=False)
     annotations: Mapped[list['DataAnnotationModel']] = relationship(back_populates="data")
     tags: Mapped[list['DataTagModel']] = relationship(back_populates="data")
-    category_id: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"))
+    category_id: Mapped[int] = mapped_column(ForeignKey("data_tag_category.id"), nullable=True)
     category: Mapped['DataTagCategoryModel'] = relationship(back_populates="data")
 
     @property
@@ -41,3 +41,8 @@ class DataModel(Base):  # pylint: disable=too-few-public-methods
         if self._text_path is None:
             self._text_path = self.data_source.document_text_path
         return self.document[self._text_path]
+
+
+# DataModel.__table__.append_constraint(
+#     Index('idx_nlp_data_document_gin', DataModel.document, postgresql_using='gin')
+# )

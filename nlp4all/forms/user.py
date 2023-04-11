@@ -66,7 +66,7 @@ class RegistrationForm(FlaskForm):
     confirm_password = PasswordField(
         "Confirm Password", validators=[DataRequired(), EqualTo("password")]
     )
-    organizations = SelectField("Select your organization", validators=[DataRequired()])
+    groups = SelectField("Select your group", validators=[DataRequired()])
     submit = SubmitField("Sign Up")
 
     def validate_username(self, username):

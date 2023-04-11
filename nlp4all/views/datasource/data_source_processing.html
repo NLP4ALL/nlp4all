@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <h1>Processing data...</h1>
+        <p>Processing data source {{ ds.name }}...</p>
+        <p>Please wait while the data is being processed. This page will refresh automatically, if it doesn't, please click <a href="#" onclick="window.location.reload(1);">here</a>.</p>
+        <p>Progress: {{ task.current_step }} / {{ task.total_steps }}</p>
+    </div>
+    <script type="text/javascript">
+        setTimeout(function() {
+            window.location.reload(1);
+        }, 5000);
+    </script>
+{% endblock content %}

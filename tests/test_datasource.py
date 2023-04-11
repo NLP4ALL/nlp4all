@@ -23,12 +23,10 @@ def test_schema_to_path_dict(jsonschema, schema_paths):
     }
 
     paths = {
-        "user.name": ("user", "name"),
-        "user.age": ("user", "age"),
-        "text": ("text",),
+        "user.name": ("properties", "user", "properties", "name"),
+        "user.age": ("properties", "user", "properties", "age"), "text": ("properties", "text")
     }
 
-    # simple example
     assert schema_aliased_path_dict(schema) == paths
 
     # complex example

@@ -557,161 +557,1049 @@ def jsonschema():
 def schema_paths():
     """Return a list of paths to JSON properties. Generated (but validated)."""
     return {
-        'entities.user_mentions.items': ('entities', 'user_mentions', 'items'),
-        'entities.urls.items': ('entities', 'urls', 'items'),
-        'entities.media.items': ('entities', 'media', 'items'),
-        'entities.media': ('entities', 'media'),
-        'in_reply_to_screen_name': ('in_reply_to_screen_name', ),
-        'text': ('text', ),
-        'id_str': ('id_str', ),
-        'place.bounding_box.type': ('place', 'bounding_box', 'type'),
-        'place.bounding_box.coordinates.items':
-        ('place', 'bounding_box', 'coordinates', 'items'),
-        'place.bounding_box.coordinates':
-        ('place', 'bounding_box', 'coordinates'),
-        'place.place_type': ('place', 'place_type'),
-        'place.country': ('place', 'country'),
-        'place.attributes': ('place', 'attributes'),
-        'place.full_name': ('place', 'full_name'),
-        'place.url': ('place', 'url'),
-        'place.name': ('place', 'name'),
-        'place.id': ('place', 'id'),
-        'place.country_code': ('place', 'country_code'),
-        'in_reply_to_status_id': ('in_reply_to_status_id', ),
-        'retweet_count': ('retweet_count', ),
-        'favorited': ('favorited', ),
-        'truncated': ('truncated', ),
-        'source': ('source', ),
-        'in_reply_to_status_id_str': ('in_reply_to_status_id_str', ),
-        'created_at': ('created_at', ),
-        'in_reply_to_user_id_str': ('in_reply_to_user_id_str', ),
-        'in_reply_to_user_id': ('in_reply_to_user_id', ),
-        'user.lang': ('user', 'lang'),
-        'user.profile_background_image_url':
-        ('user', 'profile_background_image_url'),
-        'user.id_str': ('user', 'id_str'),
-        'user.default_profile_image': ('user', 'default_profile_image'),
-        'user.statuses_count': ('user', 'statuses_count'),
-        'user.profile_link_color': ('user', 'profile_link_color'),
-        'user.favourites_count': ('user', 'favourites_count'),
-        'user.profile_image_url_https': ('user', 'profile_image_url_https'),
-        'user.profile_background_color': ('user', 'profile_background_color'),
-        'user.description': ('user', 'description'),
-        'user.profile_background_tile': ('user', 'profile_background_tile'),
-        'user.time_zone': ('user', 'time_zone'),
-        'user.profile_sidebar_fill_color': ('user',
-                                            'profile_sidebar_fill_color'),
-        'user.listed_count': ('user', 'listed_count'),
-        'user.contributors_enabled': ('user', 'contributors_enabled'),
-        'user.geo_enabled': ('user', 'geo_enabled'),
-        'user.created_at': ('user', 'created_at'),
-        'user.screen_name': ('user', 'screen_name'),
-        'user.profile_sidebar_border_color': ('user',
-                                              'profile_sidebar_border_color'),
-        'user.protected': ('user', 'protected'),
-        'user.url': ('user', 'url'),
-        'user.default_profile': ('user', 'default_profile'),
-        'user.name': ('user', 'name'),
-        'user.is_translator': ('user', 'is_translator'),
-        'user.show_all_inline_media': ('user', 'show_all_inline_media'),
-        'user.verified': ('user', 'verified'),
-        'user.profile_use_background_image': ('user',
-                                              'profile_use_background_image'),
-        'user.followers_count': ('user', 'followers_count'),
-        'user.profile_image_url': ('user', 'profile_image_url'),
-        'user.id': ('user', 'id'),
-        'user.profile_background_image_url_https':
-        ('user', 'profile_background_image_url_https'),
-        'user.utc_offset': ('user', 'utc_offset'),
-        'user.friends_count': ('user', 'friends_count'),
-        'user.profile_text_color': ('user', 'profile_text_color'),
-        'user.location': ('user', 'location'),
-        'retweeted': ('retweeted', ),
-        'id': ('id', ),
-        'retweeted_status.entities.urls.items': ('retweeted_status',
-                                                 'entities', 'urls', 'items'),
-        'retweeted_status.entities.urls': ('retweeted_status', 'entities',
-                                           'urls'),
-        'retweeted_status.text': ('retweeted_status', 'text'),
-        'retweeted_status.id_str': ('retweeted_status', 'id_str'),
-        'retweeted_status.retweet_count': ('retweeted_status',
-                                           'retweet_count'),
-        'retweeted_status.favorited': ('retweeted_status', 'favorited'),
-        'retweeted_status.truncated': ('retweeted_status', 'truncated'),
-        'retweeted_status.source': ('retweeted_status', 'source'),
-        'retweeted_status.created_at': ('retweeted_status', 'created_at'),
-        'retweeted_status.user.lang': ('retweeted_status', 'user', 'lang'),
-        'retweeted_status.user.profile_background_image_url':
-        ('retweeted_status', 'user', 'profile_background_image_url'),
-        'retweeted_status.user.id_str': ('retweeted_status', 'user', 'id_str'),
-        'retweeted_status.user.default_profile_image':
-        ('retweeted_status', 'user', 'default_profile_image'),
-        'retweeted_status.user.statuses_count': ('retweeted_status', 'user',
-                                                 'statuses_count'),
-        'retweeted_status.user.profile_link_color':
-        ('retweeted_status', 'user', 'profile_link_color'),
-        'retweeted_status.user.favourites_count': ('retweeted_status', 'user',
-                                                   'favourites_count'),
-        'retweeted_status.user.profile_image_url_https':
-        ('retweeted_status', 'user', 'profile_image_url_https'),
-        'retweeted_status.user.profile_background_color':
-        ('retweeted_status', 'user', 'profile_background_color'),
-        'retweeted_status.user.description': ('retweeted_status', 'user',
-                                              'description'),
-        'retweeted_status.user.profile_background_tile':
-        ('retweeted_status', 'user', 'profile_background_tile'),
-        'retweeted_status.user.time_zone': ('retweeted_status', 'user',
-                                            'time_zone'),
-        'retweeted_status.user.profile_sidebar_fill_color':
-        ('retweeted_status', 'user', 'profile_sidebar_fill_color'),
-        'retweeted_status.user.listed_count': ('retweeted_status', 'user',
-                                               'listed_count'),
-        'retweeted_status.user.contributors_enabled': ('retweeted_status',
-                                                       'user',
-                                                       'contributors_enabled'),
-        'retweeted_status.user.geo_enabled': ('retweeted_status', 'user',
-                                              'geo_enabled'),
-        'retweeted_status.user.created_at': ('retweeted_status', 'user',
-                                             'created_at'),
-        'retweeted_status.user.screen_name': ('retweeted_status', 'user',
-                                              'screen_name'),
-        'retweeted_status.user.profile_sidebar_border_color':
-        ('retweeted_status', 'user', 'profile_sidebar_border_color'),
-        'retweeted_status.user.protected': ('retweeted_status', 'user',
-                                            'protected'),
-        'retweeted_status.user.default_profile': ('retweeted_status', 'user',
-                                                  'default_profile'),
-        'retweeted_status.user.name': ('retweeted_status', 'user', 'name'),
-        'retweeted_status.user.is_translator': ('retweeted_status', 'user',
-                                                'is_translator'),
-        'retweeted_status.user.show_all_inline_media':
-        ('retweeted_status', 'user', 'show_all_inline_media'),
-        'retweeted_status.user.verified': ('retweeted_status', 'user',
-                                           'verified'),
-        'retweeted_status.user.profile_use_background_image':
-        ('retweeted_status', 'user', 'profile_use_background_image'),
-        'retweeted_status.user.followers_count': ('retweeted_status', 'user',
-                                                  'followers_count'),
-        'retweeted_status.user.profile_image_url': ('retweeted_status', 'user',
-                                                    'profile_image_url'),
-        'retweeted_status.user.id': ('retweeted_status', 'user', 'id'),
-        'retweeted_status.user.profile_background_image_url_https':
-        ('retweeted_status', 'user', 'profile_background_image_url_https'),
-        'retweeted_status.user.utc_offset': ('retweeted_status', 'user',
-                                             'utc_offset'),
-        'retweeted_status.user.friends_count': ('retweeted_status', 'user',
-                                                'friends_count'),
-        'retweeted_status.user.profile_text_color': ('retweeted_status',
-                                                     'user',
-                                                     'profile_text_color'),
-        'retweeted_status.user.location': ('retweeted_status', 'user',
-                                           'location'),
-        'retweeted_status.retweeted': ('retweeted_status', 'retweeted'),
-        'retweeted_status.id': ('retweeted_status', 'id'),
-        'retweeted_status.possibly_sensitive_editable':
-        ('retweeted_status', 'possibly_sensitive_editable'),
-        'retweeted_status.possibly_sensitive': ('retweeted_status',
-                                                'possibly_sensitive'),
-        'possibly_sensitive_editable': ('possibly_sensitive_editable', ),
-        'possibly_sensitive': ('possibly_sensitive', )
+        "entities.user_mentions.indices": (
+            "properties",
+            "entities",
+            "properties",
+            "user_mentions",
+            "items",
+            "properties",
+            "indices",
+            "items"
+        ),
+        "entities.user_mentions.id_str": (
+            "properties",
+            "entities",
+            "properties",
+            "user_mentions",
+            "items",
+            "properties",
+            "id_str"
+        ),
+        "entities.user_mentions.screen_name": (
+            "properties",
+            "entities",
+            "properties",
+            "user_mentions",
+            "items",
+            "properties",
+            "screen_name"
+        ),
+        "entities.user_mentions.name": (
+            "properties",
+            "entities",
+            "properties",
+            "user_mentions",
+            "items",
+            "properties",
+            "name"
+        ),
+        "entities.user_mentions.id": (
+            "properties",
+            "entities",
+            "properties",
+            "user_mentions",
+            "items",
+            "properties",
+            "id"
+        ),
+        "entities.urls.display_url": (
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "display_url"
+        ),
+        "entities.urls.indices": (
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "indices",
+            "items"
+        ),
+        "entities.urls.expanded_url": (
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "expanded_url"
+        ),
+        "entities.urls.url": (
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "url"
+        ),
+        "entities.media.type": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "type"
+        ),
+        "entities.media.display_url": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "display_url"
+        ),
+        "entities.media.indices": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "indices",
+            "items"
+        ),
+        "entities.media.id_str": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "id_str"
+        ),
+        "entities.media.media_url": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "media_url"
+        ),
+        "entities.media.expanded_url": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "expanded_url"
+        ),
+        "entities.media.sizes.small.h": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "small",
+            "properties",
+            "h"
+        ),
+        "entities.media.sizes.small.w": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "small",
+            "properties",
+            "w"
+        ),
+        "entities.media.sizes.small.resize": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "small",
+            "properties",
+            "resize"
+        ),
+        "entities.media.sizes.large.h": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "large",
+            "properties",
+            "h"
+        ),
+        "entities.media.sizes.large.w": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "large",
+            "properties",
+            "w"
+        ),
+        "entities.media.sizes.large.resize": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "large",
+            "properties",
+            "resize"
+        ),
+        "entities.media.sizes.thumb.h": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "thumb",
+            "properties",
+            "h"
+        ),
+        "entities.media.sizes.thumb.w": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "thumb",
+            "properties",
+            "w"
+        ),
+        "entities.media.sizes.thumb.resize": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "thumb",
+            "properties",
+            "resize"
+        ),
+        "entities.media.sizes.medium.h": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "medium",
+            "properties",
+            "h"
+        ),
+        "entities.media.sizes.medium.w": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "medium",
+            "properties",
+            "w"
+        ),
+        "entities.media.sizes.medium.resize": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "sizes",
+            "properties",
+            "medium",
+            "properties",
+            "resize"
+        ),
+        "entities.media.url": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "url"
+        ),
+        "entities.media.media_url_https": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "media_url_https"
+        ),
+        "entities.media.id": (
+            "properties",
+            "entities",
+            "properties",
+            "media",
+            "items",
+            "properties",
+            "id"
+        ),
+        "in_reply_to_screen_name": (
+            "properties",
+            "in_reply_to_screen_name"
+        ),
+        "text": (
+            "properties",
+            "text"
+        ),
+        "id_str": (
+            "properties",
+            "id_str"
+        ),
+        "place.bounding_box.type": (
+            "properties",
+            "place",
+            "properties",
+            "bounding_box",
+            "properties",
+            "type"
+        ),
+        "place.bounding_box.coordinates": (
+            "properties",
+            "place",
+            "properties",
+            "bounding_box",
+            "properties",
+            "coordinates",
+            "items",
+            "items",
+            "items"
+        ),
+        "place.place_type": (
+            "properties",
+            "place",
+            "properties",
+            "place_type"
+        ),
+        "place.country": (
+            "properties",
+            "place",
+            "properties",
+            "country"
+        ),
+        "place.attributes": (
+            "properties",
+            "place",
+            "properties",
+            "attributes"
+        ),
+        "place.full_name": (
+            "properties",
+            "place",
+            "properties",
+            "full_name"
+        ),
+        "place.url": (
+            "properties",
+            "place",
+            "properties",
+            "url"
+        ),
+        "place.name": (
+            "properties",
+            "place",
+            "properties",
+            "name"
+        ),
+        "place.id": (
+            "properties",
+            "place",
+            "properties",
+            "id"
+        ),
+        "place.country_code": (
+            "properties",
+            "place",
+            "properties",
+            "country_code"
+        ),
+        "in_reply_to_status_id": (
+            "properties",
+            "in_reply_to_status_id"
+        ),
+        "retweet_count": (
+            "properties",
+            "retweet_count"
+        ),
+        "favorited": (
+            "properties",
+            "favorited"
+        ),
+        "truncated": (
+            "properties",
+            "truncated"
+        ),
+        "source": (
+            "properties",
+            "source"
+        ),
+        "in_reply_to_status_id_str": (
+            "properties",
+            "in_reply_to_status_id_str"
+        ),
+        "created_at": (
+            "properties",
+            "created_at"
+        ),
+        "in_reply_to_user_id_str": (
+            "properties",
+            "in_reply_to_user_id_str"
+        ),
+        "in_reply_to_user_id": (
+            "properties",
+            "in_reply_to_user_id"
+        ),
+        "user.lang": (
+            "properties",
+            "user",
+            "properties",
+            "lang"
+        ),
+        "user.profile_background_image_url": (
+            "properties",
+            "user",
+            "properties",
+            "profile_background_image_url"
+        ),
+        "user.id_str": (
+            "properties",
+            "user",
+            "properties",
+            "id_str"
+        ),
+        "user.default_profile_image": (
+            "properties",
+            "user",
+            "properties",
+            "default_profile_image"
+        ),
+        "user.statuses_count": (
+            "properties",
+            "user",
+            "properties",
+            "statuses_count"
+        ),
+        "user.profile_link_color": (
+            "properties",
+            "user",
+            "properties",
+            "profile_link_color"
+        ),
+        "user.favourites_count": (
+            "properties",
+            "user",
+            "properties",
+            "favourites_count"
+        ),
+        "user.profile_image_url_https": (
+            "properties",
+            "user",
+            "properties",
+            "profile_image_url_https"
+        ),
+        "user.profile_background_color": (
+            "properties",
+            "user",
+            "properties",
+            "profile_background_color"
+        ),
+        "user.description": (
+            "properties",
+            "user",
+            "properties",
+            "description"
+        ),
+        "user.profile_background_tile": (
+            "properties",
+            "user",
+            "properties",
+            "profile_background_tile"
+        ),
+        "user.time_zone": (
+            "properties",
+            "user",
+            "properties",
+            "time_zone"
+        ),
+        "user.profile_sidebar_fill_color": (
+            "properties",
+            "user",
+            "properties",
+            "profile_sidebar_fill_color"
+        ),
+        "user.listed_count": (
+            "properties",
+            "user",
+            "properties",
+            "listed_count"
+        ),
+        "user.contributors_enabled": (
+            "properties",
+            "user",
+            "properties",
+            "contributors_enabled"
+        ),
+        "user.geo_enabled": (
+            "properties",
+            "user",
+            "properties",
+            "geo_enabled"
+        ),
+        "user.created_at": (
+            "properties",
+            "user",
+            "properties",
+            "created_at"
+        ),
+        "user.screen_name": (
+            "properties",
+            "user",
+            "properties",
+            "screen_name"
+        ),
+        "user.profile_sidebar_border_color": (
+            "properties",
+            "user",
+            "properties",
+            "profile_sidebar_border_color"
+        ),
+        "user.protected": (
+            "properties",
+            "user",
+            "properties",
+            "protected"
+        ),
+        "user.url": (
+            "properties",
+            "user",
+            "properties",
+            "url"
+        ),
+        "user.default_profile": (
+            "properties",
+            "user",
+            "properties",
+            "default_profile"
+        ),
+        "user.name": (
+            "properties",
+            "user",
+            "properties",
+            "name"
+        ),
+        "user.is_translator": (
+            "properties",
+            "user",
+            "properties",
+            "is_translator"
+        ),
+        "user.show_all_inline_media": (
+            "properties",
+            "user",
+            "properties",
+            "show_all_inline_media"
+        ),
+        "user.verified": (
+            "properties",
+            "user",
+            "properties",
+            "verified"
+        ),
+        "user.profile_use_background_image": (
+            "properties",
+            "user",
+            "properties",
+            "profile_use_background_image"
+        ),
+        "user.followers_count": (
+            "properties",
+            "user",
+            "properties",
+            "followers_count"
+        ),
+        "user.profile_image_url": (
+            "properties",
+            "user",
+            "properties",
+            "profile_image_url"
+        ),
+        "user.id": (
+            "properties",
+            "user",
+            "properties",
+            "id"
+        ),
+        "user.profile_background_image_url_https": (
+            "properties",
+            "user",
+            "properties",
+            "profile_background_image_url_https"
+        ),
+        "user.utc_offset": (
+            "properties",
+            "user",
+            "properties",
+            "utc_offset"
+        ),
+        "user.friends_count": (
+            "properties",
+            "user",
+            "properties",
+            "friends_count"
+        ),
+        "user.profile_text_color": (
+            "properties",
+            "user",
+            "properties",
+            "profile_text_color"
+        ),
+        "user.location": (
+            "properties",
+            "user",
+            "properties",
+            "location"
+        ),
+        "retweeted": (
+            "properties",
+            "retweeted"
+        ),
+        "id": (
+            "properties",
+            "id"
+        ),
+        "retweeted_status.entities.urls.display_url": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "display_url"
+        ),
+        "retweeted_status.entities.urls.indices": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "indices",
+            "items"
+        ),
+        "retweeted_status.entities.urls.expanded_url": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "expanded_url"
+        ),
+        "retweeted_status.entities.urls.url": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "entities",
+            "properties",
+            "urls",
+            "items",
+            "properties",
+            "url"
+        ),
+        "retweeted_status.text": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "text"
+        ),
+        "retweeted_status.id_str": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "id_str"
+        ),
+        "retweeted_status.retweet_count": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "retweet_count"
+        ),
+        "retweeted_status.favorited": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "favorited"
+        ),
+        "retweeted_status.truncated": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "truncated"
+        ),
+        "retweeted_status.source": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "source"
+        ),
+        "retweeted_status.created_at": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "created_at"
+        ),
+        "retweeted_status.user.lang": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "lang"
+        ),
+        "retweeted_status.user.profile_background_image_url": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_background_image_url"
+        ),
+        "retweeted_status.user.id_str": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "id_str"
+        ),
+        "retweeted_status.user.default_profile_image": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "default_profile_image"
+        ),
+        "retweeted_status.user.statuses_count": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "statuses_count"
+        ),
+        "retweeted_status.user.profile_link_color": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_link_color"
+        ),
+        "retweeted_status.user.favourites_count": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "favourites_count"
+        ),
+        "retweeted_status.user.profile_image_url_https": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_image_url_https"
+        ),
+        "retweeted_status.user.profile_background_color": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_background_color"
+        ),
+        "retweeted_status.user.description": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "description"
+        ),
+        "retweeted_status.user.profile_background_tile": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_background_tile"
+        ),
+        "retweeted_status.user.time_zone": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "time_zone"
+        ),
+        "retweeted_status.user.profile_sidebar_fill_color": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_sidebar_fill_color"
+        ),
+        "retweeted_status.user.listed_count": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "listed_count"
+        ),
+        "retweeted_status.user.contributors_enabled": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "contributors_enabled"
+        ),
+        "retweeted_status.user.geo_enabled": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "geo_enabled"
+        ),
+        "retweeted_status.user.created_at": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "created_at"
+        ),
+        "retweeted_status.user.screen_name": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "screen_name"
+        ),
+        "retweeted_status.user.profile_sidebar_border_color": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_sidebar_border_color"
+        ),
+        "retweeted_status.user.protected": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "protected"
+        ),
+        "retweeted_status.user.default_profile": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "default_profile"
+        ),
+        "retweeted_status.user.name": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "name"
+        ),
+        "retweeted_status.user.is_translator": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "is_translator"
+        ),
+        "retweeted_status.user.show_all_inline_media": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "show_all_inline_media"
+        ),
+        "retweeted_status.user.verified": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "verified"
+        ),
+        "retweeted_status.user.profile_use_background_image": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_use_background_image"
+        ),
+        "retweeted_status.user.followers_count": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "followers_count"
+        ),
+        "retweeted_status.user.profile_image_url": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_image_url"
+        ),
+        "retweeted_status.user.id": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "id"
+        ),
+        "retweeted_status.user.profile_background_image_url_https": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_background_image_url_https"
+        ),
+        "retweeted_status.user.utc_offset": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "utc_offset"
+        ),
+        "retweeted_status.user.friends_count": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "friends_count"
+        ),
+        "retweeted_status.user.profile_text_color": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "profile_text_color"
+        ),
+        "retweeted_status.user.location": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "user",
+            "properties",
+            "location"
+        ),
+        "retweeted_status.retweeted": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "retweeted"
+        ),
+        "retweeted_status.id": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "id"
+        ),
+        "retweeted_status.possibly_sensitive_editable": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "possibly_sensitive_editable"
+        ),
+        "retweeted_status.possibly_sensitive": (
+            "properties",
+            "retweeted_status",
+            "properties",
+            "possibly_sensitive"
+        ),
+        "possibly_sensitive_editable": (
+            "properties",
+            "possibly_sensitive_editable"
+        ),
+        "possibly_sensitive": (
+            "properties",
+            "possibly_sensitive"
+        )
     }

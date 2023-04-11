@@ -15,11 +15,11 @@ from ..models import ProjectModel
 
 class AddOrgForm(FlaskForm):
     """
-    Add organization form.
+    Add group form.
     """
 
     name = StringField("Name", validators=[DataRequired()])
-    submit = SubmitField("Add Organization")
+    submit = SubmitField("Add Group")
 
 
 class AddProjectForm(FlaskForm):
@@ -32,7 +32,7 @@ class AddProjectForm(FlaskForm):
     categories = SelectMultipleField(
         "Categories for your students to work with", validators=[DataRequired()]
     )
-    organization = SelectField(
+    group = SelectField(
         "Which student group should participate?", validators=[DataRequired()]
     )
     submit = SubmitField("Create Project")

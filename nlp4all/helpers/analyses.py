@@ -125,14 +125,14 @@ def get_user_projects(a_user):
     if a_user.admin:
         my_projects = ProjectModel.query.all()
     else:
-        user_orgs = [org.id for org in a_user.organizations]
+        user_orgs = [g.id for g in a_user.groups]
         my_projects = ProjectModel.query.filter(
-            ProjectModel.organization.in_(user_orgs)
+            ProjectModel.user_group.in_(user_orgs)
         ).all()  # pylint: disable=no-member
     return my_projects
 
 
-def add_project(name, description, org, cat_ids):
+def add_project(name, description, group, cat_ids):
     """add a project to the database"""
     print(description)
     cats_objs = DataTagCategoryModel.query.filter(
@@ -145,7 +145,7 @@ def add_project(name, description, org, cat_ids):
     project = ProjectModel(
         name=name,
         description=description,
-        organization=org,
+        user_group=group,
         categories=cats_objs,
         tweets=data_objs,
         tf_idf=tf_idf,

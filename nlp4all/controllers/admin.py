@@ -3,7 +3,7 @@
 from flask import flash, redirect, url_for
 from celery.result import AsyncResult
 from nlp4all import db
-from ..models import OrganizationModel, DataTagCategoryModel
+from ..models import UserGroupModel, DataTagCategoryModel
 from ..forms.admin import AddOrgForm
 from ..forms.analyses import AddTweetCategoryForm
 from ..helpers.tweets import add_tweets_from_account
@@ -32,18 +32,18 @@ class AdminController(BaseController):
     def add_org(cls):
         """Add organization page"""
         form = AddOrgForm()
-        orgs = OrganizationModel.query.all()
+        orgs = UserGroupModel.query.all()
         if form.validate_on_submit():
-            org = OrganizationModel(name=form.name.data)
+            org = UserGroupModel(name=form.name.data)
             db.add(org)
             db.session.commit()
-            flash("Your organization has been created!", "success")
+            flash("Your group has been created!", "success")
             return redirect(url_for("admin_controller.add_org"))
         return cls.render_template("add_org.html", form=form, orgs=orgs)
 
     @classmethod
     def celery_test(cls, x: int, y: int):
-        result = add_test.delay(x, y)
+        result = add_test.delay(x, y)  # type: ignore
         return redirect(url_for("admin_controller.celery_result", task_id=result.id))
 
     @classmethod

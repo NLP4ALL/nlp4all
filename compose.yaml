@@ -17,8 +17,17 @@ services:
       - "5672"
     networks:
       - back-tier
+  document-store:
+    restart: always
+    image: mongo:5.0.15
+    ports:
+      - "27017:27017"
+    networks:
+      - back-tier
     volumes:
-      - "rabbit:/var/lib/rabbitmq"
+      - mongo_data:/data/db
+    env_file:
+      - ./db.env
   app:
     restart: always
     build: 
@@ -40,6 +49,7 @@ services:
       - nlpdb
       - rabbitmq
       - worker
+      - document-store
   worker:
     restart: always
     build: 
@@ -57,6 +67,7 @@ services:
     depends_on:
       - nlpdb
       - rabbitmq
+      - document-store
   web:
     restart: always
     build: 
@@ -75,3 +86,4 @@ networks:
 volumes:
   postgres_data_prod:
   static_volume:
+  mongo_data:
