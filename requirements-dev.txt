@@ -15,5 +15,5 @@ pydocstyle==6.1.1
 snowballstemmer==2.2.0
 flake8-docstrings==1.6.0
 types-Flask_Cors==3.0.10
-types-Pillow==9.4.0.10
+types-Pillow==9.5.0.1
 watchdog[watchmedo]==3.0.0

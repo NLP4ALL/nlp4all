@@ -1,7 +1,7 @@
 alembic==1.9.1
 amqp==5.1.1
 asgiref==3.6.0
-astroid==2.15.1
+astroid==2.15.3
 async-timeout==4.0.2
 attrs==22.1.0
 Babel==2.11.0
@@ -93,9 +93,9 @@ spacy==3.5.2
 sqlalchemy-json==0.5.0
 SQLAlchemy==2.0.7
 sqlparse==0.4.3
-srsly==2.4.5
+srsly==2.4.6
 terminaltables==3.1.10
-thinc==8.1.7
+thinc==8.1.9
 toml==0.10.2
 tomli==2.0.1
 tomlkit==0.11.6
