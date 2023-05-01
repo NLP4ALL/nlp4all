@@ -67,7 +67,7 @@ pickleshare
 pika==0.13.0
 Pillow==9.4.0
 pip-upgrader==1.4.15
-platformdirs==3.0.0
+platformdirs==3.5.0
 pluggy==1.0.0
 preshed==3.0.8
 prompt-toolkit==3.0.37
