@@ -37,7 +37,7 @@ Flask-Email==1.4.4
 Flask-Login==0.6.2
 Flask-Mail==0.9.1
 Flask-WTF==1.1.1
-Flask==2.2.3
+Flask==2.3.2
 genson==1.2.2
 greenlet==2.0.2
 gunicorn==20.1.0
