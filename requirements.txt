@@ -106,7 +106,7 @@ typing_extensions==4.4.0
 tzdata==2023.3
 urllib3==1.26.15
 vine==5.0.0
-virtualenv==20.21.0
+virtualenv==20.23.1
 wasabi==1.1.1
 wcwidth==0.2.6
 Werkzeug==2.2.3
